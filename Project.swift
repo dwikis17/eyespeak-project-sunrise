@@ -14,6 +14,10 @@ let project = Project(
                         "UIColorName": "",
                         "UIImageName": "",
                     ],
+                    "UISupportedInterfaceOrientations~ipad" : [
+                        "UIInterfaceOrientationLandscapeLeft",
+                        "UIInterfaceOrientationLandscapeRight",
+                    ]
                 ]
             ),
             sources: ["eyespeak/Sources/**"],
