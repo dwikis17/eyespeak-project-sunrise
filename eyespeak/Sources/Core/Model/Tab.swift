@@ -8,7 +8,7 @@
 import Foundation
 
 
-enum Tab {
+enum Tab: Hashable, CaseIterable {
     case keyboard
     case aac
     case settings

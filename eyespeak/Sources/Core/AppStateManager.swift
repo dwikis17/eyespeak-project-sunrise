@@ -8,8 +8,7 @@ import Foundation
 
 @MainActor
 @Observable
-
-class AppStateManager {
+public class AppStateManager {
     var currentTab: Tab = .keyboard
     let settings = UserSettings()
 }
