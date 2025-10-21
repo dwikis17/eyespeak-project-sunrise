@@ -159,6 +159,7 @@ struct FaceStatus {
     func gazeDirection(for eyeYaw: Double, eyePitch: Double) -> (Direction, Double) {
         let defaultThreshold = 10.0
         let defaultRange = 20.0
+        let minimumActivation = 0.35
 
         guard isGazeCalibrated,
               let neutralEyeYaw,
@@ -169,6 +170,11 @@ struct FaceStatus {
               let downEyePitch else {
             let horizontalStrength = abs(eyeYaw) > defaultThreshold ? min(1, (abs(eyeYaw) - defaultThreshold) / defaultRange) : 0
             let verticalStrength = abs(eyePitch) > defaultThreshold ? min(1, (abs(eyePitch) - defaultThreshold) / defaultRange) : 0
+            let dominantStrength = max(horizontalStrength, verticalStrength)
+
+            guard dominantStrength >= minimumActivation else {
+                return (.center, 0)
+            }
 
             if horizontalStrength >= verticalStrength && eyeYaw <= -defaultThreshold {
                 return (.left, horizontalStrength)
@@ -221,6 +227,9 @@ struct FaceStatus {
             if candidate.1 > best.1 {
                 best = candidate
             }
+        }
+        if best.1 < minimumActivation {
+            return (.center, 0)
         }
         return best
     }
@@ -571,6 +580,7 @@ private struct FaceTrackingView: UIViewRepresentable {
     class Coordinator: NSObject, ARSCNViewDelegate, ARSessionDelegate {
         @Binding var status: FaceStatus
         private let blinkThreshold: Float = 0.6 // 0..1 blend shape value
+        private let blinkSuppressionThreshold: Float = 0.45
 
         private var lastAnnouncedDirection: FaceStatus.Direction = .center
         private var lastPlayTime: CFAbsoluteTime = 0
@@ -648,6 +658,7 @@ private struct FaceTrackingView: UIViewRepresentable {
             let rightVal = faceAnchor.blendShapes[.eyeBlinkRight] as? Float ?? 0
             let leftBlink = leftVal > blinkThreshold
             let rightBlink = rightVal > blinkThreshold
+            let blinkSuppressionLevel = min(leftVal, rightVal)
 
             DispatchQueue.main.async {
                 var updatedStatus = self.status
@@ -660,7 +671,11 @@ private struct FaceTrackingView: UIViewRepresentable {
                 updatedStatus.eyeYawDegrees = eyeYawDeg
                 updatedStatus.eyePitchDegrees = eyePitchDeg
 
-                let (direction, activation) = updatedStatus.gazeDirection(for: eyeYawDeg, eyePitch: eyePitchDeg)
+                var (direction, activation) = updatedStatus.gazeDirection(for: eyeYawDeg, eyePitch: eyePitchDeg)
+                if blinkSuppressionLevel > self.blinkSuppressionThreshold {
+                    direction = .center
+                    activation = 0
+                }
                 updatedStatus.direction = direction
                 updatedStatus.gazeActivation = activation
                 self.status = updatedStatus
