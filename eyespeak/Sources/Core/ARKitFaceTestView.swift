@@ -580,8 +580,8 @@ private struct FaceTrackingView: UIViewRepresentable {
     class Coordinator: NSObject, ARSCNViewDelegate, ARSessionDelegate {
         @Binding var status: FaceStatus
         private let blinkThreshold: Float = 0.6 // 0..1 blend shape value
-        private let blinkSuppressionThreshold: Float = 0.45
-        private let blinkSuppressionDecay: Float = 0.1
+        private let blinkSuppressionThreshold: Float = 0.5
+        private let blinkSuppressionDecay: Float = 0.025
 
         private var lastAnnouncedDirection: FaceStatus.Direction = .center
         private var lastPlayTime: CFAbsoluteTime = 0
@@ -642,26 +642,27 @@ private struct FaceTrackingView: UIViewRepresentable {
             let ru = faceAnchor.blendShapes[.eyeLookUpRight] as? Float ?? 0
             let rd = faceAnchor.blendShapes[.eyeLookDownRight] as? Float ?? 0
 
-            // Horizontal: looking right increases right-out + left-in, left increases right-in + left-out
-            let horiz = (ro + li) - (ri + lo) // positive -> right
-            // Vertical: looking down increases left-down + right-down, up increases left-up + right-up
-            let vert = (ld + rd) - (lu + ru) // positive -> down
-
-            // Normalize roughly to [-1, 1]
-            let eyeYawNorm = max(-1, min(1, Double(horiz / 2)))
-            let eyePitchNorm = max(-1, min(1, Double(vert / 2)))
-
-            // Convert to pseudo-degrees for visualization (match GazeArrowView expectations)
-            let eyeYawDeg = eyeYawNorm * 30.0
-            let eyePitchDeg = eyePitchNorm * 30.0
-
             // Blink detection
             let leftVal = faceAnchor.blendShapes[.eyeBlinkLeft] as? Float ?? 0
             let rightVal = faceAnchor.blendShapes[.eyeBlinkRight] as? Float ?? 0
             let leftBlink = leftVal > blinkThreshold
             let rightBlink = rightVal > blinkThreshold
-            let blinkSuppressionLevel = min(leftVal, rightVal)
+            let blinkSuppressionLevel = max(leftVal, rightVal)
             dampedBlinkLevel = max(blinkSuppressionLevel, max(0, dampedBlinkLevel - blinkSuppressionDecay))
+
+            // Horizontal: looking right increases right-out + left-in, left increases right-in + left-out
+            let horiz = (ro + li) - (ri + lo) // positive -> right
+            let eyeYawNorm = max(-1, min(1, Double(horiz / 2)))
+
+            // Vertical: blinking can bias down values; subtract a fraction of blink level before normalizing
+            let vertRaw = (ld + rd) - (lu + ru) // positive -> down
+            let blinkVerticalBias = Double(max(0, blinkSuppressionLevel - 0.2)) * 1.4
+            let adjustedVert = Double(vertRaw) - blinkVerticalBias
+            let eyePitchNorm = max(-1, min(1, adjustedVert / 2))
+
+            // Convert to pseudo-degrees for visualization (match GazeArrowView expectations)
+            let eyeYawDeg = eyeYawNorm * 30.0
+            let eyePitchDeg = eyePitchNorm * 30.0
 
             DispatchQueue.main.async {
                 var updatedStatus = self.status
