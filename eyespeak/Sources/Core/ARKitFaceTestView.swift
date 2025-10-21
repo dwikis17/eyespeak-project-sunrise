@@ -157,9 +157,9 @@ struct FaceStatus {
     }
 
     func gazeDirection(for eyeYaw: Double, eyePitch: Double) -> (Direction, Double) {
-        let defaultThreshold = 10.0
-        let defaultRange = 20.0
-        let minimumActivation = 0.35
+        let defaultThreshold = 12.0
+        let defaultRange = 25.0
+        let minimumActivation = 0.45
 
         guard isGazeCalibrated,
               let neutralEyeYaw,
@@ -191,7 +191,7 @@ struct FaceStatus {
             return (.center, 0)
         }
 
-        let deadzoneFraction = 0.35 // require ~35% of calibrated travel before activating
+        let deadzoneFraction = 0.45 // require ~45% of calibrated travel before activating
 
         func activation(current: Double, neutral: Double, target: Double) -> Double {
             let delta = target - neutral
@@ -581,10 +581,12 @@ private struct FaceTrackingView: UIViewRepresentable {
         @Binding var status: FaceStatus
         private let blinkThreshold: Float = 0.6 // 0..1 blend shape value
         private let blinkSuppressionThreshold: Float = 0.45
+        private let blinkSuppressionDecay: Float = 0.1
 
         private var lastAnnouncedDirection: FaceStatus.Direction = .center
         private var lastPlayTime: CFAbsoluteTime = 0
         private let soundCooldown: CFTimeInterval = 0.6
+        private var dampedBlinkLevel: Float = 0
 
         init(status: Binding<FaceStatus>) {
             self._status = status
@@ -659,6 +661,7 @@ private struct FaceTrackingView: UIViewRepresentable {
             let leftBlink = leftVal > blinkThreshold
             let rightBlink = rightVal > blinkThreshold
             let blinkSuppressionLevel = min(leftVal, rightVal)
+            dampedBlinkLevel = max(blinkSuppressionLevel, max(0, dampedBlinkLevel - blinkSuppressionDecay))
 
             DispatchQueue.main.async {
                 var updatedStatus = self.status
@@ -672,7 +675,7 @@ private struct FaceTrackingView: UIViewRepresentable {
                 updatedStatus.eyePitchDegrees = eyePitchDeg
 
                 var (direction, activation) = updatedStatus.gazeDirection(for: eyeYawDeg, eyePitch: eyePitchDeg)
-                if blinkSuppressionLevel > self.blinkSuppressionThreshold {
+                if self.dampedBlinkLevel > self.blinkSuppressionThreshold {
                     direction = .center
                     activation = 0
                 }
