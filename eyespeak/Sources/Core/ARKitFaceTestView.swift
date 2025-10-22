@@ -3,13 +3,53 @@ import ARKit
 import SceneKit
 import AudioToolbox
 
+enum ComboInputAction: String, Identifiable {
+    case winkLeft = "Wink Left"
+    case winkRight = "Wink Right"
+    case lookLeft = "Look Left"
+    case lookRight = "Look Right"
+    case lookUp = "Look Up"
+    case lookDown = "Look Down"
+
+    var id: String { rawValue }
+
+    var iconName: String {
+        switch self {
+        case .winkLeft, .winkRight:
+            return "eye.slash"
+        case .lookLeft:
+            return "arrow.left"
+        case .lookRight:
+            return "arrow.right"
+        case .lookUp:
+            return "arrow.up"
+        case .lookDown:
+            return "arrow.down"
+        }
+    }
+
+    static func from(direction: FaceStatus.Direction) -> ComboInputAction? {
+        switch direction {
+        case .left: return .lookLeft
+        case .right: return .lookRight
+        case .up: return .lookUp
+        case .down: return .lookDown
+        case .center: return nil
+        }
+    }
+}
+
 struct ARKitFaceTestView: View {
     @State private var status = FaceStatus()
     @State private var isCalibrating = false
+    @State private var currentCombo: [ComboInputAction] = []
+    @State private var lastCombo: [ComboInputAction]? = nil
+    @State private var comboResetWorkItem: DispatchWorkItem? = nil
+    private let comboTimeout: TimeInterval = 2.0
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            FaceTrackingView(status: $status)
+            FaceTrackingView(status: $status, onComboAction: handleComboAction)
                 .ignoresSafeArea()
 
             VStack(spacing: 10) {
@@ -76,6 +116,11 @@ struct ARKitFaceTestView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
 
+                ComboTrackerView(currentCombo: currentCombo, lastCombo: lastCombo)
+                    .padding(6)
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+
                 Text("Tip: Hold the phone in front of your face. During calibration, look straight ahead and then just past each edge of the screen to lock in your gaze thresholds.")
                     .font(.footnote)
                     .multilineTextAlignment(.center)
@@ -92,6 +137,37 @@ struct ARKitFaceTestView: View {
         .onAppear {
             // no-op
         }
+    }
+
+    private func handleComboAction(_ action: ComboInputAction) {
+        comboResetWorkItem?.cancel()
+
+        if currentCombo.isEmpty {
+            currentCombo = [action]
+            scheduleComboReset()
+            return
+        }
+
+        if currentCombo.count == 1 {
+            currentCombo.append(action)
+            lastCombo = currentCombo
+            currentCombo = []
+            comboResetWorkItem = nil
+            return
+        }
+
+        // Fallback: start a new combo
+        currentCombo = [action]
+        scheduleComboReset()
+    }
+
+    private func scheduleComboReset() {
+        let workItem = DispatchWorkItem {
+            currentCombo = []
+            comboResetWorkItem = nil
+        }
+        comboResetWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + comboTimeout, execute: workItem)
     }
 }
 
@@ -300,6 +376,70 @@ private struct GazeArrowView: View {
             let dotRect = CGRect(x: end.x - 4, y: end.y - 4, width: 8, height: 8)
             context.fill(Path(ellipseIn: dotRect), with: .color(.blue))
         }
+    }
+}
+
+private struct ComboTrackerView: View {
+    let currentCombo: [ComboInputAction]
+    let lastCombo: [ComboInputAction]?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Combo Input")
+                    .font(.headline)
+                Spacer()
+                if !currentCombo.isEmpty {
+                    Text("\(currentCombo.count)/2")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            if currentCombo.isEmpty {
+                Text("Waiting for actions…")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                ComboActionRow(actions: currentCombo)
+            }
+
+            if let lastCombo, !lastCombo.isEmpty {
+                Divider()
+                    .opacity(0.3)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Last Combo")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    ComboActionRow(actions: lastCombo)
+                }
+            }
+        }
+    }
+}
+
+private struct ComboActionRow: View {
+    let actions: [ComboInputAction]
+
+    var body: some View {
+        HStack(spacing: 6) {
+            ForEach(Array(actions.enumerated()), id: \.offset) { _, action in
+                ComboActionPill(action: action)
+            }
+        }
+    }
+}
+
+private struct ComboActionPill: View {
+    let action: ComboInputAction
+
+    var body: some View {
+        Label(action.rawValue, systemImage: action.iconName)
+            .font(.caption2)
+            .padding(.vertical, 4)
+            .padding(.horizontal, 8)
+            .background(.thinMaterial)
+            .clipShape(Capsule())
     }
 }
 
@@ -558,8 +698,13 @@ private struct CalibrationSheet: View {
 // MARK: - UIViewRepresentable wrapper
 private struct FaceTrackingView: UIViewRepresentable {
     @Binding var status: FaceStatus
+    var onComboAction: ((ComboInputAction) -> Void)?
 
-    func makeCoordinator() -> Coordinator { Coordinator(status: $status) }
+    func makeCoordinator() -> Coordinator {
+        let coordinator = Coordinator(status: $status)
+        coordinator.onComboAction = onComboAction
+        return coordinator
+    }
 
     func makeUIView(context: Context) -> ARSCNView {
         let view = ARSCNView(frame: .zero)
@@ -575,6 +720,7 @@ private struct FaceTrackingView: UIViewRepresentable {
         let config = ARFaceTrackingConfiguration()
         config.isLightEstimationEnabled = true
         uiView.session.run(config, options: [.resetTracking, .removeExistingAnchors])
+        context.coordinator.onComboAction = onComboAction
     }
 
     class Coordinator: NSObject, ARSCNViewDelegate, ARSessionDelegate {
@@ -587,6 +733,10 @@ private struct FaceTrackingView: UIViewRepresentable {
         private var lastPlayTime: CFAbsoluteTime = 0
         private let soundCooldown: CFTimeInterval = 0.6
         private var dampedBlinkLevel: Float = 0
+        var onComboAction: ((ComboInputAction) -> Void)?
+        private var lastLeftBlinkState = false
+        private var lastRightBlinkState = false
+        private var directionLatch: FaceStatus.Direction = .center
 
         init(status: Binding<FaceStatus>) {
             self._status = status
@@ -685,6 +835,28 @@ private struct FaceTrackingView: UIViewRepresentable {
                 self.status = updatedStatus
 
                 self.handleDirectionChange(direction: direction, activation: activation)
+
+                let bothBlinking = leftBlink && rightBlink
+                if !bothBlinking {
+                    if leftBlink && !self.lastLeftBlinkState {
+                        self.onComboAction?(.winkRight)
+                    }
+                    if rightBlink && !self.lastRightBlinkState {
+                        self.onComboAction?(.winkLeft)
+                    }
+                }
+
+                if let directionAction = ComboInputAction.from(direction: direction),
+                   activation >= 0.75,
+                   self.directionLatch != direction {
+                    self.onComboAction?(directionAction)
+                    self.directionLatch = direction
+                } else if direction == .center || activation < 0.25 {
+                    self.directionLatch = .center
+                }
+
+                self.lastLeftBlinkState = leftBlink
+                self.lastRightBlinkState = rightBlink
             }
         }
 
