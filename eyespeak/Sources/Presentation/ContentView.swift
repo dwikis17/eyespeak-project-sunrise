@@ -1,35 +1,64 @@
 import SwiftUI
+import SwiftData
 
 public struct ContentView: View {
     @Environment(AppStateManager.self) private var appState
+    @Environment(\.modelContext) private var modelContext
+
     
     public var body: some View {
         @Bindable var bindableAppState = appState
         
-        TabView(selection: $bindableAppState.currentTab) {
-            // Keyboard Tab
-            KeyboardView()
-                .tabItem {
-                    Image(systemName: "keyboard")
-                    Text("Keyboard")
+        Group {
+            if bindableAppState.showOnboarding {
+                OnboardingView()
+                    .onAppear {
+                        bindableAppState.checkOnboardingStatus(modelContext: modelContext)
+                    }
+            } else {
+                TabView(selection: $bindableAppState.currentTab) {
+                    // Keyboard Tab
+                    Text("Keyboard View")
+                        .tabItem {
+                            Image(systemName: "keyboard")
+                            Text("Keyboard")
+                        }
+                        .tag(Tab.keyboard)
+                    
+                    // AAC Tab
+                    AACView()
+                        .tabItem {
+                            Image(systemName: "bubble.left.and.bubble.right")
+                            Text("AAC")
+                        }
+                        .tag(Tab.aac)
+                    
+                    EyeTrackingDemoView()
+                        .tabItem {
+                            Image(systemName: "eye.circle")
+                            Text("AAC With Accessibility")
+                        }
+                        .tag(Tab.eyeTrackingAccessible)
+                    
+                    EyeTrackViewDemo()
+                        .tabItem {
+                            Image(systemName: "eye")
+                            Text("Simple Eye Tracking")
+                        }
+                        .tag(Tab.eyeTrackingSimple)
+                    
+                    // Settings Tab
+                    SettingsView()
+                        .tabItem {
+                            Image(systemName: "gearshape")
+                       
+                        }
+                        .tag(Tab.settings)
                 }
-                .tag(Tab.keyboard)
-            
-            // AAC Tab
-            AACView()
-                .tabItem {
-                    Image(systemName: "bubble.left.and.bubble.right")
-                    Text("AAC")
+                .onAppear {
+                    bindableAppState.checkOnboardingStatus(modelContext: modelContext)
                 }
-                .tag(Tab.aac)
-            
-            // Settings Tab
-            SettingsView()
-                .tabItem {
-                    Image(systemName: "gearshape")
-                    Text("Settings")
-                }
-                .tag(Tab.settings)
+            }
         }
     }
 }
@@ -39,5 +68,6 @@ struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
             .environment(AppStateManager())
+            .modelContainer(ModelContainer.preview)
     }
 }
