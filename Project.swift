@@ -17,7 +17,8 @@ let project = Project(
                     "UISupportedInterfaceOrientations~ipad" : [
                         "UIInterfaceOrientationLandscapeLeft",
                         "UIInterfaceOrientationLandscapeRight",
-                    ]
+                    ],
+                    "NSCameraUsageDescription": "This app uses the camera for eye tracking and face detection to provide accessibility features for communication."
                 ]
             ),
             sources: ["eyespeak/Sources/**"],

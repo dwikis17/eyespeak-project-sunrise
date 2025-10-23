@@ -8,7 +8,7 @@ public struct ContentView: View {
         
         TabView(selection: $bindableAppState.currentTab) {
             // Keyboard Tab
-            Text("Keyboard View")
+            KeyboardView()
                 .tabItem {
                     Image(systemName: "keyboard")
                     Text("Keyboard")
@@ -16,7 +16,7 @@ public struct ContentView: View {
                 .tag(Tab.keyboard)
             
             // AAC Tab
-            Text("AAC View")
+            AACView()
                 .tabItem {
                     Image(systemName: "bubble.left.and.bubble.right")
                     Text("AAC")
@@ -24,7 +24,7 @@ public struct ContentView: View {
                 .tag(Tab.aac)
             
             // Settings Tab
-            Text("Settings View")
+            SettingsView()
                 .tabItem {
                     Image(systemName: "gearshape")
                     Text("Settings")
