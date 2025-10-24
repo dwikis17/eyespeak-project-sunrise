@@ -54,6 +54,11 @@ public struct ContentView: View {
                        
                         }
                         .tag(Tab.settings)
+                    
+                    ARKitFaceTestView()
+                        .tabItem {
+                            Image(systemName:"camera.fill")
+                        }
                 }
                 .onAppear {
                     bindableAppState.checkOnboardingStatus(modelContext: modelContext)
