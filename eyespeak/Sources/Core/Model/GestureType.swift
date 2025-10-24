@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum GestureType: String, Codable, CaseIterable {
+public enum GestureType: String, Codable, CaseIterable {
     case lookLeft = "Look Left"
     case lookRight = "Look Right"
     case lookUp = "Look Up"
@@ -16,7 +16,7 @@ enum GestureType: String, Codable, CaseIterable {
     case winkRight = "Wink Right"
     case blink = "Blink"
     
-    var iconName: String {
+    public var iconName: String {
         switch self {
         case .lookLeft: return "arrow.left"
         case .lookRight: return "arrow.right"

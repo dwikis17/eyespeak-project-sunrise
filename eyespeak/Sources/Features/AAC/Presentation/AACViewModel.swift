@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Observation
 import SwiftData
 import SwiftUI
 
@@ -20,6 +21,9 @@ public final class AACViewModel: ObservableObject {
     public var showingSettings = false
     public var isGestureMode = false
     public var selectedPosition: GridPosition?
+    public var faceStatus = FaceStatus()
+    public var isCalibrating = false
+    public var lastDetectedGesture: GestureType?
     
     // MARK: - Manager Access
     public var dataManagerInstance: DataManager { dataManager }
@@ -75,7 +79,11 @@ public final class AACViewModel: ObservableObject {
             if isGestureMode {
                 gestureInputManager.loadCombos(from: positions)
             } else {
+                isCalibrating = false
                 gestureInputManager.reset()
+                faceStatus.direction = .center
+                faceStatus.gazeActivation = 0
+                lastDetectedGesture = nil
             }
         }
     }
@@ -83,8 +91,31 @@ public final class AACViewModel: ObservableObject {
     public func resetGestureMode() {
         withAnimation {
             isGestureMode = false
+            isCalibrating = false
             gestureInputManager.reset()
+            faceStatus.direction = .center
+            faceStatus.gazeActivation = 0
+            lastDetectedGesture = nil
         }
+    }
+    
+    // MARK: - Face Tracking Methods
+    
+    public func handleDetectedGesture(_ gesture: GestureType) {
+        guard isGestureMode, !isCalibrating else { return }
+        
+        lastDetectedGesture = gesture
+        
+        gestureInputManager.registerGesture(gesture)
+    }
+    
+    public func beginCalibration() {
+        guard isGestureMode else { return }
+        isCalibrating = true
+    }
+    
+    public func endCalibration() {
+        isCalibrating = false
     }
     
     // MARK: - Settings Methods
@@ -158,10 +189,16 @@ public final class AACViewModel: ObservableObject {
     
     public func assignCardToPosition(_ card: AACard, position: GridPosition) {
         try? dataManager.assignCardToPosition(card, position: position)
+        if isGestureMode {
+            gestureInputManager.loadCombos(from: positions)
+        }
     }
     
     public func assignComboToPosition(_ combo: ActionCombo, position: GridPosition) {
         try? dataManager.assignComboToPosition(combo, position: position)
+        if isGestureMode {
+            gestureInputManager.loadCombos(from: positions)
+        }
     }
     
     public func fetchPosition(at index: Int) -> GridPosition? {
@@ -170,6 +207,9 @@ public final class AACViewModel: ObservableObject {
     
     public func resizeGrid(newTotal: Int) {
         try? dataManager.resizeGrid(newTotal: newTotal)
+        if isGestureMode {
+            gestureInputManager.loadCombos(from: positions)
+        }
     }
     
     // MARK: - Card Interaction Methods

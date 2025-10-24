@@ -25,17 +25,8 @@ struct CardGridView: View {
     
     private var mainContent: some View {
         VStack(spacing: 0) {
-            gestureInputSection
             gridSection
             bottomToolbar
-        }
-    }
-    
-    @ViewBuilder
-    private var gestureInputSection: some View {
-        if viewModel.isGestureMode {
-            GestureInputPanel(gestureManager: viewModel.gestureInputManagerInstance)
-                .transition(.move(edge: .top).combined(with: .opacity))
         }
     }
     

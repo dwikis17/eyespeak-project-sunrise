@@ -13,7 +13,11 @@ struct InformationView: View {
     var body: some View {
         VStack(spacing: 16) {
             currentInputSection
-            gestureSequenceSection
+            if viewModel.isGestureMode {
+                AACFaceTrackingPanel()
+            } else {
+                gestureModePlaceholder
+            }
         }
     }
     
@@ -35,7 +39,7 @@ struct InformationView: View {
         }
     }
     
-    private var gestureSequenceSection: some View {
+    private var gestureModePlaceholder: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 20)
                 .fill(Color(.systemBackground))
@@ -43,56 +47,21 @@ struct InformationView: View {
                 .frame(height: 200)
             
             VStack(spacing: 16) {
-                // Current gesture sequence
-                if viewModel.isGestureMode {
-                    VStack(spacing: 8) {
-                        Text("Gesture Sequence")
-                            .font(.headline)
-                            .foregroundColor(.primary)
-                        
-                        if viewModel.gestureInputManager.gestureSequence.isEmpty {
-                            Text("No gestures detected")
-                                .foregroundColor(.secondary)
-                                .font(.subheadline)
-                        } else {
-                            HStack(spacing: 8) {
-                                ForEach(Array(viewModel.gestureInputManager.gestureSequence.enumerated()), id: \.offset) { index, gesture in
-                                    HStack(spacing: 4) {
-                                        if index > 0 {
-                                            Image(systemName: "arrow.right")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                        }
-                                        
-                                        HStack(spacing: 4) {
-                                            Image(systemName: gesture.iconName)
-                                            Text(gesture.rawValue)
-                                        }
-                                        .font(.subheadline)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .background(Color.blue.opacity(0.2))
-                                        .foregroundColor(.blue)
-                                        .clipShape(Capsule())
-                                    }
-                                }
-                            }
-                        }
+                Text("Gesture Mode")
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                
+                VStack(spacing: 8) {
+                    Text("Turn on gesture mode to control the grid with your eyes.")
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(.secondary)
+                    HStack(spacing: 40) {
+                        Image(systemName: "arrow.left")
+                        Image(systemName: "eye")
+                        Image(systemName: "arrow.right")
                     }
-                } else {
-                    // Default display when not in gesture mode
-                    VStack(spacing: 16) {
-                        Text("Gesture Mode")
-                            .font(.headline)
-                            .foregroundColor(.primary)
-                        
-                        HStack(spacing: 40) {
-                            Image(systemName: "arrow.up")
-                            Image(systemName: "arrow.up")
-                        }
-                        .font(.system(size: 60, weight: .bold))
-                        .foregroundStyle(.blue.opacity(0.3))
-                    }
+                    .font(.system(size: 48, weight: .semibold))
+                    .foregroundStyle(.blue.opacity(0.3))
                 }
             }
             .padding()
