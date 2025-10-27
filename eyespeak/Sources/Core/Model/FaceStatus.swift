@@ -29,10 +29,14 @@ public struct FaceStatus {
     // Gaze calibration reference points
     public var neutralEyeYaw: Double? = nil
     public var neutralEyePitch: Double? = nil
-    public var leftEyeYaw: Double? = nil
-    public var rightEyeYaw: Double? = nil
-    public var upEyePitch: Double? = nil
-    public var downEyePitch: Double? = nil
+    public var leftEyeYawEdge: Double? = nil
+    public var leftEyeYawOuter: Double? = nil
+    public var rightEyeYawEdge: Double? = nil
+    public var rightEyeYawOuter: Double? = nil
+    public var upEyePitchEdge: Double? = nil
+    public var upEyePitchOuter: Double? = nil
+    public var downEyePitchEdge: Double? = nil
+    public var downEyePitchOuter: Double? = nil
 
     // Gaze strength for UI/debugging
     public var gazeActivation: Double = 0
@@ -56,19 +60,27 @@ public struct FaceStatus {
         neutralRightBlink != nil &&
         neutralEyeYaw != nil &&
         neutralEyePitch != nil &&
-        leftEyeYaw != nil &&
-        rightEyeYaw != nil &&
-        upEyePitch != nil &&
-        downEyePitch != nil
+        leftEyeYawEdge != nil &&
+        leftEyeYawOuter != nil &&
+        rightEyeYawEdge != nil &&
+        rightEyeYawOuter != nil &&
+        upEyePitchEdge != nil &&
+        upEyePitchOuter != nil &&
+        downEyePitchEdge != nil &&
+        downEyePitchOuter != nil
     }
 
     public var isGazeCalibrated: Bool {
         neutralEyeYaw != nil &&
         neutralEyePitch != nil &&
-        leftEyeYaw != nil &&
-        rightEyeYaw != nil &&
-        upEyePitch != nil &&
-        downEyePitch != nil
+        leftEyeYawEdge != nil &&
+        leftEyeYawOuter != nil &&
+        rightEyeYawEdge != nil &&
+        rightEyeYawOuter != nil &&
+        upEyePitchEdge != nil &&
+        upEyePitchOuter != nil &&
+        downEyePitchEdge != nil &&
+        downEyePitchOuter != nil
     }
 
     public func gazeDirection(for eyeYaw: Double, eyePitch: Double) -> (Direction, Double) {
@@ -76,74 +88,97 @@ public struct FaceStatus {
         let defaultRange = 25.0
         let minimumActivation = 0.45
 
-        guard isGazeCalibrated,
-              let neutralEyeYaw,
-              let neutralEyePitch,
-              let leftEyeYaw,
-              let rightEyeYaw,
-              let upEyePitch,
-              let downEyePitch else {
-            let horizontalStrength = abs(eyeYaw) > defaultThreshold ? min(1, (abs(eyeYaw) - defaultThreshold) / defaultRange) : 0
-            let verticalStrength = abs(eyePitch) > defaultThreshold ? min(1, (abs(eyePitch) - defaultThreshold) / defaultRange) : 0
-            let dominantStrength = max(horizontalStrength, verticalStrength)
-
-            guard dominantStrength >= minimumActivation else {
-                return (.center, 0)
-            }
-
-            if horizontalStrength >= verticalStrength && eyeYaw <= -defaultThreshold {
-                return (.left, horizontalStrength)
-            }
-            if horizontalStrength >= verticalStrength && eyeYaw >= defaultThreshold {
-                return (.right, horizontalStrength)
-            }
-            if verticalStrength > horizontalStrength && eyePitch <= -defaultThreshold {
-                return (.up, verticalStrength)
-            }
-            if verticalStrength > horizontalStrength && eyePitch >= defaultThreshold {
-                return (.down, verticalStrength)
-            }
-            return (.center, 0)
+        guard let neutralEyeYaw,
+              let neutralEyePitch else {
+            return fallbackDirection(eyeYaw: eyeYaw, eyePitch: eyePitch, minimumActivation: minimumActivation, defaultThreshold: defaultThreshold, defaultRange: defaultRange)
         }
 
-        let deadzoneFraction = 0.45 // require ~45% of calibrated travel before activating
+        let horizontalDelta = eyeYaw - neutralEyeYaw
+        let verticalDelta = eyePitch - neutralEyePitch
 
-        func activation(current: Double, neutral: Double, target: Double) -> Double {
-            let delta = target - neutral
-            if abs(delta) < 0.001 { return 0 }
-            let threshold = neutral + delta * deadzoneFraction
-            let span = delta * (1 - deadzoneFraction)
-            if span == 0 { return 0 }
+        let leftStrength = activationWithEdge(current: eyeYaw, neutral: neutralEyeYaw, edge: leftEyeYawEdge, outer: leftEyeYawOuter)
+            ?? fallbackDirectionalActivation(delta: horizontalDelta, threshold: defaultThreshold, range: defaultRange, positiveDirection: false)
 
-            if delta > 0 {
-                let beyond = current - threshold
-                guard beyond > 0 else { return 0 }
-                return max(0, min(1, beyond / span))
-            } else {
-                let beyond = threshold - current
-                guard beyond > 0 else { return 0 }
-                return max(0, min(1, beyond / -span))
-            }
-        }
+        let rightStrength = activationWithEdge(current: eyeYaw, neutral: neutralEyeYaw, edge: rightEyeYawEdge, outer: rightEyeYawOuter)
+            ?? fallbackDirectionalActivation(delta: horizontalDelta, threshold: defaultThreshold, range: defaultRange, positiveDirection: true)
 
-        let leftStrength = activation(current: eyeYaw, neutral: neutralEyeYaw, target: leftEyeYaw)
-        let rightStrength = activation(current: eyeYaw, neutral: neutralEyeYaw, target: rightEyeYaw)
-        let upStrength = activation(current: eyePitch, neutral: neutralEyePitch, target: upEyePitch)
-        let downStrength = activation(current: eyePitch, neutral: neutralEyePitch, target: downEyePitch)
+        let upStrength = activationWithEdge(current: eyePitch, neutral: neutralEyePitch, edge: upEyePitchEdge, outer: upEyePitchOuter)
+            ?? fallbackDirectionalActivation(delta: verticalDelta, threshold: defaultThreshold, range: defaultRange, positiveDirection: false)
 
-        var best: (Direction, Double) = (.center, 0)
+        let downStrength = activationWithEdge(current: eyePitch, neutral: neutralEyePitch, edge: downEyePitchEdge, outer: downEyePitchOuter)
+            ?? fallbackDirectionalActivation(delta: verticalDelta, threshold: defaultThreshold, range: defaultRange, positiveDirection: true)
+
         let candidates: [(Direction, Double)] = [
             (.left, leftStrength),
             (.right, rightStrength),
             (.up, upStrength),
             (.down, downStrength)
         ]
-        for candidate in candidates where candidate.1 > best.1 {
-            best = candidate
-        }
+
+        let best = candidates.max { $0.1 < $1.1 } ?? (.center, 0)
         if best.1 < minimumActivation {
             return (.center, 0)
         }
         return best
+    }
+
+    private func activationWithEdge(current: Double, neutral: Double, edge: Double?, outer: Double?) -> Double? {
+        guard let edge, let outer else { return nil }
+        if outer == edge { return nil }
+
+        if outer < neutral {
+            // Direction is towards decreasing values (left/up). Edge is closer to neutral.
+            if current >= edge { return 0 }
+            let span = edge - outer
+            if span == 0 { return nil }
+            let progress = (edge - current) / span
+            return max(0, min(1, progress))
+        } else {
+            // Direction towards increasing values (right/down)
+            if current <= edge { return 0 }
+            let span = outer - edge
+            if span == 0 { return nil }
+            let progress = (current - edge) / span
+            return max(0, min(1, progress))
+        }
+    }
+
+    private func fallbackDirection(eyeYaw: Double, eyePitch: Double, minimumActivation: Double, defaultThreshold: Double, defaultRange: Double) -> (Direction, Double) {
+        let horizontalStrength = abs(eyeYaw) > defaultThreshold ? min(1, (abs(eyeYaw) - defaultThreshold) / defaultRange) : 0
+        let verticalStrength = abs(eyePitch) > defaultThreshold ? min(1, (abs(eyePitch) - defaultThreshold) / defaultRange) : 0
+        let dominantStrength = max(horizontalStrength, verticalStrength)
+
+        guard dominantStrength >= minimumActivation else {
+            return (.center, 0)
+        }
+
+        if horizontalStrength >= verticalStrength && eyeYaw <= -defaultThreshold {
+            return (.left, horizontalStrength)
+        }
+        if horizontalStrength >= verticalStrength && eyeYaw >= defaultThreshold {
+            return (.right, horizontalStrength)
+        }
+        if verticalStrength > horizontalStrength && eyePitch <= -defaultThreshold {
+            return (.up, verticalStrength)
+        }
+        if verticalStrength > horizontalStrength && eyePitch >= defaultThreshold {
+            return (.down, verticalStrength)
+        }
+        return (.center, 0)
+    }
+
+    private func fallbackDirectionalActivation(
+        delta: Double,
+        threshold: Double,
+        range: Double,
+        positiveDirection: Bool
+    ) -> Double {
+        if positiveDirection {
+            guard delta >= threshold else { return 0 }
+            return min(1, (delta - threshold) / range)
+        } else {
+            guard delta <= -threshold else { return 0 }
+            return min(1, (-delta - threshold) / range)
+        }
     }
 }
