@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum GestureType: String, Codable, CaseIterable {
+public enum GestureType: String, Codable, CaseIterable {
     case lookLeft = "Look Left"
     case lookRight = "Look Right"
     case lookUp = "Look Up"

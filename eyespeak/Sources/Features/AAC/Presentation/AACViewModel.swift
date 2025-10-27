@@ -86,6 +86,11 @@ public final class AACViewModel: ObservableObject {
             gestureInputManager.reset()
         }
     }
+
+    // MARK: - ARKit Gesture Input
+    public func registerDetectedGesture(_ gesture: GestureType) {
+        gestureInputManager.registerGesture(gesture)
+    }
     
     // MARK: - Settings Methods
     
