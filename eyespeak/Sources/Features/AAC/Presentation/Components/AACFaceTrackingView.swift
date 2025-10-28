@@ -46,6 +46,9 @@ struct AACFaceTrackingView: UIViewRepresentable {
         private let blinkSuppressionDecay: Float = 0.025
         private let mouthOpenThreshold: Float = 0.35
         private let eyebrowsRaiseThreshold: Float = 0.25
+        private let lipShiftThreshold: Float = 0.14
+        private let lipShiftDifference: Float = 0.045
+        private let smileThreshold: Float = 0.35
 
         private var lastAnnouncedDirection: FaceStatus.Direction = .center
         private var lastPlayTime: CFAbsoluteTime = 0
@@ -56,6 +59,9 @@ struct AACFaceTrackingView: UIViewRepresentable {
         private var lastRightBlinkState = false
         private var lastMouthOpenState = false
         private var lastBrowState = false
+        private var lastLipLeftState = false
+        private var lastLipRightState = false
+        private var lastSmileState = false
         private var directionLatch: FaceStatus.Direction = .center
 
         init(status: Binding<FaceStatus>) {
@@ -106,6 +112,10 @@ struct AACFaceTrackingView: UIViewRepresentable {
             let jaw = faceAnchor.blendShapes[.jawOpen] as? Float ?? 0
             let brow = faceAnchor.blendShapes[.browOuterUpLeft] as? Float ?? 0
             let browRight = faceAnchor.blendShapes[.browOuterUpRight] as? Float ?? 0
+            let mouthLeftShift = max(0, faceAnchor.blendShapes[.mouthLeft] as? Float ?? 0)
+            let mouthRightShift = max(0, faceAnchor.blendShapes[.mouthRight] as? Float ?? 0)
+            let smileLeft = faceAnchor.blendShapes[.mouthSmileLeft] as? Float ?? 0
+            let smileRight = faceAnchor.blendShapes[.mouthSmileRight] as? Float ?? 0
 
             let leftVal = faceAnchor.blendShapes[.eyeBlinkLeft] as? Float ?? 0
             let rightVal = faceAnchor.blendShapes[.eyeBlinkRight] as? Float ?? 0
@@ -115,6 +125,10 @@ struct AACFaceTrackingView: UIViewRepresentable {
             dampedBlinkLevel = max(blinkSuppressionLevel, max(0, dampedBlinkLevel - blinkSuppressionDecay))
             let mouthOpen = jaw > mouthOpenThreshold
             let browsRaised = (brow + browRight) * 0.5 > eyebrowsRaiseThreshold
+            let lipsShiftMagnitude = max(mouthLeftShift, mouthRightShift)
+            let lipsPuckerLeft = lipsShiftMagnitude > lipShiftThreshold && (mouthLeftShift - mouthRightShift) > lipShiftDifference
+            let lipsPuckerRight = lipsShiftMagnitude > lipShiftThreshold && (mouthRightShift - mouthLeftShift) > lipShiftDifference
+            let smiling = (smileLeft + smileRight) * 0.5 > smileThreshold
 
             let horiz = (ro + li) - (ri + lo) // positive -> right
             let eyeYawNorm = max(-1, min(1, Double(horiz / 2)))
@@ -141,6 +155,12 @@ struct AACFaceTrackingView: UIViewRepresentable {
                 updatedStatus.mouthOpen = mouthOpen
                 updatedStatus.browRaiseValue = (brow + browRight) * 0.5
                 updatedStatus.eyebrowsRaised = browsRaised
+                updatedStatus.lipPuckerLeftValue = mouthRightShift
+                updatedStatus.lipPuckerRightValue = mouthLeftShift
+                updatedStatus.lipsPuckeredLeft = lipsPuckerRight
+                updatedStatus.lipsPuckeredRight = lipsPuckerLeft
+                updatedStatus.smileValue = (smileLeft + smileRight) * 0.5
+                updatedStatus.isSmiling = smiling
 
                 var (direction, activation) = updatedStatus.gazeDirection(for: eyeYawDeg, eyePitch: eyePitchDeg)
                 if self.dampedBlinkLevel > self.blinkSuppressionThreshold {
@@ -181,6 +201,20 @@ struct AACFaceTrackingView: UIViewRepresentable {
                     self.onGesture?(.raiseEyebrows)
                 }
                 self.lastBrowState = browsRaised
+
+                if lipsPuckerLeft && !self.lastLipLeftState {
+                    self.onGesture?(.lipPuckerRight)
+                }
+                if lipsPuckerRight && !self.lastLipRightState {
+                    self.onGesture?(.lipPuckerLeft)
+                }
+                if smiling && !self.lastSmileState {
+                    self.onGesture?(.smile)
+                }
+
+                self.lastLipLeftState = lipsPuckerLeft
+                self.lastLipRightState = lipsPuckerRight
+                self.lastSmileState = smiling
             }
         }
 

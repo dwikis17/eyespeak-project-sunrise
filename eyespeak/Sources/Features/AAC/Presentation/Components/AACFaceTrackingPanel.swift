@@ -155,6 +155,40 @@ struct AACFaceTrackingPanel: View {
                     .foregroundStyle(.secondary)
             }
 
+            HStack {
+                Label("Smile", systemImage: "face.smiling")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text(viewModel.faceStatus.isSmiling ? "Smiling" : "Neutral")
+                    .font(.subheadline)
+                Text(String(format: "%.0f%%", viewModel.faceStatus.smileValue * 100))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            HStack {
+                Label("Lip Pucker", systemImage: "lips")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                VStack(alignment: .trailing, spacing: 4) {
+                    HStack {
+                        Text("Left")
+                        Text(viewModel.faceStatus.lipsPuckeredLeft ? "Puckered" : "Neutral")
+                        Text(String(format: "%.0f%%", viewModel.faceStatus.lipPuckerLeftValue * 100))
+                    }
+                    .font(.caption)
+
+                    HStack {
+                        Text("Right")
+                        Text(viewModel.faceStatus.lipsPuckeredRight ? "Puckered" : "Neutral")
+                        Text(String(format: "%.0f%%", viewModel.faceStatus.lipPuckerRightValue * 100))
+                    }
+                    .font(.caption)
+                }
+            }
+
             Divider()
 
             VStack(alignment: .leading, spacing: 6) {

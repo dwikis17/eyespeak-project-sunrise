@@ -179,8 +179,65 @@ struct AACPhoneTestingView: View {
             Text(viewModel.isGestureMode ?
                  "Tap a card to play it manually or use gaze combos to trigger highlights."
                  : "Enable gesture mode to drive the board with your eyes. You can still tap cards to play them.")
-            .font(.footnote)
-            .foregroundStyle(.secondary)
+           .font(.footnote)
+           .foregroundStyle(.secondary)
+
+            HStack {
+                VStack(alignment: .leading, spacing: 6) {
+                    Label("Mouth", systemImage: "face.smiling")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(viewModel.faceStatus.mouthOpen ? "Open" : "Closed")
+                        .font(.subheadline)
+                    Text(String(format: "Jaw %.0f%%", viewModel.faceStatus.jawOpenValue * 100))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                VStack(alignment: .leading, spacing: 6) {
+                    Label("Eyebrows", systemImage: "face.smiling.fill")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(viewModel.faceStatus.eyebrowsRaised ? "Raised" : "Neutral")
+                        .font(.subheadline)
+                    Text(String(format: "Brow %.0f%%", viewModel.faceStatus.browRaiseValue * 100))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            HStack {
+                VStack(alignment: .leading, spacing: 6) {
+                    Label("Smile", systemImage: "face.smiling")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(viewModel.faceStatus.isSmiling ? "Smiling" : "Neutral")
+                        .font(.subheadline)
+                    Text(String(format: "Smile %.0f%%", viewModel.faceStatus.smileValue * 100))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                VStack(alignment: .leading, spacing: 6) {
+                    Label("Lip Pucker", systemImage: "lips")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    HStack {
+                        Text("L:")
+                        Text(viewModel.faceStatus.lipsPuckeredLeft ? "Puckered" : "Neutral")
+                        Text(String(format: "%.0f%%", viewModel.faceStatus.lipPuckerLeftValue * 100))
+                    }
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    HStack {
+                        Text("R:")
+                        Text(viewModel.faceStatus.lipsPuckeredRight ? "Puckered" : "Neutral")
+                        Text(String(format: "%.0f%%", viewModel.faceStatus.lipPuckerRightValue * 100))
+                    }
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                }
+            }
             
             LazyVGrid(
                 columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: phoneColumnCount),

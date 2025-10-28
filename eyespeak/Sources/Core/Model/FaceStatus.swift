@@ -25,6 +25,12 @@ public struct FaceStatus {
     public var mouthOpen: Bool = false
     public var browRaiseValue: Float = 0
     public var eyebrowsRaised: Bool = false
+    public var lipPuckerLeftValue: Float = 0
+    public var lipPuckerRightValue: Float = 0
+    public var lipsPuckeredLeft: Bool = false
+    public var lipsPuckeredRight: Bool = false
+    public var smileValue: Float = 0
+    public var isSmiling: Bool = false
 
     // Eye-gaze derived angles (pseudo-degrees from blend shapes)
     public var eyeYawDegrees: Double = 0 // right positive
