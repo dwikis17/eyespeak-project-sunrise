@@ -131,6 +131,18 @@ struct AACFaceTrackingPanel: View {
                 }
             }
 
+            HStack {
+                Label("Mouth", systemImage: "face.smiling")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text(viewModel.faceStatus.mouthOpen ? "Open" : "Closed")
+                    .font(.subheadline)
+                Text(String(format: "%.0f%%", viewModel.faceStatus.jawOpenValue * 100))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             Divider()
 
             VStack(alignment: .leading, spacing: 6) {
