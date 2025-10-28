@@ -19,6 +19,14 @@ struct CardGridView: View {
                 .onAppear {
                     viewModel.setupManagers()
                 }
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button(action: { viewModel.toggleGestureMode() }) {
+                            Image(systemName: viewModel.isGestureMode ? "eye.fill" : "eye")
+                        }
+                        .accessibilityLabel("Toggle gesture mode")
+                    }
+                }
         }
         .padding()
     }
@@ -31,12 +39,12 @@ struct CardGridView: View {
     }
     
     private var gridSection: some View {
-        ScrollView {
+        ZStack {
             LazyVGrid(
                 columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: viewModel.columns),
                 spacing: 12
             ) {
-                ForEach(viewModel.positions) { position in
+                ForEach(viewModel.currentPagePositions) { position in
                     CardCell(
                         position: position,
                         dataManager: viewModel.dataManagerInstance,
@@ -46,14 +54,37 @@ struct CardGridView: View {
                     )
                 }
             }
-            .padding()
+            
+            // Overlay arrows
+            HStack {
+                Button(action: { viewModel.goToPreviousPage() }) {
+                    Image(systemName: "chevron.left.circle.fill")
+                        .font(.system(size: 28, weight: .semibold))
+                        .foregroundColor(.primary.opacity(viewModel.currentPage == 0 ? 0.2 : 0.9))
+                }
+                .disabled(viewModel.currentPage == 0)
+                .padding(.leading, 4)
+                
+                Spacer()
+                
+                Button(action: { viewModel.goToNextPage() }) {
+                    Image(systemName: "chevron.right.circle.fill")
+                        .font(.system(size: 28, weight: .semibold))
+                        .foregroundColor(.primary.opacity(viewModel.currentPage + 1 >= viewModel.totalPages ? 0.2 : 0.9))
+                }
+                .disabled(viewModel.currentPage + 1 >= viewModel.totalPages)
+                .padding(.trailing, 4)
+            }
+            .padding(.horizontal)
         }
+        .padding()
     }
     
     private var bottomToolbar: some View {
         HStack(spacing: 20) {
             gestureButton
             Spacer()
+            pagerControls
             settingsButton
         }
         .padding()
@@ -83,6 +114,24 @@ struct CardGridView: View {
                 .background(Color.gray.opacity(0.2))
                 .foregroundColor(.primary)
                 .clipShape(Circle())
+        }
+    }
+    
+    private var pagerControls: some View {
+        HStack(spacing: 12) {
+            Button(action: { viewModel.goToPreviousPage() }) {
+                Image(systemName: "chevron.left")
+            }
+            .disabled(viewModel.currentPage == 0)
+            
+            Text("\(viewModel.currentPage + 1)/\(viewModel.totalPages)")
+                .font(.subheadline)
+                .monospacedDigit()
+            
+            Button(action: { viewModel.goToNextPage() }) {
+                Image(systemName: "chevron.right")
+            }
+            .disabled(viewModel.currentPage + 1 >= viewModel.totalPages)
         }
     }
     

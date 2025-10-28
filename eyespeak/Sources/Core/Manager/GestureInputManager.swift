@@ -20,11 +20,11 @@ import Observation
         // Timing window (how long between gestures)
         var timingWindow: TimeInterval = 2.0
         
-        // Matched combo callback
-        var onComboMatched: ((ActionCombo, GridPosition) -> Void)?
+        // Matched combo callback (page-relative by slot index)
+        var onComboMatchedBySlot: ((ActionCombo, Int) -> Void)?
         
-        // Available combos from grid positions
-        private var availableCombos: [ActionCombo: GridPosition] = [:]
+        // Available combos mapped to slot index within a page (0-based)
+        private var availableCombosBySlot: [ActionCombo: Int] = [:]
         
         // MARK: - Public Methods
         
@@ -65,17 +65,20 @@ import Observation
             }
         }
         
-        /// Load available combos from grid positions
-        func loadCombos(from positions: [GridPosition]) {
-            availableCombos.removeAll()
-            
-            for position in positions {
+        /// Load available combos template from the first page's positions.
+        /// Only the first `pageSize` positions are considered the template for mapping combos → slot index.
+        func loadCombosTemplate(from positions: [GridPosition], pageSize: Int) {
+            availableCombosBySlot.removeAll()
+            guard pageSize > 0 else { return }
+            let end = min(pageSize, positions.count)
+            if end == 0 { return }
+            for slotIndex in 0..<end {
+                let position = positions[slotIndex]
                 if let combo = position.actionCombo, combo.isEnabled {
-                    availableCombos[combo] = position
+                    availableCombosBySlot[combo] = slotIndex
                 }
             }
-            
-            print("✅ Loaded \(availableCombos.count) active combos")
+            print("✅ Loaded template with \(availableCombosBySlot.count) active combos for first page (pageSize=\(pageSize))")
         }
         
         /// Reset gesture sequence
@@ -97,11 +100,11 @@ import Observation
             
             print("🔍 Checking for match: \(first.rawValue) → \(second.rawValue)")
             
-            // Find matching combo
-            for (combo, position) in availableCombos {
+            // Find matching combo by template
+            for (combo, slotIndex) in availableCombosBySlot {
                 if combo.firstGesture == first && combo.secondGesture == second {
-                    print("✨ MATCH FOUND! Combo: \(combo.name)")
-                    onComboMatched?(combo, position)
+                    print("✨ MATCH FOUND! Combo: \(combo.name) at slot #\(slotIndex)")
+                    onComboMatchedBySlot?(combo, slotIndex)
                     reset()
                     return
                 }
