@@ -16,6 +16,7 @@ public enum GestureType: String, Codable, CaseIterable {
     case winkRight = "Wink Right"
     case blink = "Blink"
     case mouthOpen = "Mouth Open"
+    case raiseEyebrows = "Raise Eyebrows"
     
     public var iconName: String {
         switch self {
@@ -27,6 +28,7 @@ public enum GestureType: String, Codable, CaseIterable {
         case .winkRight: return "eye.slash.fill"
         case .blink: return "eye"
         case .mouthOpen: return "face.smiling"
+        case .raiseEyebrows: return "face.smiling.fill"
         }
     }
 }

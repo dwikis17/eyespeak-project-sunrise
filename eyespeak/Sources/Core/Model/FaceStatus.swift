@@ -23,6 +23,8 @@ public struct FaceStatus {
     public var rightBlinkValue: Float = 0
     public var jawOpenValue: Float = 0
     public var mouthOpen: Bool = false
+    public var browRaiseValue: Float = 0
+    public var eyebrowsRaised: Bool = false
 
     // Eye-gaze derived angles (pseudo-degrees from blend shapes)
     public var eyeYawDegrees: Double = 0 // right positive

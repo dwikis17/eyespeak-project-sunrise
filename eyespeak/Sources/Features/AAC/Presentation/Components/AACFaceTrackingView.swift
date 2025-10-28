@@ -45,6 +45,7 @@ struct AACFaceTrackingView: UIViewRepresentable {
         private let blinkSuppressionThreshold: Float = 0.5
         private let blinkSuppressionDecay: Float = 0.025
         private let mouthOpenThreshold: Float = 0.35
+        private let eyebrowsRaiseThreshold: Float = 0.25
 
         private var lastAnnouncedDirection: FaceStatus.Direction = .center
         private var lastPlayTime: CFAbsoluteTime = 0
@@ -54,6 +55,7 @@ struct AACFaceTrackingView: UIViewRepresentable {
         private var lastLeftBlinkState = false
         private var lastRightBlinkState = false
         private var lastMouthOpenState = false
+        private var lastBrowState = false
         private var directionLatch: FaceStatus.Direction = .center
 
         init(status: Binding<FaceStatus>) {
@@ -102,6 +104,8 @@ struct AACFaceTrackingView: UIViewRepresentable {
             let ru = faceAnchor.blendShapes[.eyeLookUpRight] as? Float ?? 0
             let rd = faceAnchor.blendShapes[.eyeLookDownRight] as? Float ?? 0
             let jaw = faceAnchor.blendShapes[.jawOpen] as? Float ?? 0
+            let brow = faceAnchor.blendShapes[.browOuterUpLeft] as? Float ?? 0
+            let browRight = faceAnchor.blendShapes[.browOuterUpRight] as? Float ?? 0
 
             let leftVal = faceAnchor.blendShapes[.eyeBlinkLeft] as? Float ?? 0
             let rightVal = faceAnchor.blendShapes[.eyeBlinkRight] as? Float ?? 0
@@ -110,6 +114,7 @@ struct AACFaceTrackingView: UIViewRepresentable {
             let blinkSuppressionLevel = max(leftVal, rightVal)
             dampedBlinkLevel = max(blinkSuppressionLevel, max(0, dampedBlinkLevel - blinkSuppressionDecay))
             let mouthOpen = jaw > mouthOpenThreshold
+            let browsRaised = (brow + browRight) * 0.5 > eyebrowsRaiseThreshold
 
             let horiz = (ro + li) - (ri + lo) // positive -> right
             let eyeYawNorm = max(-1, min(1, Double(horiz / 2)))
@@ -134,6 +139,8 @@ struct AACFaceTrackingView: UIViewRepresentable {
                 updatedStatus.eyePitchDegrees = eyePitchDeg
                 updatedStatus.jawOpenValue = jaw
                 updatedStatus.mouthOpen = mouthOpen
+                updatedStatus.browRaiseValue = (brow + browRight) * 0.5
+                updatedStatus.eyebrowsRaised = browsRaised
 
                 var (direction, activation) = updatedStatus.gazeDirection(for: eyeYawDeg, eyePitch: eyePitchDeg)
                 if self.dampedBlinkLevel > self.blinkSuppressionThreshold {
@@ -169,6 +176,11 @@ struct AACFaceTrackingView: UIViewRepresentable {
                     self.onGesture?(.mouthOpen)
                 }
                 self.lastMouthOpenState = mouthOpen
+
+                if browsRaised && !self.lastBrowState {
+                    self.onGesture?(.raiseEyebrows)
+                }
+                self.lastBrowState = browsRaised
             }
         }
 

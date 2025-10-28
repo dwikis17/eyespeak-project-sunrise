@@ -143,6 +143,18 @@ struct AACFaceTrackingPanel: View {
                     .foregroundStyle(.secondary)
             }
 
+            HStack {
+                Label("Eyebrows", systemImage: "face.smiling.fill")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text(viewModel.faceStatus.eyebrowsRaised ? "Raised" : "Neutral")
+                    .font(.subheadline)
+                Text(String(format: "%.0f%%", viewModel.faceStatus.browRaiseValue * 100))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             Divider()
 
             VStack(alignment: .leading, spacing: 6) {
