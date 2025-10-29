@@ -17,8 +17,9 @@ public final class AACViewModel: ObservableObject {
     public let gestureInputManager: GestureInputManager
     
     // MARK: - UI State Properties
-    public var columns: Int = 3
-    public var rows: Int = 3
+    public var columns: Int = 4
+    public var rows: Int = 4
+    public let settings = UserSettings()
     public var currentPage: Int = 0
     public var showingSettings = false
     public var isGestureMode = false
@@ -82,9 +83,28 @@ public final class AACViewModel: ObservableObject {
     }
     
     public func setupManagers() {
-        // Initialize grid if empty
-        if positions.isEmpty {
-            try? dataManager.initializeGrid(totalPositions: 9) // 3x3 default
+        // Pull saved grid configuration from settings and size grid to exactly the current layout needs
+        rows = settings.gridRows
+        columns = settings.gridColumns
+        let desired = pageSize
+        let current = positions.count
+        if current == 0 {
+            try? dataManager.initializeGrid(totalPositions: desired)
+        } else if current % desired != 0 {
+            // Normalize to a whole number of pages of current page size
+            let pages = max(1, Int(ceil(Double(current) / Double(desired))))
+            try? dataManager.resizeGrid(newTotal: pages * desired)
+        }
+        if isGestureMode {
+            if totalPages > 1 {
+                gestureInputManager.setNavigationCombos(
+                    prev: settings.navPrevCombo,
+                    next: settings.navNextCombo
+                )
+            } else {
+                gestureInputManager.setNavigationCombos(prev: nil, next: nil)
+            }
+            gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
         }
     }
     
@@ -94,6 +114,15 @@ public final class AACViewModel: ObservableObject {
         withAnimation {
             isGestureMode.toggle()
             if isGestureMode {
+                // Configure navigation priority if there is more than one page
+                if totalPages > 1 {
+                    gestureInputManager.setNavigationCombos(
+                        prev: settings.navPrevCombo,
+                        next: settings.navNextCombo
+                    )
+                } else {
+                    gestureInputManager.setNavigationCombos(prev: nil, next: nil)
+                }
                 gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
             } else {
                 isCalibrating = false
@@ -143,6 +172,16 @@ public final class AACViewModel: ObservableObject {
     
     public func hideSettings() {
         showingSettings = false
+    }
+    
+    public func showComboInfo() {
+        // This will be handled by showing an alert or sheet
+        // For now, we'll use a simple print statement
+        print("Combo Info: Some buttons don't have combos because:")
+        print("1. Limited gestures selected during onboarding")
+        print("2. Navigation combos reserved for page switching")
+        print("3. Unique combos per page to avoid duplicates")
+        print("4. Grid size may be larger than available unique combos")
     }
     
     // MARK: - Grid Methods
@@ -222,9 +261,24 @@ public final class AACViewModel: ObservableObject {
     }
     
     private func handleComboMatched(combo: ActionCombo, slotIndex: Int) {
+        // Special negative indices reserved for navigation from the matcher
+        if slotIndex == -1 { goToNextPage(); return }
+        if slotIndex == -2 { goToPreviousPage(); return }
+
         let index = currentPage * pageSize + slotIndex
         guard index >= 0, index < positions.count else {
             print("⚠️ Slot index out of bounds for current page: \(slotIndex)")
+            return
+        }
+        // Navigation combos (dynamic based on onboarding selection)
+        if let (ng1, ng2) = settings.navNextCombo,
+           combo.firstGesture == ng1, combo.secondGesture == ng2 {
+            goToNextPage()
+            return
+        }
+        if let (pg1, pg2) = settings.navPrevCombo,
+           combo.firstGesture == pg1, combo.secondGesture == pg2 {
+            goToPreviousPage()
             return
         }
         let position = positions[index]
@@ -255,6 +309,17 @@ public final class AACViewModel: ObservableObject {
     }
     
     public func assignComboToPosition(_ combo: ActionCombo, position: GridPosition) {
+        // Prevent assigning navigation-priority combos to positions when paging is available
+        if totalPages > 1 {
+            if let n = settings.navNextCombo, combo.firstGesture == n.0 && combo.secondGesture == n.1 {
+                print("⛔️ Not assigning navigation NEXT combo to a grid position")
+                return
+            }
+            if let p = settings.navPrevCombo, combo.firstGesture == p.0 && combo.secondGesture == p.1 {
+                print("⛔️ Not assigning navigation PREV combo to a grid position")
+                return
+            }
+        }
         try? dataManager.assignComboToPosition(combo, position: position)
         if isGestureMode {
             gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
@@ -269,6 +334,14 @@ public final class AACViewModel: ObservableObject {
         try? dataManager.resizeGrid(newTotal: newTotal)
         currentPage = min(currentPage, max(0, totalPages - 1))
         if isGestureMode {
+            if totalPages > 1 {
+                gestureInputManager.setNavigationCombos(
+                    prev: settings.navPrevCombo,
+                    next: settings.navNextCombo
+                )
+            } else {
+                gestureInputManager.setNavigationCombos(prev: nil, next: nil)
+            }
             gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
         }
     }

@@ -173,15 +173,7 @@ struct AACFaceTrackingView: UIViewRepresentable {
 
                 self.handleDirectionChange(direction: direction, activation: activation)
 
-                let bothBlinking = leftBlink && rightBlink
-                if !bothBlinking {
-                    if leftBlink && !self.lastLeftBlinkState {
-                        self.onGesture?(.winkRight)
-                    }
-                    if rightBlink && !self.lastRightBlinkState {
-                        self.onGesture?(.winkLeft)
-                    }
-                }
+                // Disable blink and wink derived gestures
 
                 if let gesture = Self.gesture(for: direction, activation: activation, latch: self.directionLatch) {
                     self.onGesture?(gesture)
@@ -190,28 +182,24 @@ struct AACFaceTrackingView: UIViewRepresentable {
                     self.directionLatch = .center
                 }
 
+                // Emit rising-edge events before updating flags
+                if mouthOpen && !self.lastMouthOpenState { self.onGesture?(.mouthOpen) }
+                if browsRaised && !self.lastBrowState { self.onGesture?(.raiseEyebrows) }
+                
+                // Front-facing camera is mirrored: swap wink mapping so
+                // user's left-eye wink triggers .winkLeft semantically.
+                if leftBlink && !self.lastLeftBlinkState { self.onGesture?(.winkRight) }
+                if rightBlink && !self.lastRightBlinkState { self.onGesture?(.winkLeft) }
+                
+                if lipsPuckerLeft && !self.lastLipLeftState { self.onGesture?(.lipPuckerRight) }
+                if lipsPuckerRight && !self.lastLipRightState { self.onGesture?(.lipPuckerLeft) }
+                if smiling && !self.lastSmileState { self.onGesture?(.smile) }
+
+                // Update last-state flags
                 self.lastLeftBlinkState = leftBlink
                 self.lastRightBlinkState = rightBlink
-                if mouthOpen && !self.lastMouthOpenState {
-                    self.onGesture?(.mouthOpen)
-                }
                 self.lastMouthOpenState = mouthOpen
-
-                if browsRaised && !self.lastBrowState {
-                    self.onGesture?(.raiseEyebrows)
-                }
                 self.lastBrowState = browsRaised
-
-                if lipsPuckerLeft && !self.lastLipLeftState {
-                    self.onGesture?(.lipPuckerRight)
-                }
-                if lipsPuckerRight && !self.lastLipRightState {
-                    self.onGesture?(.lipPuckerLeft)
-                }
-                if smiling && !self.lastSmileState {
-                    self.onGesture?(.smile)
-                }
-
                 self.lastLipLeftState = lipsPuckerLeft
                 self.lastLipRightState = lipsPuckerRight
                 self.lastSmileState = smiling

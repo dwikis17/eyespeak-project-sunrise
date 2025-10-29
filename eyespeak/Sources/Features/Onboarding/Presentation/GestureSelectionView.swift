@@ -16,12 +16,15 @@ struct GestureSelectionView: View {
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 20) {
-                if let viewModel = viewModel {
-                    contentView(viewModel: viewModel)
-                } else {
-                    ProgressView("Loading gestures...")
+            ScrollView {
+                VStack(spacing: 20) {
+                    if let viewModel = viewModel {
+                        contentView(viewModel: viewModel)
+                    } else {
+                        ProgressView("Loading gestures...")
+                    }
                 }
+                .padding(.bottom, 24)
             }
             .navigationTitle("Select Your Gestures")
             .onAppear {
@@ -51,11 +54,11 @@ struct GestureSelectionView: View {
             VStack(spacing: 20) {
                 // Header
                 VStack(spacing: 8) {
-                    Text("Choose 3-4 gestures you can perform")
+                    Text("Choose gestures you can perform")
                         .font(.headline)
                         .multilineTextAlignment(.center)
                     
-                    Text("Selected: \(viewModel.getSelectedGestureCount())/4")
+                    Text("Selected: \(viewModel.getSelectedGestureCount())")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -65,7 +68,7 @@ struct GestureSelectionView: View {
                     ForEach(viewModel.userGestures, id: \.id) { userGesture in
                         GestureCard(
                             userGesture: userGesture,
-                            isSelected: userGesture.isEnabled,
+                            isSelected: viewModel.isGestureSelected(userGesture),
                             isDisabled: false,
                             onTap: {
                                 viewModel.toggleGestureSelection(userGesture)
@@ -96,11 +99,11 @@ struct GestureSelectionView: View {
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(
-                            viewModel.getSelectedGestureCount() >= 2 ? Color.blue : Color.gray
+                            viewModel.getSelectedGestureCount() >= 1 ? Color.blue : Color.gray
                         )
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
-                .disabled(viewModel.getSelectedGestureCount() < 2)
+                .disabled(viewModel.getSelectedGestureCount() < 1)
                 .padding(.horizontal)
             }
         }

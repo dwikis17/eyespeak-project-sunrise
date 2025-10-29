@@ -26,6 +26,10 @@ import Observation
         // Available combos mapped to slot index within a page (0-based)
         private var availableCombosBySlot: [ActionCombo: Int] = [:]
         
+        // Optional high-priority navigation combos (prev/next page)
+        private var navNext: (GestureType, GestureType)?
+        private var navPrev: (GestureType, GestureType)?
+        
         // MARK: - Public Methods
         
         /// Register a gesture input
@@ -75,10 +79,19 @@ import Observation
             for slotIndex in 0..<end {
                 let position = positions[slotIndex]
                 if let combo = position.actionCombo, combo.isEnabled {
+                    // Skip combos reserved for navigation priority
+                    if let n = navNext, combo.firstGesture == n.0 && combo.secondGesture == n.1 { continue }
+                    if let p = navPrev, combo.firstGesture == p.0 && combo.secondGesture == p.1 { continue }
                     availableCombosBySlot[combo] = slotIndex
                 }
             }
             print("✅ Loaded template with \(availableCombosBySlot.count) active combos for first page (pageSize=\(pageSize))")
+        }
+        
+        /// Configure navigation combos that should take precedence over card combos.
+        func setNavigationCombos(prev: (GestureType, GestureType)?, next: (GestureType, GestureType)?) {
+            self.navPrev = prev
+            self.navNext = next
         }
         
         /// Reset gesture sequence
@@ -100,7 +113,21 @@ import Observation
             
             print("🔍 Checking for match: \(first.rawValue) → \(second.rawValue)")
             
-            // Find matching combo by template
+            // 1) High-priority navigation combos
+            if let n = navNext, first == n.0 && second == n.1 {
+                let combo = ActionCombo(name: "Navigate Next", firstGesture: n.0, secondGesture: n.1)
+                onComboMatchedBySlot?(combo, -1) // special slot index for navigation
+                reset()
+                return
+            }
+            if let p = navPrev, first == p.0 && second == p.1 {
+                let combo = ActionCombo(name: "Navigate Previous", firstGesture: p.0, secondGesture: p.1)
+                onComboMatchedBySlot?(combo, -2)
+                reset()
+                return
+            }
+            
+            // 2) Find matching combo by template
             for (combo, slotIndex) in availableCombosBySlot {
                 if combo.firstGesture == first && combo.secondGesture == second {
                     print("✨ MATCH FOUND! Combo: \(combo.name) at slot #\(slotIndex)")

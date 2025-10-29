@@ -114,103 +114,54 @@ struct SampleData {
             context.insert(card)
         }
         
-        // Sample Action Combos - Meaningful gesture combinations
-        let combos = [
-            // Basic Navigation
-            ActionCombo(
-                name: "Look Left + Right",
-                firstGesture: .lookLeft,
-                secondGesture: .lookRight
-            ),
-            ActionCombo(
-                name: "Look Up + Down",
-                firstGesture: .lookUp,
-                secondGesture: .lookDown
-            ),
-            
-            // Wink Combinations
-            ActionCombo(
-                name: "Wink Left + Look Right",
-                firstGesture: .winkLeft,
-                secondGesture: .lookRight
-            ),
-            ActionCombo(
-                name: "Wink Right + Look Left",
-                firstGesture: .winkRight,
-                secondGesture: .lookLeft
-            ),
-            ActionCombo(
-                name: "Wink Left + Look Up",
-                firstGesture: .winkLeft,
-                secondGesture: .lookUp
-            ),
-            ActionCombo(
-                name: "Wink Right + Look Down",
-                firstGesture: .winkRight,
-                secondGesture: .lookDown
-            ),
-            
-            // Blink Combinations
-            ActionCombo(
-                name: "Blink + Look Left",
-                firstGesture: .blink,
-                secondGesture: .lookLeft
-            ),
-            ActionCombo(
-                name: "Blink + Look Right",
-                firstGesture: .blink,
-                secondGesture: .lookRight
-            ),
-            ActionCombo(
-                name: "Blink + Look Up",
-                firstGesture: .blink,
-                secondGesture: .lookUp
-            ),
-            ActionCombo(
-                name: "Blink + Look Down",
-                firstGesture: .blink,
-                secondGesture: .lookDown
-            ),
-            
-            // Complex Patterns
-            ActionCombo(
-                name: "Look Up + Wink Left",
-                firstGesture: .lookUp,
-                secondGesture: .winkLeft
-            ),
-            ActionCombo(
-                name: "Look Down + Wink Right",
-                firstGesture: .lookDown,
-                secondGesture: .winkRight
-            ),
-            ActionCombo(
-                name: "Look Left + Blink",
-                firstGesture: .lookLeft,
-                secondGesture: .blink
-            ),
-            ActionCombo(
-                name: "Look Right + Blink",
-                firstGesture: .lookRight,
-                secondGesture: .blink
-            ),
-            
-            // Double Wink Patterns
-            ActionCombo(
-                name: "Wink Left + Wink Right",
-                firstGesture: .winkLeft,
-                secondGesture: .winkRight
-            ),
-            ActionCombo(
-                name: "Wink Right + Wink Left",
-                firstGesture: .winkRight,
-                secondGesture: .winkLeft
-            )
-        ]
-        
-        // Insert all combos
-        for combo in combos {
-            context.insert(combo)
+        // Build combos dynamically from enabled user gestures when available
+        let enabledDescriptor = FetchDescriptor<UserGesture>(
+            predicate: #Predicate { $0.isEnabled == true }
+        )
+        let enabled = (try? context.fetch(enabledDescriptor)) ?? []
+
+        var combos: [ActionCombo] = []
+        let allowed: Set<GestureType>
+        if !enabled.isEmpty {
+            let selected = Set(enabled.map { $0.gestureType })
+            // Only include gestures supported by our detector emissions (blink and wink are excluded)
+            allowed = selected.intersection([
+                .lookLeft, .lookRight, .lookUp, .lookDown,
+                .lipPuckerLeft, .lipPuckerRight, .raiseEyebrows, .smile
+            ])
+        } else {
+            // Fallback default before onboarding: basic gaze directions only
+            allowed = [.lookLeft, .lookRight, .lookUp, .lookDown]
         }
+
+        func makeName(_ a: GestureType, _ b: GestureType) -> String {
+            "\(a.rawValue) + \(b.rawValue)"
+        }
+
+        // Prioritize directional navigation combos if available
+        if allowed.contains(.lookLeft) && allowed.contains(.lookRight) {
+            combos.append(ActionCombo(name: makeName(.lookLeft, .lookRight), firstGesture: .lookLeft, secondGesture: .lookRight))
+            combos.append(ActionCombo(name: makeName(.lookRight, .lookLeft), firstGesture: .lookRight, secondGesture: .lookLeft))
+        }
+        if allowed.contains(.lookUp) && allowed.contains(.lookDown) {
+            combos.append(ActionCombo(name: makeName(.lookUp, .lookDown), firstGesture: .lookUp, secondGesture: .lookDown))
+            combos.append(ActionCombo(name: makeName(.lookDown, .lookUp), firstGesture: .lookDown, secondGesture: .lookUp))
+        }
+
+        // Fill remaining combos from ordered pairs of allowed gestures (excluding identical pairs)
+        let allowedList = Array(allowed)
+        for first in allowedList {
+            for second in allowedList where first != second {
+                // Skip if already present
+                if combos.contains(where: { $0.firstGesture == first && $0.secondGesture == second }) {
+                    continue
+                }
+                combos.append(ActionCombo(name: makeName(first, second), firstGesture: first, secondGesture: second))
+            }
+        }
+
+        // Insert combos
+        for combo in combos { context.insert(combo) }
         
         // Sample Grid - dynamic size based on gridSize parameter
         // Use the arrays we already created
@@ -222,10 +173,8 @@ struct SampleData {
                 position.card = cards[index]
             }
             
-            // Assign combos cyclically - prioritize basic navigation combos
-            if index < combos.count {
-                position.actionCombo = combos[index]
-            }
+            // Assign combos cyclically
+            if !combos.isEmpty { position.actionCombo = combos[index % combos.count] }
             
             context.insert(position)
         }

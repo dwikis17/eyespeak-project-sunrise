@@ -17,9 +17,13 @@ struct ComboInputSettings: Codable, Equatable {
     static let defaults = ComboInputSettings(isEnabled: true, maxCombos: 2, sensitivity: 0.5)
 }
 
-class UserSettings {
+public class UserSettings {
     @AppStorage("timerSpeed") var timerSpeed: Double = 4.0
     @AppStorage("fontSize") var fontSize: Double = 14
+    @AppStorage("gridRows") var gridRows: Int = 4
+    @AppStorage("gridColumns") var gridColumns: Int = 4
+    @AppStorage("navNextCombo") private var navNextRaw: String?
+    @AppStorage("navPrevCombo") private var navPrevRaw: String?
 
     @AppStorage("comboInputSettings") private var comboInputSettingsData: Data?
 
@@ -33,6 +37,29 @@ class UserSettings {
         set {
             comboInputSettingsData = try? JSONEncoder().encode(newValue)
         }
+    }
+
+    // MARK: - Navigation Combos
+    var navNextCombo: (GestureType, GestureType)? {
+        get { decodePair(navNextRaw) }
+        set { navNextRaw = encodePair(newValue) }
+    }
+    var navPrevCombo: (GestureType, GestureType)? {
+        get { decodePair(navPrevRaw) }
+        set { navPrevRaw = encodePair(newValue) }
+    }
+
+    private func encodePair(_ pair: (GestureType, GestureType)?) -> String? {
+        guard let pair else { return nil }
+        return "\(pair.0.rawValue)|\(pair.1.rawValue)"
+    }
+
+    private func decodePair(_ s: String?) -> (GestureType, GestureType)? {
+        guard let s, let sep = s.firstIndex(of: "|") else { return nil }
+        let a = String(s[..<sep])
+        let b = String(s[s.index(after: sep)...])
+        guard let g1 = GestureType(rawValue: a), let g2 = GestureType(rawValue: b) else { return nil }
+        return (g1, g2)
     }
 }
 

@@ -23,9 +23,10 @@ struct AACView: View {
                     .frame(width: geo.size.width * 0.2)
                 Spacer()
                 CardGridView()
-                    .frame(width: geo.size.width * 0.7)
+                    .frame( width: geo.size.width * 0.7)
+
             }
-            .padding()
+            .padding(.horizontal)
         }
         // 👇 inject into environment so child views can use @EnvironmentObject
         .environmentObject(viewModel)
