@@ -46,8 +46,8 @@ struct AACFaceTrackingView: UIViewRepresentable {
         private let blinkSuppressionDecay: Float = 0.025
         private let mouthOpenThreshold: Float = 0.35
         private let eyebrowsRaiseThreshold: Float = 0.25
-        private let lipShiftThreshold: Float = 0.14
-        private let lipShiftDifference: Float = 0.045
+        private let lipShiftThreshold: Float = 0.18
+        private let lipShiftDifference: Float = 0.06
         private let smileThreshold: Float = 0.35
 
         private var lastAnnouncedDirection: FaceStatus.Direction = .center
