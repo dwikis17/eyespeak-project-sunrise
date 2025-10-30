@@ -39,7 +39,20 @@ struct CardGridView: View {
     }
     
     private var gridSection: some View {
-        ZStack {
+        HStack(alignment: .center, spacing: 40) {
+            VStack(spacing: 8) {
+                comboBadge(for: viewModel.settings.navPrevCombo)
+                Button(action: { viewModel.goToPreviousPage() }) {
+                    Image("arrow")
+                        .renderingMode(.template)
+                        .font(.system(size: 28, weight: .semibold))
+                        .foregroundColor(.primary.opacity(viewModel.currentPage == 0 ? 0.2 : 0.9))
+                        .rotationEffect(.degrees(180))
+                        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                }
+                .disabled(viewModel.currentPage == 0)
+            }
+
             LazyVGrid(
                 columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: viewModel.columns),
                 spacing: 8
@@ -50,48 +63,25 @@ struct CardGridView: View {
                         dataManager: viewModel.dataManagerInstance,
                         columns: viewModel.columns,
                         isHighlighted: viewModel.selectedPosition?.id == position.id,
-                        viewModel:viewModel
+                        viewModel: viewModel
                     )
                 }
             }
-            
-            // Overlay arrows
-            HStack {
-                Button(action: { viewModel.goToPreviousPage() }) {
-                    Image(systemName: "chevron.left.circle.fill")
-                        .font(.system(size: 28, weight: .semibold))
-                        .foregroundColor(.primary.opacity(viewModel.currentPage == 0 ? 0.2 : 0.9))
-                }
-                .disabled(viewModel.currentPage == 0)
-                .padding(.leading, 4)
-                
-                Spacer()
-                
+            .frame(maxWidth: .infinity)   // <- important: grid expands to take remaining width
+            .layoutPriority(1)            // <- prefer grid over arrows when sizing
+
+            VStack(spacing: 8) {
+                comboBadge(for: viewModel.settings.navNextCombo)
                 Button(action: { viewModel.goToNextPage() }) {
-                    Image(systemName: "chevron.right.circle.fill")
-                        .font(.system(size: 28, weight: .semibold))
+                    Image("arrow")
+                        .renderingMode(.template)
                         .foregroundColor(.primary.opacity(viewModel.currentPage + 1 >= viewModel.totalPages ? 0.2 : 0.9))
+                        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
                 }
                 .disabled(viewModel.currentPage + 1 >= viewModel.totalPages)
-                .padding(.trailing, 4)
-            }
-            .padding(.horizontal)
-            
-            // Navigation cheat sheet overlay
-            if viewModel.isGestureMode {
-                VStack {
-                    HStack {
-                        Spacer()
-                        navigationCheatSheet
-                    }
-                    Spacer()
-                }
-                .padding(.top, 8)
-                .padding(.trailing, 8)
             }
         }
-        .padding(8)
-        .padding(.top, 10)
+        .padding(.horizontal)
     }
     
     private var bottomToolbar: some View {
@@ -192,6 +182,28 @@ struct CardGridView: View {
         .background(Color(uiColor: .systemBackground).opacity(0.9))
         .cornerRadius(8)
         .shadow(radius: 2)
+    }
+
+    // MARK: - Side combo badge
+    private func comboBadge(for combo: (GestureType, GestureType)?) -> some View {
+        Group {
+            if let c = combo {
+                HStack(spacing: 6) {
+                    Image(systemName: c.0.iconName)
+                        .font(.caption.weight(.semibold))
+                    Text("+")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    Image(systemName: c.1.iconName)
+                        .font(.caption.weight(.semibold))
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(
+                    Capsule().fill(Color(uiColor: .systemBackground))
+                )
+            }
+        }
     }
     
     private var infoButton: some View {

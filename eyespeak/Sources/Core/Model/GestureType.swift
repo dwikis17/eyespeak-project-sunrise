@@ -32,8 +32,8 @@ public enum GestureType: String, Codable, CaseIterable {
         case .blink: return "eye.fill"              // Distinguish from open eye
         case .mouthOpen: return "mouth"             // Unique for open mouth
         case .raiseEyebrows: return "eyebrow"       // Use a custom or symbolic icon if available
-        case .lipPuckerLeft: return "mouth.left"    // Suggesting a left mouth pucker (custom, fallback to "mouth" if nonexistent)
-        case .lipPuckerRight: return "mouth.right"  // Suggesting a right mouth pucker (custom, fallback to "mouth" if nonexistent)
+        case .lipPuckerLeft: return "person.circle"    // Suggesting a left mouth pucker (custom, fallback to "mouth" if nonexistent)
+        case .lipPuckerRight: return "person.circle.fill"  // Suggesting a right mouth pucker (custom, fallback to "mouth" if nonexistent)
         case .smile: return "face.smiling"          // Standard smile
         }
     }

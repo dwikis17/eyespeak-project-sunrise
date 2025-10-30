@@ -101,6 +101,15 @@ import Observation
             lastGestureTime = nil
         }
         
+        /// Return remaining time fraction (1.0 → just registered, 0.0 → expired)
+        /// Safe to call from UI refresh timers to drive countdown visuals.
+        func remainingTimeFraction(referenceDate: Date = Date()) -> Double {
+            guard let last = lastGestureTime, timingWindow > 0 else { return 0 }
+            let elapsed = referenceDate.timeIntervalSince(last)
+            let remaining = max(0, timingWindow - elapsed)
+            return max(0, min(1, remaining / timingWindow))
+        }
+        
         // MARK: - Private Methods
         
         private func checkForMatch() {

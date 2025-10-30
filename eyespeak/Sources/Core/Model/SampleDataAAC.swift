@@ -9,7 +9,6 @@ import Foundation
 import SwiftData
 
 struct SampleData {
-    
     static func populate(context: ModelContext, gridSize: Int = 25) {
         // Sample Cards - Expanded Essential Communication Vocabulary
         let cards = [
@@ -165,6 +164,9 @@ struct SampleData {
         
         // Sample Grid - dynamic size based on gridSize parameter
         // Use the arrays we already created
+        let settings = UserSettings()
+        let navNext = settings.navNextCombo
+        let navPrev = settings.navPrevCombo
         for index in 0..<gridSize {
             let position = GridPosition(order: index)
             
@@ -173,8 +175,23 @@ struct SampleData {
                 position.card = cards[index]
             }
             
-            // Assign combos cyclically
-            if !combos.isEmpty { position.actionCombo = combos[index % combos.count] }
+            // Assign combos cyclically, but avoid navigation combos if configured
+            if !combos.isEmpty {
+                var assigned = combos[index % combos.count]
+                if let n = navNext, assigned.firstGesture == n.0 && assigned.secondGesture == n.1 {
+                    // choose next non-conflicting combo
+                    if let alt = combos.first(where: { c in
+                        !(navNext?.0 == c.firstGesture && navNext?.1 == c.secondGesture) &&
+                        !(navPrev?.0 == c.firstGesture && navPrev?.1 == c.secondGesture)
+                    }) { assigned = alt }
+                } else if let p = navPrev, assigned.firstGesture == p.0 && assigned.secondGesture == p.1 {
+                    if let alt = combos.first(where: { c in
+                        !(navNext?.0 == c.firstGesture && navNext?.1 == c.secondGesture) &&
+                        !(navPrev?.0 == c.firstGesture && navPrev?.1 == c.secondGesture)
+                    }) { assigned = alt }
+                }
+                position.actionCombo = assigned
+            }
             
             context.insert(position)
         }
