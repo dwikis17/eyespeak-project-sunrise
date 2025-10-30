@@ -33,6 +33,8 @@ extension ModelContainer {
             let context = container.mainContext
             initializeUserGesturesIfNeeded(context: context)
             initializeSampleDataIfNeeded(context: context)
+            // Ensure no initial grid combos clash with navigation combos
+            sanitizeNavigationComboConflicts(context: context)
             
             return container
         } catch {
@@ -73,6 +75,65 @@ extension ModelContainer {
         }
     }
     
+    /// Replace any grid `ActionCombo` that matches navigation combos so that
+    /// navigation gestures do not overlap with card activation combos.
+    private static func sanitizeNavigationComboConflicts(context: ModelContext) {
+        let settings = UserSettings()
+        let navNext = settings.navNextCombo
+        let navPrev = settings.navPrevCombo
+        guard navNext != nil || navPrev != nil else { return }
+
+        func isNavCombo(_ c: ActionCombo) -> Bool {
+            if let n = navNext, c.firstGesture == n.0 && c.secondGesture == n.1 { return true }
+            if let p = navPrev, c.firstGesture == p.0 && c.secondGesture == p.1 { return true }
+            return false
+        }
+
+        // Fetch data
+        let posDescriptor = FetchDescriptor<GridPosition>(sortBy: [SortDescriptor(\.order)])
+        let allPositions = (try? context.fetch(posDescriptor)) ?? []
+        let comboDescriptor = FetchDescriptor<ActionCombo>()
+        let allCombos = (try? context.fetch(comboDescriptor)) ?? []
+        var candidates = allCombos.filter { !isNavCombo($0) }
+
+        // Work only on first page to ensure it's fully actionable
+        // We infer the page size from the smallest square >= first page count; fallback to 16
+        let pageSize = max(1, Int(min(16, allPositions.count)))
+        let firstPageEnd = min(pageSize, allPositions.count)
+
+        // Track used combos on the first page
+        var usedFirstPage = Set<String>()
+        if firstPageEnd > 0 {
+            for i in 0..<firstPageEnd {
+                if let c = allPositions[i].actionCombo, !isNavCombo(c) {
+                    usedFirstPage.insert("\(c.firstGesture.rawValue)|\(c.secondGesture.rawValue)")
+                }
+            }
+        }
+
+        var changed = false
+        if firstPageEnd > 0 {
+            for i in 0..<firstPageEnd {
+                guard let c = allPositions[i].actionCombo else { continue }
+                if isNavCombo(c) {
+                    if let replacement = candidates.first(where: { cand in
+                        let key = "\(cand.firstGesture.rawValue)|\(cand.secondGesture.rawValue)"
+                        return !usedFirstPage.contains(key)
+                    }) {
+                        allPositions[i].actionCombo = replacement
+                        usedFirstPage.insert("\(replacement.firstGesture.rawValue)|\(replacement.secondGesture.rawValue)")
+                        changed = true
+                    } else {
+                        allPositions[i].actionCombo = nil
+                        changed = true
+                    }
+                }
+            }
+        }
+
+        if changed { try? context.save() }
+    }
+    
     /// Preview container for SwiftUI previews (in-memory only)
     @MainActor
     static var preview: ModelContainer = {
@@ -96,7 +157,7 @@ extension ModelContainer {
             
             // Add sample data for previews
             let context = container.mainContext
-            SampleData.populate(context: context)  // 3x3 grid
+            SampleData.populate(context: context) 
             
             return container
         } catch {

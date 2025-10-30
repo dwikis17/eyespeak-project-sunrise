@@ -18,12 +18,12 @@ public final class AACViewModel: ObservableObject {
     private let speechService: SpeechService
     
     // MARK: - UI State Properties
-    public var columns: Int = 4
-    public var rows: Int = 4
+    public var columns: Int = 5
+    public var rows: Int = 5
     public let settings = UserSettings()
     public var currentPage: Int = 0
     public var showingSettings = false
-    public var isGestureMode = false
+    public var isGestureMode = true
     public var selectedPosition: GridPosition?
     public var faceStatus = FaceStatus()
     public var isCalibrating = false
@@ -105,6 +105,8 @@ public final class AACViewModel: ObservableObject {
                     prev: settings.navPrevCombo,
                     next: settings.navNextCombo
                 )
+                // Ensure no position uses a navigation combo
+                sanitizeNavigationComboConflicts()
             } else {
                 gestureInputManager.setNavigationCombos(prev: nil, next: nil)
             }
@@ -124,6 +126,8 @@ public final class AACViewModel: ObservableObject {
                         prev: settings.navPrevCombo,
                         next: settings.navNextCombo
                     )
+                    // Ensure no position uses a navigation combo
+                    sanitizeNavigationComboConflicts()
                 } else {
                     gestureInputManager.setNavigationCombos(prev: nil, next: nil)
                 }
@@ -342,11 +346,66 @@ public final class AACViewModel: ObservableObject {
                     prev: settings.navPrevCombo,
                     next: settings.navNextCombo
                 )
+                // Ensure no position uses a navigation combo
+                sanitizeNavigationComboConflicts()
             } else {
                 gestureInputManager.setNavigationCombos(prev: nil, next: nil)
             }
             gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
         }
+
+    }
+
+    // MARK: - Conflict Sanitization
+    /// Replace any grid `ActionCombo` that equals a navigation combo when paging is enabled.
+    /// Ensures first page stays actionable and avoids duplicate combos on that page when possible.
+    private func sanitizeNavigationComboConflicts() {
+        guard totalPages > 1 else { return }
+        let navNext = settings.navNextCombo
+        let navPrev = settings.navPrevCombo
+
+        func isNavCombo(_ c: ActionCombo) -> Bool {
+            if let n = navNext, c.firstGesture == n.0 && c.secondGesture == n.1 { return true }
+            if let p = navPrev, c.firstGesture == p.0 && c.secondGesture == p.1 { return true }
+            return false
+        }
+
+        let allCombos = fetchAllActionCombos()
+        var candidates = allCombos.filter { !isNavCombo($0) }
+
+        // Track used combos on the first page to keep them unique (optional but nice)
+        var usedFirstPage = Set<String>()
+        let firstPageEnd = min(pageSize, positions.count)
+        if firstPageEnd > 0 {
+            for i in 0..<firstPageEnd {
+                if let c = positions[i].actionCombo, !isNavCombo(c) {
+                    usedFirstPage.insert("\(c.firstGesture.rawValue)|\(c.secondGesture.rawValue)")
+                }
+            }
+        }
+
+        var didChange = false
+        if firstPageEnd > 0 {
+            for i in 0..<firstPageEnd {
+                guard let c = positions[i].actionCombo else { continue }
+                if isNavCombo(c) {
+                    if let replacement = candidates.first(where: { cand in
+                        let key = "\(cand.firstGesture.rawValue)|\(cand.secondGesture.rawValue)"
+                        return !usedFirstPage.contains(key)
+                    }) {
+                        positions[i].actionCombo = replacement
+                        usedFirstPage.insert("\(replacement.firstGesture.rawValue)|\(replacement.secondGesture.rawValue)")
+                        didChange = true
+                    } else {
+                        // As a fallback, clear the combo if none available
+                        positions[i].actionCombo = nil
+                        didChange = true
+                    }
+                }
+            }
+        }
+
+        if didChange { try? modelContext.save() }
     }
     
     // MARK: - Card Interaction Methods

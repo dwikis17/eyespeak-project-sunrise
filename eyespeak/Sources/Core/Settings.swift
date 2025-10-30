@@ -20,8 +20,8 @@ struct ComboInputSettings: Codable, Equatable {
 public class UserSettings {
     @AppStorage("timerSpeed") var timerSpeed: Double = 4.0
     @AppStorage("fontSize") var fontSize: Double = 14
-    @AppStorage("gridRows") var gridRows: Int = 4
-    @AppStorage("gridColumns") var gridColumns: Int = 4
+    @AppStorage("gridRows") var gridRows: Int = 5
+    @AppStorage("gridColumns") var gridColumns: Int = 5
     @AppStorage("navNextCombo") private var navNextRaw: String?
     @AppStorage("navPrevCombo") private var navPrevRaw: String?
 
