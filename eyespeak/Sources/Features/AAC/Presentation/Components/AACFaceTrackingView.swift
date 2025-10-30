@@ -49,6 +49,7 @@ struct AACFaceTrackingView: UIViewRepresentable {
         private let lipShiftThreshold: Float = 0.18
         private let lipShiftDifference: Float = 0.06
         private let smileThreshold: Float = 0.35
+        private let winkDominanceThreshold: Float = 0.2
 
         private var lastAnnouncedDirection: FaceStatus.Direction = .center
         private var lastPlayTime: CFAbsoluteTime = 0
@@ -129,6 +130,8 @@ struct AACFaceTrackingView: UIViewRepresentable {
             let lipsPuckerLeft = lipsShiftMagnitude > lipShiftThreshold && (mouthLeftShift - mouthRightShift) > lipShiftDifference
             let lipsPuckerRight = lipsShiftMagnitude > lipShiftThreshold && (mouthRightShift - mouthLeftShift) > lipShiftDifference
             let smiling = (smileLeft + smileRight) * 0.5 > smileThreshold
+            let leftDominantWink = (leftVal - rightVal) > winkDominanceThreshold
+            let rightDominantWink = (rightVal - leftVal) > winkDominanceThreshold
 
             let horiz = (ro + li) - (ri + lo) // positive -> right
             let eyeYawNorm = max(-1, min(1, Double(horiz / 2)))
@@ -188,8 +191,12 @@ struct AACFaceTrackingView: UIViewRepresentable {
                 
                 // Front-facing camera is mirrored: swap wink mapping so
                 // user's left-eye wink triggers .winkLeft semantically.
-                if leftBlink && !self.lastLeftBlinkState { self.onGesture?(.winkRight) }
-                if rightBlink && !self.lastRightBlinkState { self.onGesture?(.winkLeft) }
+                if leftBlink && !rightBlink && leftDominantWink && !self.lastLeftBlinkState {
+                    self.onGesture?(.winkRight)
+                }
+                if rightBlink && !leftBlink && rightDominantWink && !self.lastRightBlinkState {
+                    self.onGesture?(.winkLeft)
+                }
                 
                 if lipsPuckerLeft && !self.lastLipLeftState { self.onGesture?(.lipPuckerRight) }
                 if lipsPuckerRight && !self.lastLipRightState { self.onGesture?(.lipPuckerLeft) }
