@@ -373,39 +373,53 @@ public final class AACViewModel: ObservableObject {
         let allCombos = fetchAllActionCombos()
         var candidates = allCombos.filter { !isNavCombo($0) }
 
-        // Track used combos on the first page to keep them unique (optional but nice)
+        // 1. Fix first page: assign safe, unique combos per slot
         var usedFirstPage = Set<String>()
         let firstPageEnd = min(pageSize, positions.count)
         if firstPageEnd > 0 {
             for i in 0..<firstPageEnd {
-                if let c = positions[i].actionCombo, !isNavCombo(c) {
-                    usedFirstPage.insert("\(c.firstGesture.rawValue)|\(c.secondGesture.rawValue)")
-                }
-            }
-        }
-
-        var didChange = false
-        if firstPageEnd > 0 {
-            for i in 0..<firstPageEnd {
-                guard let c = positions[i].actionCombo else { continue }
-                if isNavCombo(c) {
+                let slotCombo = positions[i].actionCombo
+                if let c = slotCombo, isNavCombo(c) {
+                    // Replace nav combo with first unused safe combo
                     if let replacement = candidates.first(where: { cand in
                         let key = "\(cand.firstGesture.rawValue)|\(cand.secondGesture.rawValue)"
                         return !usedFirstPage.contains(key)
                     }) {
                         positions[i].actionCombo = replacement
                         usedFirstPage.insert("\(replacement.firstGesture.rawValue)|\(replacement.secondGesture.rawValue)")
-                        didChange = true
                     } else {
-                        // As a fallback, clear the combo if none available
                         positions[i].actionCombo = nil
-                        didChange = true
+                    }
+                }
+                if let c = positions[i].actionCombo {
+                    let key = "\(c.firstGesture.rawValue)|\(c.secondGesture.rawValue)"
+                    usedFirstPage.insert(key)
+                }
+            }
+        }
+        // 2. Mirror combos from first page to every other page slot (if not navigation combo)
+        let pageCount = totalPages
+        for slotIdx in 0..<firstPageEnd {
+            let comboToMirror = positions[slotIdx].actionCombo
+            // Never mirror if it's a navigation combo or nil
+            if let c = comboToMirror, !isNavCombo(c) {
+                for page in 1..<pageCount {
+                    let idx = page * pageSize + slotIdx
+                    if idx < positions.count {
+                        positions[idx].actionCombo = c
+                    }
+                }
+            } else {
+                // If nil or nav combo, clear the slot on other pages
+                for page in 1..<pageCount {
+                    let idx = page * pageSize + slotIdx
+                    if idx < positions.count {
+                        positions[idx].actionCombo = nil
                     }
                 }
             }
         }
-
-        if didChange { try? modelContext.save() }
+        try? modelContext.save()
     }
     
     // MARK: - Card Interaction Methods
