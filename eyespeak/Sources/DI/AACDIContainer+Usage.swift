@@ -39,7 +39,7 @@ extension AACDIContainer {
         // MARK: - 3. Resolving Dependencies for Complex Views
         
         let dependencies = container.resolveAACDependencies()
-        // Use dependencies.modelContext, dependencies.dataManager, dependencies.gestureInputManager
+        // Use dependencies.modelContext, dependencies.dataManager, dependencies.gestureInputManager, dependencies.speechService
         
         // MARK: - 4. Preview Support
         

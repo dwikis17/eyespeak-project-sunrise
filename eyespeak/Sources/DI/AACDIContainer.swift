@@ -60,6 +60,11 @@ public final class AACDIContainer {
         GestureInputManager()
     }()
     
+    @MainActor
+    private lazy var _speechService: SpeechService = {
+        SpeechService.shared
+    }()
+    
     // MARK: - Manager Factories
     
     /// Creates a new DataManager instance
@@ -74,6 +79,11 @@ public final class AACDIContainer {
         GestureInputManager()
     }
     
+    @MainActor
+    public func makeSpeechService() -> SpeechService {
+        SpeechService.shared
+    }
+    
     /// Gets the shared DataManager instance
     @MainActor
     public var dataManager: DataManager {
@@ -86,6 +96,11 @@ public final class AACDIContainer {
         return _gestureInputManager
     }
     
+    @MainActor
+    public var speechService: SpeechService {
+        return _speechService
+    }
+    
     // MARK: - ViewModel Factories
     
     /// Creates a new AACViewModel instance
@@ -94,7 +109,8 @@ public final class AACDIContainer {
         AACViewModel(
             modelContext: Self.modelContext,
             dataManager: makeDataManager(),
-            gestureInputManager: makeGestureInputManager()
+            gestureInputManager: makeGestureInputManager(),
+            speechService: makeSpeechService()
         )
     }
     
@@ -114,12 +130,14 @@ public final class AACDIContainer {
     public func resolveAACDependencies() -> (
         modelContext: ModelContext,
         dataManager: DataManager,
-        gestureInputManager: GestureInputManager
+        gestureInputManager: GestureInputManager,
+        speechService: SpeechService
     ) {
         return (
             modelContext: Self.modelContext,
             dataManager: makeDataManager(),
-            gestureInputManager: makeGestureInputManager()
+            gestureInputManager: makeGestureInputManager(),
+            speechService: makeSpeechService()
         )
     }
     

@@ -15,6 +15,7 @@ public final class AACViewModel: ObservableObject {
     public let modelContext: ModelContext
     public let dataManager: DataManager
     public let gestureInputManager: GestureInputManager
+    private let speechService: SpeechService
     
     // MARK: - UI State Properties
     public var columns: Int = 4
@@ -58,11 +59,13 @@ public final class AACViewModel: ObservableObject {
     init(
         modelContext: ModelContext,
         dataManager: DataManager,
-        gestureInputManager: GestureInputManager
+        gestureInputManager: GestureInputManager,
+        speechService: SpeechService
     ) {
         self.modelContext = modelContext
         self.dataManager = dataManager
         self.gestureInputManager = gestureInputManager
+        self.speechService = speechService
         setupGestureManager()
     }
     
@@ -71,6 +74,7 @@ public final class AACViewModel: ObservableObject {
         self.modelContext = modelContext
         self.dataManager = DataManager(modelContext: modelContext)
         self.gestureInputManager = GestureInputManager()
+        self.speechService = SpeechService.shared
         setupGestureManager()
     }
     
@@ -248,8 +252,7 @@ public final class AACViewModel: ObservableObject {
         // Trigger card action
         if let card = position.card {
             incrementCardUsage(card)
-            print("🗣️ Speaking: \(card.title)")
-            // TODO: Add text-to-speech here
+            speak(text: card.title)
         }
         
         // Reset highlight after delay
@@ -353,8 +356,7 @@ public final class AACViewModel: ObservableObject {
         incrementCardUsage(card)
         
         // Speak the card title
-        print("🗣️ Speaking: \(card.title)")
-        // TODO: Add text-to-speech here
+        speak(text: card.title)
         
         // You could also add haptic feedback here
         // let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
@@ -370,5 +372,15 @@ public final class AACViewModel: ObservableObject {
     public func goToPreviousPage() {
         guard currentPage > 0 else { return }
         withAnimation { currentPage -= 1 }
+    }
+
+    // MARK: - Speech Helpers
+
+    private func speak(text: String, language: String? = nil) {
+        speechService.speak(text, language: language)
+    }
+
+    public func speakSentence(_ text: String, language: String? = nil) {
+        speak(text: text, language: language)
     }
 }
