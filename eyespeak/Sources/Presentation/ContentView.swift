@@ -18,7 +18,7 @@ public struct ContentView: View {
             } else {
                 TabView(selection: $bindableAppState.currentTab) {
                     // Keyboard Tab
-                    Text("Keyboard View")
+                    KeyboardView()
                         .tabItem {
                             Image(systemName: "keyboard")
                             Text("Keyboard")
