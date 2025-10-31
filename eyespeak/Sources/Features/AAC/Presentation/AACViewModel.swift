@@ -377,23 +377,30 @@ public final class AACViewModel: ObservableObject {
         var usedFirstPage = Set<String>()
         let firstPageEnd = min(pageSize, positions.count)
         if firstPageEnd > 0 {
+            // First pass: collect all existing non-nav combos already on the first page
+            for i in 0..<firstPageEnd {
+                if let c = positions[i].actionCombo, !isNavCombo(c) {
+                    let key = "\(c.firstGesture.rawValue)|\(c.secondGesture.rawValue)"
+                    usedFirstPage.insert(key)
+                }
+            }
+            
+            // Second pass: replace nav combos with unique safe combos
             for i in 0..<firstPageEnd {
                 let slotCombo = positions[i].actionCombo
                 if let c = slotCombo, isNavCombo(c) {
-                    // Replace nav combo with first unused safe combo
+                    // Replace nav combo with first unused safe combo that's not already assigned
                     if let replacement = candidates.first(where: { cand in
                         let key = "\(cand.firstGesture.rawValue)|\(cand.secondGesture.rawValue)"
                         return !usedFirstPage.contains(key)
                     }) {
                         positions[i].actionCombo = replacement
-                        usedFirstPage.insert("\(replacement.firstGesture.rawValue)|\(replacement.secondGesture.rawValue)")
+                        let key = "\(replacement.firstGesture.rawValue)|\(replacement.secondGesture.rawValue)"
+                        usedFirstPage.insert(key)
                     } else {
+                        // No available combo, clear it
                         positions[i].actionCombo = nil
                     }
-                }
-                if let c = positions[i].actionCombo {
-                    let key = "\(c.firstGesture.rawValue)|\(c.secondGesture.rawValue)"
-                    usedFirstPage.insert(key)
                 }
             }
         }
