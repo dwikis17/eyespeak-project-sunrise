@@ -23,4 +23,7 @@ enum Typography {
     static let headline   = AppFont.Montserrat.semibold(17, relativeTo: .headline)
     static let body       = AppFont.Montserrat.regular(17, relativeTo: .body)
     static let caption    = AppFont.Montserrat.regular(12, relativeTo: .caption)
+
+    // Helvetica Neue preset as requested
+    static let helveticaCaption = Font.custom("HelveticaNeue", size: 16.5549, relativeTo: .caption)
 }
