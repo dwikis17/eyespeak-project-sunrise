@@ -105,11 +105,11 @@ public final class AACViewModel: ObservableObject {
                     prev: settings.navPrevCombo,
                     next: settings.navNextCombo
                 )
-                // Ensure no position uses a navigation combo
-                sanitizeNavigationComboConflicts()
             } else {
                 gestureInputManager.setNavigationCombos(prev: nil, next: nil)
             }
+            // Always sanitize conflicts if nav combos are configured (even with 1 page)
+            sanitizeNavigationComboConflicts()
             gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
         }
     }
@@ -126,11 +126,11 @@ public final class AACViewModel: ObservableObject {
                         prev: settings.navPrevCombo,
                         next: settings.navNextCombo
                     )
-                    // Ensure no position uses a navigation combo
-                    sanitizeNavigationComboConflicts()
                 } else {
                     gestureInputManager.setNavigationCombos(prev: nil, next: nil)
                 }
+                // Always sanitize conflicts if nav combos are configured (even with 1 page)
+                sanitizeNavigationComboConflicts()
                 gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
             } else {
                 isCalibrating = false
@@ -346,23 +346,25 @@ public final class AACViewModel: ObservableObject {
                     prev: settings.navPrevCombo,
                     next: settings.navNextCombo
                 )
-                // Ensure no position uses a navigation combo
-                sanitizeNavigationComboConflicts()
             } else {
                 gestureInputManager.setNavigationCombos(prev: nil, next: nil)
             }
+            // Always sanitize conflicts if nav combos are configured (even with 1 page)
+            sanitizeNavigationComboConflicts()
             gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
         }
 
     }
 
     // MARK: - Conflict Sanitization
-    /// Replace any grid `ActionCombo` that equals a navigation combo when paging is enabled.
+    /// Replace any grid `ActionCombo` that equals a navigation combo.
     /// Ensures first page stays actionable and avoids duplicate combos on that page when possible.
+    /// Runs even with 1 page if navigation combos are configured to prevent conflicts.
     private func sanitizeNavigationComboConflicts() {
-        guard totalPages > 1 else { return }
         let navNext = settings.navNextCombo
         let navPrev = settings.navPrevCombo
+        // Only sanitize if navigation combos are actually configured
+        guard navNext != nil || navPrev != nil else { return }
 
         func isNavCombo(_ c: ActionCombo) -> Bool {
             if let n = navNext, c.firstGesture == n.0 && c.secondGesture == n.1 { return true }
@@ -405,23 +407,26 @@ public final class AACViewModel: ObservableObject {
             }
         }
         // 2. Mirror combos from first page to every other page slot (if not navigation combo)
-        let pageCount = totalPages
-        for slotIdx in 0..<firstPageEnd {
-            let comboToMirror = positions[slotIdx].actionCombo
-            // Never mirror if it's a navigation combo or nil
-            if let c = comboToMirror, !isNavCombo(c) {
-                for page in 1..<pageCount {
-                    let idx = page * pageSize + slotIdx
-                    if idx < positions.count {
-                        positions[idx].actionCombo = c
+        // Only mirror if there are multiple pages
+        if totalPages > 1 {
+            let pageCount = totalPages
+            for slotIdx in 0..<firstPageEnd {
+                let comboToMirror = positions[slotIdx].actionCombo
+                // Never mirror if it's a navigation combo or nil
+                if let c = comboToMirror, !isNavCombo(c) {
+                    for page in 1..<pageCount {
+                        let idx = page * pageSize + slotIdx
+                        if idx < positions.count {
+                            positions[idx].actionCombo = c
+                        }
                     }
-                }
-            } else {
-                // If nil or nav combo, clear the slot on other pages
-                for page in 1..<pageCount {
-                    let idx = page * pageSize + slotIdx
-                    if idx < positions.count {
-                        positions[idx].actionCombo = nil
+                } else {
+                    // If nil or nav combo, clear the slot on other pages
+                    for page in 1..<pageCount {
+                        let idx = page * pageSize + slotIdx
+                        if idx < positions.count {
+                            positions[idx].actionCombo = nil
+                        }
                     }
                 }
             }
