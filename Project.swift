@@ -18,7 +18,13 @@ let project = Project(
                         "UIInterfaceOrientationLandscapeLeft",
                         "UIInterfaceOrientationLandscapeRight",
                     ],
-                    "NSCameraUsageDescription": "This app uses the camera for eye tracking and face detection to provide accessibility features for communication."
+                    "NSCameraUsageDescription": "This app uses the camera for eye tracking and face detection to provide accessibility features for communication.",
+                    "UIAppFonts": [
+                        "Fonts/Montserrat-Regular.ttf",
+                        "Fonts/Montserrat-Medium.ttf",
+                        "Fonts/Montserrat-SemiBold.ttf",
+                        "Fonts/Montserrat-Bold.ttf",
+                    ]
                 ]
             ),
             sources: ["eyespeak/Sources/**"],
