@@ -25,12 +25,12 @@ struct AACFaceTrackingPanel: View {
             trackingPreview(statusBinding: statusBinding)
 //            statusSummary statusSummary
         }
-//        .sheet(isPresented: calibratingBinding, onDismiss: viewModel.endCalibration) {
-//            AACCalibrationSheet(
-//                status: statusBinding,
-//                isPresented: calibratingBinding
-//            )
-//        }
+        .sheet(isPresented: calibratingBinding, onDismiss: viewModel.endCalibration) {
+            AACCalibrationSheet(
+                status: statusBinding,
+                isPresented: calibratingBinding
+            )
+        }
     }
 
     // MARK: - Subviews
