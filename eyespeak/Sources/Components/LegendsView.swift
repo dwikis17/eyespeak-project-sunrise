@@ -18,8 +18,10 @@ struct LegendsView: View {
     private var columnItems: [[LegendItem]] {
         guard !legendItems.isEmpty else { return [] }
         if !hasMultipleColumns { return [legendItems] }
-        let left = Array(legendItems.prefix(6))
-        let right = Array(legendItems.dropFirst(6))
+        let midPoint = Int(ceil(Double(legendItems.count) / 2.0))
+        let left = Array(legendItems.prefix(midPoint))
+        let rightCount = max(legendItems.count - midPoint, 0)
+        let right = rightCount > 0 ? Array(legendItems.suffix(rightCount)) : []
         return right.isEmpty ? [left] : [left, right]
     }
     
@@ -51,7 +53,6 @@ struct LegendsView: View {
                 LegendColumn(items: items)
             }
         }
-        .frame(height: 275.56)
     }
 }
 
@@ -79,12 +80,8 @@ private struct LegendColumn: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            ForEach(0..<6, id: \.self) { index in
-                if index < items.count {
-                    LegendRow(item: items[index])
-                } else {
-                    Spacer().frame(height: 19.2)
-                }
+            ForEach(items) { item in
+                LegendRow(item: item)
             }
         }
         .padding(.horizontal, 19)
@@ -121,18 +118,7 @@ private struct LegendRow: View {
     }
 }
 
-#Preview("Six Gestures") {
-    LegendsView()
-        .modelContainer(makeLegendPreviewContainer(enabledCount: 4))
-}
-
-#Preview("Nine Gestures") {
-    LegendsView()
-        .modelContainer(makeLegendPreviewContainer(enabledCount: 9))
-}
-
-@MainActor
-private func makeLegendPreviewContainer(enabledCount: Int) -> ModelContainer {
+#Preview {
     let schema = Schema([
         AACard.self,
         ActionCombo.self,
@@ -144,10 +130,12 @@ private func makeLegendPreviewContainer(enabledCount: Int) -> ModelContainer {
     let context = container.mainContext
     SampleData.populate(context: context)
     if let gestures = try? context.fetch(FetchDescriptor<UserGesture>(sortBy: [SortDescriptor(\.order)])) {
-        for (index, gesture) in gestures.enumerated() {
-            gesture.isEnabled = index < enabledCount
+        for (index, gesture) in gestures.enumerated() where index < 8 {
+            gesture.isEnabled = true
         }
         try? context.save()
     }
-    return container
+    
+    return LegendsView()
+        .modelContainer(container)
 }
