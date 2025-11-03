@@ -19,11 +19,12 @@ struct AACView: View {
 
     var body: some View {
         GeometryReader { geo in
-            HStack {
+            HStack{
                 InformationView()
-                    .frame(width: geo.size.width * 0.2)
-                Spacer()
+                    .padding()
+                    .frame(width: geo.size.width * 0.3)
                 CardGridView()
+                    .padding()
                     .frame( width: geo.size.width * 0.7)
 
             }
@@ -44,5 +45,6 @@ struct AACView: View {
 #Preview {
     let container = AACDIContainer.makePreviewContainer()
     return AACView(container: AACDIContainer.shared)
+        .environment(AppStateManager())
         .modelContainer(container)
 }

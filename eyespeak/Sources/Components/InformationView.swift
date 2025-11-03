@@ -27,8 +27,8 @@ struct InformationView: View {
     @Environment(AppStateManager.self) private var appState
 
     let columns = [
-        GridItem(.flexible()),
-        GridItem(.flexible()),
+        GridItem(.flexible(), spacing: 0),
+         GridItem(.flexible(), spacing: 0)
     ]
 
     var body: some View {
@@ -44,43 +44,99 @@ struct InformationView: View {
     }
 
     private var controlPanelSection: some View {
-        LazyVGrid(columns: columns, spacing: 20) {
+        LazyVGrid(columns: columns, spacing: 10) {
             // Settings button with optional combo badge
-            Card {
-                ZStack(alignment: .topTrailing) {
-                    Button {
-                        appState.currentTab = .settings
-                    } label: {
-                        VStack {
-                            Text("SETTINGS")
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            Spacer()
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    
-                    // Combo badge in top-right corner (only if configured)
-                    if let settingsCombo = viewModel.settings.settingsCombo {
-                        HStack(spacing: 4) {
-                            Image(systemName: settingsCombo.0.iconName)
-                                .font(.caption2)
-                            Image(systemName: settingsCombo.1.iconName)
-                                .font(.caption2)
-                        }
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
-                        .background(
-                            Capsule()
-                                .fill(Color(uiColor: .systemBackground))
-                                .overlay(
-                                    Capsule()
-                                        .strokeBorder(Color.primary.opacity(0.2), lineWidth: 1)
-                                )
-                        )
-                        .padding(8)
-                    }
+            // Use NavigationCard directly and pass optional combos + action
+            if let settingsCombo = viewModel.settings.settingsCombo {
+                NavigationCard(
+                    title: "Settings",
+                    background: .customBlue,
+                    cornerRadius: 22,
+                    firstCombo: settingsCombo.0.iconName,
+                    secondCombo: settingsCombo.1.iconName
+                ) {
+                    // action closure
+                    appState.currentTab = .settings
+                }
+            } else {
+                // no combo configured — keep same visual but without pill
+                NavigationCard(
+                    title: "Settings",
+                    background: .customBlue,
+                    cornerRadius: 22,
+                    firstCombo: nil,
+                    secondCombo: nil
+                ) {
+                    appState.currentTab = .settings
+                }
+            }
+            if let settingsCombo = viewModel.settings.settingsCombo {
+                NavigationCard(
+                    title: "Settings",
+                    background: .customBlue,
+                    cornerRadius: 22,
+                    firstCombo: settingsCombo.0.iconName,
+                    secondCombo: settingsCombo.1.iconName
+                ) {
+                    // action closure
+                    appState.currentTab = .settings
+                }
+            } else {
+                // no combo configured — keep same visual but without pill
+                NavigationCard(
+                    title: "Settings",
+                    background: .customBlue,
+                    cornerRadius: 22,
+                    firstCombo: nil,
+                    secondCombo: nil
+                ) {
+                    appState.currentTab = .settings
+                }
+            }
+            if let settingsCombo = viewModel.settings.settingsCombo {
+                NavigationCard(
+                    title: "Settings",
+                    background: .customBlue,
+                    cornerRadius: 22,
+                    firstCombo: settingsCombo.0.iconName,
+                    secondCombo: settingsCombo.1.iconName
+                ) {
+                    // action closure
+                    appState.currentTab = .settings
+                }
+            } else {
+                // no combo configured — keep same visual but without pill
+                NavigationCard(
+                    title: "Settings",
+                    background: .customBlue,
+                    cornerRadius: 22,
+                    firstCombo: nil,
+                    secondCombo: nil
+                ) {
+                    appState.currentTab = .settings
+                }
+            }
+            if let settingsCombo = viewModel.settings.settingsCombo {
+                NavigationCard(
+                    title: "Settings",
+                    background: .customBlue,
+                    cornerRadius: 22,
+                    firstCombo: settingsCombo.0.iconName,
+                    secondCombo: settingsCombo.1.iconName
+                ) {
+                    // action closure
+                    appState.currentTab = .settings
+                }
+            } else {
+                // no combo configured — keep same visual but without pill
+                NavigationCard(
+                    title: "Settings",
+                    background: .customBlue,
+                    cornerRadius: 22,
+                    firstCombo: nil,
+                    secondCombo: nil
+                ) {
+                    appState.currentTab = .settings
                 }
             }
         }
@@ -190,5 +246,6 @@ struct InformationView: View {
 #Preview {
     InformationView()
         .environmentObject(AACDIContainer.shared.makeAACViewModel())
+        .environment(AppStateManager())
         .frame(width: 360)
 }
