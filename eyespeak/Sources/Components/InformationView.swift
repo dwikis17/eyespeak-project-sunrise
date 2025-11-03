@@ -12,18 +12,24 @@ struct Card<Content: View>: View {
         VStack {
             content
         }
-        .padding() // internal padding for content
+        .padding()  // internal padding for content
         .background(
             RoundedRectangle(cornerRadius: 20)
                 .fill(Color(.systemBackground))
                 .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
         )
-        .fixedSize(horizontal: false, vertical: true) // important: allow card to fit its content height
+        .fixedSize(horizontal: false, vertical: true)  // important: allow card to fit its content height
     }
 }
 
 struct InformationView: View {
     @EnvironmentObject private var viewModel: AACViewModel
+    @Environment(AppStateManager.self) private var appState
+
+    let columns = [
+        GridItem(.flexible()),
+        GridItem(.flexible()),
+    ]
 
     var body: some View {
         VStack(spacing: 16) {
@@ -32,6 +38,50 @@ struct InformationView: View {
                 AACFaceTrackingPanel()
             } else {
                 gestureModePlaceholder
+            }
+            controlPanelSection
+        }
+    }
+
+    private var controlPanelSection: some View {
+        LazyVGrid(columns: columns, spacing: 20) {
+            // Settings button with optional combo badge
+            Card {
+                ZStack(alignment: .topTrailing) {
+                    Button {
+                        appState.currentTab = .settings
+                    } label: {
+                        VStack {
+                            Text("SETTINGS")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            Spacer()
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    
+                    // Combo badge in top-right corner (only if configured)
+                    if let settingsCombo = viewModel.settings.settingsCombo {
+                        HStack(spacing: 4) {
+                            Image(systemName: settingsCombo.0.iconName)
+                                .font(.caption2)
+                            Image(systemName: settingsCombo.1.iconName)
+                                .font(.caption2)
+                        }
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
+                        .background(
+                            Capsule()
+                                .fill(Color(uiColor: .systemBackground))
+                                .overlay(
+                                    Capsule()
+                                        .strokeBorder(Color.primary.opacity(0.2), lineWidth: 1)
+                                )
+                        )
+                        .padding(8)
+                    }
+                }
             }
         }
     }
@@ -49,15 +99,31 @@ struct InformationView: View {
                 ZStack(alignment: .center) {
                     RoundedRectangle(cornerRadius: 14)
                         .fill(LinearGradient.redOrange)
-                        .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 3)
+                        .shadow(
+                            color: .black.opacity(0.08),
+                            radius: 6,
+                            x: 0,
+                            y: 3
+                        )
 
                     // Show up to last two gestures as large, white icons
                     HStack(spacing: 28) {
-                        ForEach(Array(viewModel.gestureInputManager.gestureSequence.enumerated()), id: \.offset) { _, gesture in
+                        ForEach(
+                            Array(
+                                viewModel.gestureInputManager.gestureSequence
+                                    .enumerated()
+                            ),
+                            id: \.offset
+                        ) { _, gesture in
                             Image(systemName: gesture.iconName)
                                 .font(.system(size: 44, weight: .semibold))
                                 .foregroundColor(.white)
-                                .shadow(color: .black.opacity(0.12), radius: 4, x: 0, y: 2)
+                                .shadow(
+                                    color: .black.opacity(0.12),
+                                    radius: 4,
+                                    x: 0,
+                                    y: 2
+                                )
                         }
                     }
                 }
@@ -66,14 +132,24 @@ struct InformationView: View {
                 // Live countdown bar linked to gesture timing window
                 GeometryReader { geo in
                     TimelineView(.periodic(from: .now, by: 0.05)) { context in
-                        let fraction = viewModel.gestureInputManager.remainingTimeFraction(referenceDate: context.date)
+                        let fraction = viewModel.gestureInputManager
+                            .remainingTimeFraction(referenceDate: context.date)
                         ZStack(alignment: .leading) {
                             Capsule()
                                 .frame(height: 6)
                                 .foregroundColor(Color(.systemGray5))
                             Capsule()
-                                .frame(width: geo.size.width * fraction, height: 6)
-                                .foregroundColor(Color(red: 246/255, green: 146/255, blue: 79/255))
+                                .frame(
+                                    width: geo.size.width * fraction,
+                                    height: 6
+                                )
+                                .foregroundColor(
+                                    Color(
+                                        red: 246 / 255,
+                                        green: 146 / 255,
+                                        blue: 79 / 255
+                                    )
+                                )
                         }
                         .animation(.easeOut(duration: 0.1), value: fraction)
                     }
@@ -91,9 +167,11 @@ struct InformationView: View {
                     .foregroundColor(.primary)
 
                 VStack(spacing: 8) {
-                    Text("Turn on gesture mode to control the grid with your eyes.")
-                        .multilineTextAlignment(.center)
-                        .foregroundStyle(.secondary)
+                    Text(
+                        "Turn on gesture mode to control the grid with your eyes."
+                    )
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.secondary)
                     HStack(spacing: 40) {
                         Image(systemName: "arrow.left")
                         Image(systemName: "eye")
@@ -105,7 +183,7 @@ struct InformationView: View {
             }
             .frame(maxWidth: .infinity)
         }
-        .frame(maxWidth: .infinity) // placeholder card stretches horizontally but still fits content height
+        .frame(maxWidth: .infinity)  // placeholder card stretches horizontally but still fits content height
     }
 }
 

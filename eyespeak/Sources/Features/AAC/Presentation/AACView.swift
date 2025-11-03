@@ -10,6 +10,7 @@ import SwiftUI
 
 struct AACView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(AppStateManager.self) private var appState
     @StateObject private var viewModel: AACViewModel
     
     init(container: AACDIContainer = AACDIContainer.shared) {
@@ -30,6 +31,12 @@ struct AACView: View {
         }
         // 👇 inject into environment so child views can use @EnvironmentObject
         .environmentObject(viewModel)
+        .onAppear {
+            // Wire up settings navigation callback
+            viewModel.onNavigateToSettings = {
+                appState.currentTab = .settings
+            }
+        }
     }
 }
 

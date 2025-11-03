@@ -32,21 +32,7 @@ public struct ContentView: View {
                             Text("AAC")
                         }
                         .tag(Tab.aac)
-                    
-                    EyeTrackingDemoView()
-                        .tabItem {
-                            Image(systemName: "eye.circle")
-                            Text("AAC With Accessibility")
-                        }
-                        .tag(Tab.eyeTrackingAccessible)
-                    
-                    EyeTrackViewDemo()
-                        .tabItem {
-                            Image(systemName: "eye")
-                            Text("Simple Eye Tracking")
-                        }
-                        .tag(Tab.eyeTrackingSimple)
-                    
+                 
                     // Settings Tab
                     SettingsView()
                         .tabItem {
@@ -54,11 +40,11 @@ public struct ContentView: View {
                        
                         }
                         .tag(Tab.settings)
-                    
-                    ARKitFaceTestView()
-                        .tabItem {
-                            Image(systemName:"camera.fill")
-                        }
+//                    
+//                    ARKitFaceTestView()
+//                        .tabItem {
+//                            Image(systemName:"camera.fill")
+//                        }
                 }
                 .onAppear {
                     bindableAppState.checkOnboardingStatus(modelContext: modelContext)

@@ -81,11 +81,13 @@ extension ModelContainer {
         let settings = UserSettings()
         let navNext = settings.navNextCombo
         let navPrev = settings.navPrevCombo
-        guard navNext != nil || navPrev != nil else { return }
+        let settingsCombo = settings.settingsCombo
+        guard navNext != nil || navPrev != nil || settingsCombo != nil else { return }
 
         func isNavCombo(_ c: ActionCombo) -> Bool {
             if let n = navNext, c.firstGesture == n.0 && c.secondGesture == n.1 { return true }
             if let p = navPrev, c.firstGesture == p.0 && c.secondGesture == p.1 { return true }
+            if let s = settingsCombo, c.firstGesture == s.0 && c.secondGesture == s.1 { return true }
             return false
         }
 

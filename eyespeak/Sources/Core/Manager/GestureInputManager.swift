@@ -29,6 +29,8 @@ import Observation
         // Optional high-priority navigation combos (prev/next page)
         private var navNext: (GestureType, GestureType)?
         private var navPrev: (GestureType, GestureType)?
+        // Settings combo (priority 3)
+        private var settingsCombo: (GestureType, GestureType)?
         
         // MARK: - Public Methods
         
@@ -82,6 +84,7 @@ import Observation
                     // Skip combos reserved for navigation priority
                     if let n = navNext, combo.firstGesture == n.0 && combo.secondGesture == n.1 { continue }
                     if let p = navPrev, combo.firstGesture == p.0 && combo.secondGesture == p.1 { continue }
+                    if let s = settingsCombo, combo.firstGesture == s.0 && combo.secondGesture == s.1 { continue }
                     availableCombosBySlot[combo] = slotIndex
                 }
             }
@@ -92,6 +95,11 @@ import Observation
         func setNavigationCombos(prev: (GestureType, GestureType)?, next: (GestureType, GestureType)?) {
             self.navPrev = prev
             self.navNext = next
+        }
+        
+        /// Configure settings combo (priority 3, after nav prev/next)
+        func setSettingsCombo(_ combo: (GestureType, GestureType)?) {
+            self.settingsCombo = combo
         }
         
         /// Reset gesture sequence
@@ -135,8 +143,15 @@ import Observation
                 reset()
                 return
             }
+            // 2) Settings combo (priority 3)
+            if let s = settingsCombo, first == s.0 && second == s.1 {
+                let combo = ActionCombo(name: "Settings", firstGesture: s.0, secondGesture: s.1)
+                onComboMatchedBySlot?(combo, -3) // special slot index for settings
+                reset()
+                return
+            }
             
-            // 2) Find matching combo by template
+            // 3) Find matching combo by template
             for (combo, slotIndex) in availableCombosBySlot {
                 if combo.firstGesture == first && combo.secondGesture == second {
                     print("✨ MATCH FOUND! Combo: \(combo.name) at slot #\(slotIndex)")

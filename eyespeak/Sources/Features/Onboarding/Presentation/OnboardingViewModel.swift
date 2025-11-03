@@ -188,18 +188,35 @@ public final class OnboardingViewModel {
         }
         settings.navNextCombo = navNext
         settings.navPrevCombo = navPrev
-
-        // Ensure nav combos appear on the first page by putting them at the front of assignment order
-        var assignmentOrder = combos
-        if let next = navNext, let idx = assignmentOrder.firstIndex(where: { $0.firstGesture == next.0 && $0.secondGesture == next.1 }) {
-            let c = assignmentOrder.remove(at: idx)
-            assignmentOrder.insert(c, at: 0)
+        
+        // Assign settings combo (priority 3) - use next available combo that's not nav
+        var settingsCombo: (GestureType, GestureType)?
+        for combo in combos {
+            let isNavNext = navNext != nil && combo.firstGesture == navNext!.0 && combo.secondGesture == navNext!.1
+            let isNavPrev = navPrev != nil && combo.firstGesture == navPrev!.0 && combo.secondGesture == navPrev!.1
+            if !isNavNext && !isNavPrev {
+                settingsCombo = (combo.firstGesture, combo.secondGesture)
+                break
+            }
         }
-        if let prev = navPrev, let idx = assignmentOrder.firstIndex(where: { $0.firstGesture == prev.0 && $0.secondGesture == prev.1 }) {
-            let c = assignmentOrder.remove(at: idx)
-            // Put prev second, after next
-            let insertIdx = min(1, assignmentOrder.count)
-            assignmentOrder.insert(c, at: insertIdx)
+        // Fallback: if no combo found, use first combo that's not nav
+        if settingsCombo == nil {
+            if let firstNonNav = combos.first(where: { c in
+                let isNavNext = navNext != nil && c.firstGesture == navNext!.0 && c.secondGesture == navNext!.1
+                let isNavPrev = navPrev != nil && c.firstGesture == navPrev!.0 && c.secondGesture == navPrev!.1
+                return !isNavNext && !isNavPrev
+            }) {
+                settingsCombo = (firstNonNav.firstGesture, firstNonNav.secondGesture)
+            }
+        }
+        settings.settingsCombo = settingsCombo
+
+        // Build assignment order, excluding priority combos (nav and settings)
+        var assignmentOrder = combos.filter { combo in
+            let isNavNext = navNext != nil && combo.firstGesture == navNext!.0 && combo.secondGesture == navNext!.1
+            let isNavPrev = navPrev != nil && combo.firstGesture == navPrev!.0 && combo.secondGesture == navPrev!.1
+            let isSettings = settingsCombo != nil && combo.firstGesture == settingsCombo!.0 && combo.secondGesture == settingsCombo!.1
+            return !isNavNext && !isNavPrev && !isSettings
         }
 
         for (index, position) in updatedPositions.enumerated() {
