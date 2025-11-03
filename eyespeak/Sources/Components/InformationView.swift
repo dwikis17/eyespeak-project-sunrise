@@ -9,29 +9,133 @@ struct Card<Content: View>: View {
     }
 
     var body: some View {
-        VStack {
-            content
-        }
-        .padding() // internal padding for content
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
-        )
-        .fixedSize(horizontal: false, vertical: true) // important: allow card to fit its content height
+
+        content
+            .padding()  // internal padding for content
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color(.systemBackground))
+                    .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
+            )
+            .fixedSize(horizontal: false, vertical: true)  // important: allow card to fit its content height
     }
 }
 
 struct InformationView: View {
     @EnvironmentObject private var viewModel: AACViewModel
+    @Environment(AppStateManager.self) private var appState
+
+    let columns = [
+        GridItem(.flexible(), spacing: 12),
+        GridItem(.flexible(), spacing: 12),
+    ]
 
     var body: some View {
         VStack(spacing: 16) {
             currentInputSection
             if viewModel.isGestureMode {
-                AACFaceTrackingPanel()
+                HStack(alignment: .top, spacing: 12) {
+                    AACFaceTrackingPanel()
+                        .frame(maxWidth: .infinity)
+                        .layoutPriority(1)
+                    lastInputSection
+                        .frame(width: 105)
+                }
             } else {
                 gestureModePlaceholder
+            }
+            controlPanelSection
+            LegendsView()
+        }
+    }
+
+    private var controlPanelSection: some View {
+        LazyVGrid(columns: columns, spacing: 10) {
+            // Settings button with optional combo badge
+            // Use NavigationCard directly and pass optional combos + action
+            // Calibrate card (moved from panel)
+                 if let settingsCombo = viewModel.settings.settingsCombo {
+                NavigationCard(
+                    title: "Settings",
+                    background: .customBlue,
+                    cornerRadius: 22,
+                    firstCombo: settingsCombo.0.iconName,
+                    secondCombo: settingsCombo.1.iconName
+                ) {
+                    // action closure
+                    appState.currentTab = .settings
+                }
+            } else {
+                // no combo configured — keep same visual but without pill
+                NavigationCard(
+                    title: "Settings",
+                    background: .customBlue,
+                    cornerRadius: 22,
+                    firstCombo: nil,
+                    secondCombo: nil
+                ) {
+                    appState.currentTab = .settings
+                }
+            }
+            NavigationCard(
+                title: "Calibrate",
+                background: .customBlue,
+                cornerRadius: 22,
+                firstCombo: nil,
+                secondCombo: nil
+            ) {
+                if viewModel.isCalibrating {
+                    viewModel.endCalibration()
+                } else {
+                    viewModel.beginCalibration()
+                }
+            }
+       
+            if let settingsCombo = viewModel.settings.settingsCombo {
+                NavigationCard(
+                    title: "Settings",
+                    background: .customBlue,
+                    cornerRadius: 22,
+                    firstCombo: settingsCombo.0.iconName,
+                    secondCombo: settingsCombo.1.iconName
+                ) {
+                    // action closure
+                    appState.currentTab = .settings
+                }
+            } else {
+                // no combo configured — keep same visual but without pill
+                NavigationCard(
+                    title: "Settings",
+                    background: .customBlue,
+                    cornerRadius: 22,
+                    firstCombo: nil,
+                    secondCombo: nil
+                ) {
+                    appState.currentTab = .settings
+                }
+            }
+            if let settingsCombo = viewModel.settings.settingsCombo {
+                NavigationCard(
+                    title: "Settings",
+                    background: .customBlue,
+                    cornerRadius: 22,
+                    firstCombo: settingsCombo.0.iconName,
+                    secondCombo: settingsCombo.1.iconName
+                ) {
+                    // action closure
+                    appState.currentTab = .settings
+                }
+            } else {
+                // no combo configured — keep same visual but without pill
+                NavigationCard(
+                    title: "Settings",
+                    background: .customBlue,
+                    cornerRadius: 22,
+                    firstCombo: nil,
+                    secondCombo: nil
+                ) {
+                    appState.currentTab = .settings
+                }
             }
         }
     }
@@ -49,15 +153,31 @@ struct InformationView: View {
                 ZStack(alignment: .center) {
                     RoundedRectangle(cornerRadius: 14)
                         .fill(LinearGradient.redOrange)
-                        .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 3)
+                        .shadow(
+                            color: .black.opacity(0.08),
+                            radius: 6,
+                            x: 0,
+                            y: 3
+                        )
 
                     // Show up to last two gestures as large, white icons
                     HStack(spacing: 28) {
-                        ForEach(Array(viewModel.gestureInputManager.gestureSequence.enumerated()), id: \.offset) { _, gesture in
+                        ForEach(
+                            Array(
+                                viewModel.gestureInputManager.gestureSequence
+                                    .enumerated()
+                            ),
+                            id: \.offset
+                        ) { _, gesture in
                             Image(systemName: gesture.iconName)
                                 .font(.system(size: 44, weight: .semibold))
                                 .foregroundColor(.white)
-                                .shadow(color: .black.opacity(0.12), radius: 4, x: 0, y: 2)
+                                .shadow(
+                                    color: .black.opacity(0.12),
+                                    radius: 4,
+                                    x: 0,
+                                    y: 2
+                                )
                         }
                     }
                 }
@@ -66,19 +186,55 @@ struct InformationView: View {
                 // Live countdown bar linked to gesture timing window
                 GeometryReader { geo in
                     TimelineView(.periodic(from: .now, by: 0.05)) { context in
-                        let fraction = viewModel.gestureInputManager.remainingTimeFraction(referenceDate: context.date)
+                        let fraction = viewModel.gestureInputManager
+                            .remainingTimeFraction(referenceDate: context.date)
                         ZStack(alignment: .leading) {
                             Capsule()
                                 .frame(height: 6)
                                 .foregroundColor(Color(.systemGray5))
                             Capsule()
-                                .frame(width: geo.size.width * fraction, height: 6)
-                                .foregroundColor(Color(red: 246/255, green: 146/255, blue: 79/255))
+                                .frame(
+                                    width: geo.size.width * fraction,
+                                    height: 6
+                                )
+                                .foregroundColor(
+                                    Color(
+                                        red: 246 / 255,
+                                        green: 146 / 255,
+                                        blue: 79 / 255
+                                    )
+                                )
                         }
                         .animation(.easeOut(duration: 0.1), value: fraction)
                     }
                 }
                 .frame(height: 20)
+            }
+        }
+    }
+
+    private var lastInputSection: some View {
+        Card {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("LAST INPUT")
+                    .font(.headline)
+                    .foregroundColor(.primary)
+
+                Divider()
+
+                VStack(spacing: 10) {
+                    ForEach(Array(viewModel.recentCombos.prefix(3).enumerated()), id: \.offset) { _, pair in
+                        HStack(spacing: 16) {
+                            Image(systemName: pair.0.iconName)
+                            Image(systemName: pair.1.iconName)
+                        }
+                        .font(.system(size: 18, weight: .semibold))
+                        .padding(.vertical, 10)
+                        .frame(maxWidth: .infinity)
+                        .background(Color(.systemGray6))
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                    }
+                }
             }
         }
     }
@@ -91,9 +247,11 @@ struct InformationView: View {
                     .foregroundColor(.primary)
 
                 VStack(spacing: 8) {
-                    Text("Turn on gesture mode to control the grid with your eyes.")
-                        .multilineTextAlignment(.center)
-                        .foregroundStyle(.secondary)
+                    Text(
+                        "Turn on gesture mode to control the grid with your eyes."
+                    )
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.secondary)
                     HStack(spacing: 40) {
                         Image(systemName: "arrow.left")
                         Image(systemName: "eye")
@@ -105,12 +263,13 @@ struct InformationView: View {
             }
             .frame(maxWidth: .infinity)
         }
-        .frame(maxWidth: .infinity) // placeholder card stretches horizontally but still fits content height
+        .frame(maxWidth: .infinity)  // placeholder card stretches horizontally but still fits content height
     }
 }
 
 #Preview {
     InformationView()
         .environmentObject(AACDIContainer.shared.makeAACViewModel())
+        .environment(AppStateManager())
         .frame(width: 360)
 }

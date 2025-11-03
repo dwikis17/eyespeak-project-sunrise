@@ -82,22 +82,12 @@ struct AACFaceTrackingPanel: View {
             .padding(.horizontal, 10)
             .background(.ultraThinMaterial)
             .clipShape(Capsule())
-
             Spacer()
-
-            Button(action: handleCalibrationButton) {
-                Text(viewModel.isCalibrating
-                     ? "Calibrating…"
-                     : (viewModel.faceStatus.isCalibrated ? "Recalibrate" : "Calibrate"))
-                    .font(.footnote.weight(.semibold))
-            }
-            .buttonStyle(.borderedProminent)
-            .disabled(viewModel.isCalibrating)
         }
     }
 
     private var statusSummary: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 12) { 
             HStack {
                 Label("Direction", systemImage: "eyes")
                     .font(.caption)
@@ -225,11 +215,5 @@ struct AACFaceTrackingPanel: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
-    private func handleCalibrationButton() {
-        if viewModel.isCalibrating {
-            viewModel.endCalibration()
-        } else {
-            viewModel.beginCalibration()
-        }
-    }
+    // Calibrate button moved to InformationView
 }

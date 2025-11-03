@@ -24,6 +24,7 @@ public class UserSettings {
     @AppStorage("gridColumns") var gridColumns: Int = 5
     @AppStorage("navNextCombo") private var navNextRaw: String?
     @AppStorage("navPrevCombo") private var navPrevRaw: String?
+    @AppStorage("settingsCombo") private var settingsComboRaw: String?
 
     @AppStorage("comboInputSettings") private var comboInputSettingsData: Data?
 
@@ -47,6 +48,10 @@ public class UserSettings {
     var navPrevCombo: (GestureType, GestureType)? {
         get { decodePair(navPrevRaw) }
         set { navPrevRaw = encodePair(newValue) }
+    }
+    var settingsCombo: (GestureType, GestureType)? {
+        get { decodePair(settingsComboRaw) }
+        set { settingsComboRaw = encodePair(newValue) }
     }
 
     private func encodePair(_ pair: (GestureType, GestureType)?) -> String? {

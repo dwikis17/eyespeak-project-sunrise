@@ -10,6 +10,7 @@ import SwiftUI
 
 struct AACView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(AppStateManager.self) private var appState
     @StateObject private var viewModel: AACViewModel
     
     init(container: AACDIContainer = AACDIContainer.shared) {
@@ -18,18 +19,26 @@ struct AACView: View {
 
     var body: some View {
         GeometryReader { geo in
-            HStack {
+            HStack (alignment: .center) {
                 InformationView()
-                    .frame(width: geo.size.width * 0.2)
+                    .padding()
+                    .frame(width: geo.size.width * 0.25, height: geo.size.height)
                 Spacer()
                 CardGridView()
-                    .frame( width: geo.size.width * 0.7)
+                    .padding()
+                    .frame( width: geo.size.width * 0.7, height: geo.size.height)
 
             }
-            .padding(.horizontal)
+            .padding()
         }
         // 👇 inject into environment so child views can use @EnvironmentObject
         .environmentObject(viewModel)
+        .onAppear {
+            // Wire up settings navigation callback
+            viewModel.onNavigateToSettings = {
+                appState.currentTab = .settings
+            }
+        }
     }
 }
 
@@ -37,5 +46,6 @@ struct AACView: View {
 #Preview {
     let container = AACDIContainer.makePreviewContainer()
     return AACView(container: AACDIContainer.shared)
+        .environment(AppStateManager())
         .modelContainer(container)
 }

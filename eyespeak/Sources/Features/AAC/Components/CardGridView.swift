@@ -5,39 +5,26 @@
 //  Created by Dwiki on [date]
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct CardGridView: View {
     @EnvironmentObject private var viewModel: AACViewModel
-    
+
     var body: some View {
-        NavigationStack {
-            mainContent
-                .navigationTitle("EyeSpeak")
-                .navigationBarTitleDisplayMode(.inline)
-                .onAppear {
-                    viewModel.setupManagers()
-                }
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button(action: { viewModel.toggleGestureMode() }) {
-                            Image(systemName: viewModel.isGestureMode ? "eye.fill" : "eye")
-                        }
-                        .accessibilityLabel("Toggle gesture mode")
-                }
+        mainContent
+            .onAppear {
+                viewModel.setupManagers()
             }
-        }
-        
-      
+
     }
-    
+
     private var mainContent: some View {
-        VStack(spacing: 0) {
+        
             gridSection
-        }
+        
     }
-    
+
     private var gridSection: some View {
         HStack(alignment: .center, spacing: 40) {
             VStack(spacing: 8) {
@@ -46,15 +33,27 @@ struct CardGridView: View {
                     Image("arrow")
                         .renderingMode(.template)
                         .font(.system(size: 28, weight: .semibold))
-                        .foregroundColor(.primary.opacity(viewModel.currentPage == 0 ? 0.2 : 0.9))
+                        .foregroundColor(
+                            .primary.opacity(
+                                viewModel.currentPage == 0 ? 0.2 : 0.9
+                            )
+                        )
                         .rotationEffect(.degrees(180))
-                        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                        .shadow(
+                            color: .black.opacity(0.1),
+                            radius: 4,
+                            x: 0,
+                            y: 2
+                        )
                 }
                 .disabled(viewModel.currentPage == 0)
             }
 
             LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: viewModel.columns),
+                columns: Array(
+                    repeating: GridItem(.flexible(), spacing: 8),
+                    count: viewModel.columns
+                ),
                 spacing: 8
             ) {
                 ForEach(viewModel.currentPagePositions) { position in
@@ -62,28 +61,39 @@ struct CardGridView: View {
                         position: position,
                         dataManager: viewModel.dataManagerInstance,
                         columns: viewModel.columns,
-                        isHighlighted: viewModel.selectedPosition?.id == position.id,
+                        isHighlighted: viewModel.selectedPosition?.id
+                            == position.id,
                         viewModel: viewModel
                     )
                 }
             }
-            .frame(maxWidth: .infinity)   // <- important: grid expands to take remaining width
-            .layoutPriority(1)            // <- prefer grid over arrows when sizing
+            .frame(maxWidth: .infinity)  // <- important: grid expands to take remaining width
+            .layoutPriority(1)  // <- prefer grid over arrows when sizing
 
             VStack(spacing: 8) {
                 comboBadge(for: viewModel.settings.navNextCombo)
                 Button(action: { viewModel.goToNextPage() }) {
                     Image("arrow")
                         .renderingMode(.template)
-                        .foregroundColor(.primary.opacity(viewModel.currentPage + 1 >= viewModel.totalPages ? 0.2 : 0.9))
-                        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                        .foregroundColor(
+                            .primary.opacity(
+                                viewModel.currentPage + 1
+                                    >= viewModel.totalPages ? 0.2 : 0.9
+                            )
+                        )
+                        .shadow(
+                            color: .black.opacity(0.1),
+                            radius: 4,
+                            x: 0,
+                            y: 2
+                        )
                 }
                 .disabled(viewModel.currentPage + 1 >= viewModel.totalPages)
             }
         }
         .padding(.horizontal)
     }
-    
+
     private var bottomToolbar: some View {
         HStack(spacing: 20) {
             gestureButton
@@ -95,7 +105,7 @@ struct CardGridView: View {
         .padding()
         .background(Color(uiColor: .systemBackground))
     }
-    
+
     private var gestureButton: some View {
         Button {
             viewModel.toggleGestureMode()
@@ -108,7 +118,7 @@ struct CardGridView: View {
                 .clipShape(Circle())
         }
     }
-    
+
     private var settingsButton: some View {
         Button {
             viewModel.showSettings()
@@ -121,25 +131,25 @@ struct CardGridView: View {
                 .clipShape(Circle())
         }
     }
-    
+
     private var pagerControls: some View {
         HStack(spacing: 12) {
             Button(action: { viewModel.goToPreviousPage() }) {
                 Image(systemName: "chevron.left")
             }
             .disabled(viewModel.currentPage == 0)
-            
+
             Text("\(viewModel.currentPage + 1)/\(viewModel.totalPages)")
                 .font(.subheadline)
                 .monospacedDigit()
-            
+
             Button(action: { viewModel.goToNextPage() }) {
                 Image(systemName: "chevron.right")
             }
             .disabled(viewModel.currentPage + 1 >= viewModel.totalPages)
         }
     }
-    
+
     private var navigationCheatSheet: some View {
         VStack(alignment: .trailing, spacing: 4) {
             HStack(spacing: 8) {
@@ -149,7 +159,7 @@ struct CardGridView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            
+
             if let prevCombo = viewModel.settings.navPrevCombo {
                 Text("\(prevCombo.0.displayName) + \(prevCombo.1.displayName)")
                     .font(.caption2)
@@ -159,7 +169,7 @@ struct CardGridView: View {
                     .background(Color.blue.opacity(0.1))
                     .cornerRadius(4)
             }
-            
+
             HStack(spacing: 8) {
                 Image(systemName: "chevron.right")
                     .foregroundColor(.blue)
@@ -167,7 +177,7 @@ struct CardGridView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            
+
             if let nextCombo = viewModel.settings.navNextCombo {
                 Text("\(nextCombo.0.displayName) + \(nextCombo.1.displayName)")
                     .font(.caption2)
@@ -185,7 +195,8 @@ struct CardGridView: View {
     }
 
     // MARK: - Side combo badge
-    private func comboBadge(for combo: (GestureType, GestureType)?) -> some View {
+    private func comboBadge(for combo: (GestureType, GestureType)?) -> some View
+    {
         Group {
             if let c = combo {
                 HStack(spacing: 6) {
@@ -205,7 +216,7 @@ struct CardGridView: View {
             }
         }
     }
-    
+
     private var infoButton: some View {
         Button {
             viewModel.showComboInfo()
@@ -218,7 +229,7 @@ struct CardGridView: View {
                 .clipShape(Circle())
         }
     }
-    
+
 }
 
 #Preview("Default") {

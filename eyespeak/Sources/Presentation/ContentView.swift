@@ -8,7 +8,6 @@ public struct ContentView: View {
     
     public var body: some View {
         @Bindable var bindableAppState = appState
-        
         Group {
             if bindableAppState.showOnboarding {
                 OnboardingView()
@@ -32,21 +31,7 @@ public struct ContentView: View {
                             Text("AAC")
                         }
                         .tag(Tab.aac)
-                    
-                    EyeTrackingDemoView()
-                        .tabItem {
-                            Image(systemName: "eye.circle")
-                            Text("AAC With Accessibility")
-                        }
-                        .tag(Tab.eyeTrackingAccessible)
-                    
-                    EyeTrackViewDemo()
-                        .tabItem {
-                            Image(systemName: "eye")
-                            Text("Simple Eye Tracking")
-                        }
-                        .tag(Tab.eyeTrackingSimple)
-                    
+                 
                     // Settings Tab
                     SettingsView()
                         .tabItem {
@@ -54,12 +39,13 @@ public struct ContentView: View {
                        
                         }
                         .tag(Tab.settings)
-                    
-                    ARKitFaceTestView()
-                        .tabItem {
-                            Image(systemName:"camera.fill")
-                        }
+//                    
+//                    ARKitFaceTestView()
+//                        .tabItem {
+//                            Image(systemName:"camera.fill")
+//                        }
                 }
+                .tabViewStyle(.page(indexDisplayMode: .never)) // ✅ hides tab bar
                 .onAppear {
                     bindableAppState.checkOnboardingStatus(modelContext: modelContext)
                 }

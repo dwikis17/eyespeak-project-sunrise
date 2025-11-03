@@ -28,6 +28,10 @@ public final class AACViewModel: ObservableObject {
     public var faceStatus = FaceStatus()
     public var isCalibrating = false
     public var lastDetectedGesture: GestureType?
+    public var recentCombos: [(GestureType, GestureType)] = []
+    
+    // Callback to navigate to settings (needs to be set by parent view)
+    public var onNavigateToSettings: (() -> Void)?
     
     // MARK: - Manager Access
     public var dataManagerInstance: DataManager { dataManager }
@@ -108,6 +112,8 @@ public final class AACViewModel: ObservableObject {
             } else {
                 gestureInputManager.setNavigationCombos(prev: nil, next: nil)
             }
+            // Always set settings combo regardless of page count
+            gestureInputManager.setSettingsCombo(settings.settingsCombo)
             // Always sanitize conflicts if nav combos are configured (even with 1 page)
             sanitizeNavigationComboConflicts()
             gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
@@ -129,6 +135,8 @@ public final class AACViewModel: ObservableObject {
                 } else {
                     gestureInputManager.setNavigationCombos(prev: nil, next: nil)
                 }
+                // Always set settings combo regardless of page count
+                gestureInputManager.setSettingsCombo(settings.settingsCombo)
                 // Always sanitize conflicts if nav combos are configured (even with 1 page)
                 sanitizeNavigationComboConflicts()
                 gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
@@ -247,6 +255,7 @@ public final class AACViewModel: ObservableObject {
     
     private func handleComboMatched(combo: ActionCombo, position: GridPosition) {
         print("🎯 Combo matched: \(combo.name) at position \(position.order)")
+        recordRecentCombo(combo)
         
         // Highlight the matched position
         withAnimation {
@@ -269,8 +278,13 @@ public final class AACViewModel: ObservableObject {
     
     private func handleComboMatched(combo: ActionCombo, slotIndex: Int) {
         // Special negative indices reserved for navigation from the matcher
-        if slotIndex == -1 { goToNextPage(); return }
-        if slotIndex == -2 { goToPreviousPage(); return }
+        if slotIndex == -1 { recordRecentCombo(combo); goToNextPage(); return }
+        if slotIndex == -2 { recordRecentCombo(combo); goToPreviousPage(); return }
+        if slotIndex == -3 { 
+            // Navigate to settings - need to set callback from parent
+            onNavigateToSettings?()
+            return 
+        }
 
         let index = currentPage * pageSize + slotIndex
         guard index >= 0, index < positions.count else {
@@ -290,6 +304,13 @@ public final class AACViewModel: ObservableObject {
         }
         let position = positions[index]
         handleComboMatched(combo: combo, position: position)
+    }
+
+    private func recordRecentCombo(_ combo: ActionCombo) {
+        recentCombos.insert((combo.firstGesture, combo.secondGesture), at: 0)
+        if recentCombos.count > 3 {
+            recentCombos = Array(recentCombos.prefix(3))
+        }
     }
     
     // MARK: - Data Access Methods
@@ -349,6 +370,8 @@ public final class AACViewModel: ObservableObject {
             } else {
                 gestureInputManager.setNavigationCombos(prev: nil, next: nil)
             }
+            // Always set settings combo regardless of page count
+            gestureInputManager.setSettingsCombo(settings.settingsCombo)
             // Always sanitize conflicts if nav combos are configured (even with 1 page)
             sanitizeNavigationComboConflicts()
             gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
@@ -363,12 +386,14 @@ public final class AACViewModel: ObservableObject {
     private func sanitizeNavigationComboConflicts() {
         let navNext = settings.navNextCombo
         let navPrev = settings.navPrevCombo
-        // Only sanitize if navigation combos are actually configured
-        guard navNext != nil || navPrev != nil else { return }
+        let settingsCombo = settings.settingsCombo
+        // Only sanitize if priority combos are actually configured
+        guard navNext != nil || navPrev != nil || settingsCombo != nil else { return }
 
         func isNavCombo(_ c: ActionCombo) -> Bool {
             if let n = navNext, c.firstGesture == n.0 && c.secondGesture == n.1 { return true }
             if let p = navPrev, c.firstGesture == p.0 && c.secondGesture == p.1 { return true }
+            if let s = settingsCombo, c.firstGesture == s.0 && c.secondGesture == s.1 { return true }
             return false
         }
 
