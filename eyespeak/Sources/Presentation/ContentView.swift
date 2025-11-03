@@ -8,7 +8,6 @@ public struct ContentView: View {
     
     public var body: some View {
         @Bindable var bindableAppState = appState
-        
         Group {
             if bindableAppState.showOnboarding {
                 OnboardingView()
@@ -46,6 +45,7 @@ public struct ContentView: View {
 //                            Image(systemName:"camera.fill")
 //                        }
                 }
+                .tabViewStyle(.page(indexDisplayMode: .never)) // ✅ hides tab bar
                 .onAppear {
                     bindableAppState.checkOnboardingStatus(modelContext: modelContext)
                 }

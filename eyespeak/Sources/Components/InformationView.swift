@@ -9,16 +9,16 @@ struct Card<Content: View>: View {
     }
 
     var body: some View {
-        VStack {
-            content
-        }
-        .padding()  // internal padding for content
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
-        )
-        .fixedSize(horizontal: false, vertical: true)  // important: allow card to fit its content height
+
+        content
+
+            .padding()  // internal padding for content
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color(.systemBackground))
+                    .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
+            )
+            .fixedSize(horizontal: false, vertical: true)  // important: allow card to fit its content height
     }
 }
 
@@ -27,8 +27,8 @@ struct InformationView: View {
     @Environment(AppStateManager.self) private var appState
 
     let columns = [
-        GridItem(.flexible(), spacing: 0),
-         GridItem(.flexible(), spacing: 0)
+        GridItem(.flexible(), spacing: 12),
+        GridItem(.flexible(), spacing: 12),
     ]
 
     var body: some View {
@@ -40,6 +40,7 @@ struct InformationView: View {
                 gestureModePlaceholder
             }
             controlPanelSection
+            LegendsView()
         }
     }
 

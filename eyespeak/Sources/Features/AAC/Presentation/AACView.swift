@@ -19,16 +19,17 @@ struct AACView: View {
 
     var body: some View {
         GeometryReader { geo in
-            HStack{
+            HStack (alignment: .center) {
                 InformationView()
                     .padding()
-                    .frame(width: geo.size.width * 0.3)
+                    .frame(width: geo.size.width * 0.25, height: geo.size.height)
+                Spacer()
                 CardGridView()
                     .padding()
-                    .frame( width: geo.size.width * 0.7)
+                    .frame( width: geo.size.width * 0.7, height: geo.size.height)
 
             }
-            .padding(.horizontal)
+            .padding()
         }
         // 👇 inject into environment so child views can use @EnvironmentObject
         .environmentObject(viewModel)

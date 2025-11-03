@@ -50,7 +50,7 @@ struct NavigationCard: View {
                 .padding(12)
             }
         }
-        .frame(width: 143.03, height: 100.72)
+        .frame(height: 100.72)
         .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 4)
     }
 
