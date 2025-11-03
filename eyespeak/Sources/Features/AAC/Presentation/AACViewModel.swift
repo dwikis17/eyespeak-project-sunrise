@@ -28,6 +28,7 @@ public final class AACViewModel: ObservableObject {
     public var faceStatus = FaceStatus()
     public var isCalibrating = false
     public var lastDetectedGesture: GestureType?
+    public var recentCombos: [(GestureType, GestureType)] = []
     
     // Callback to navigate to settings (needs to be set by parent view)
     public var onNavigateToSettings: (() -> Void)?
@@ -254,6 +255,7 @@ public final class AACViewModel: ObservableObject {
     
     private func handleComboMatched(combo: ActionCombo, position: GridPosition) {
         print("🎯 Combo matched: \(combo.name) at position \(position.order)")
+        recordRecentCombo(combo)
         
         // Highlight the matched position
         withAnimation {
@@ -276,8 +278,8 @@ public final class AACViewModel: ObservableObject {
     
     private func handleComboMatched(combo: ActionCombo, slotIndex: Int) {
         // Special negative indices reserved for navigation from the matcher
-        if slotIndex == -1 { goToNextPage(); return }
-        if slotIndex == -2 { goToPreviousPage(); return }
+        if slotIndex == -1 { recordRecentCombo(combo); goToNextPage(); return }
+        if slotIndex == -2 { recordRecentCombo(combo); goToPreviousPage(); return }
         if slotIndex == -3 { 
             // Navigate to settings - need to set callback from parent
             onNavigateToSettings?()
@@ -302,6 +304,13 @@ public final class AACViewModel: ObservableObject {
         }
         let position = positions[index]
         handleComboMatched(combo: combo, position: position)
+    }
+
+    private func recordRecentCombo(_ combo: ActionCombo) {
+        recentCombos.insert((combo.firstGesture, combo.secondGesture), at: 0)
+        if recentCombos.count > 3 {
+            recentCombos = Array(recentCombos.prefix(3))
+        }
     }
     
     // MARK: - Data Access Methods

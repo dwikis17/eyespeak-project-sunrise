@@ -11,7 +11,6 @@ struct Card<Content: View>: View {
     var body: some View {
 
         content
-
             .padding()  // internal padding for content
             .background(
                 RoundedRectangle(cornerRadius: 20)
@@ -35,7 +34,13 @@ struct InformationView: View {
         VStack(spacing: 16) {
             currentInputSection
             if viewModel.isGestureMode {
-                AACFaceTrackingPanel()
+                HStack(alignment: .top, spacing: 12) {
+                    AACFaceTrackingPanel()
+                        .frame(maxWidth: .infinity)
+                        .layoutPriority(1)
+                    lastInputSection
+                        .frame(width: 105)
+                }
             } else {
                 gestureModePlaceholder
             }
@@ -48,7 +53,8 @@ struct InformationView: View {
         LazyVGrid(columns: columns, spacing: 10) {
             // Settings button with optional combo badge
             // Use NavigationCard directly and pass optional combos + action
-            if let settingsCombo = viewModel.settings.settingsCombo {
+            // Calibrate card (moved from panel)
+                 if let settingsCombo = viewModel.settings.settingsCombo {
                 NavigationCard(
                     title: "Settings",
                     background: .customBlue,
@@ -71,29 +77,20 @@ struct InformationView: View {
                     appState.currentTab = .settings
                 }
             }
-            if let settingsCombo = viewModel.settings.settingsCombo {
-                NavigationCard(
-                    title: "Settings",
-                    background: .customBlue,
-                    cornerRadius: 22,
-                    firstCombo: settingsCombo.0.iconName,
-                    secondCombo: settingsCombo.1.iconName
-                ) {
-                    // action closure
-                    appState.currentTab = .settings
-                }
-            } else {
-                // no combo configured — keep same visual but without pill
-                NavigationCard(
-                    title: "Settings",
-                    background: .customBlue,
-                    cornerRadius: 22,
-                    firstCombo: nil,
-                    secondCombo: nil
-                ) {
-                    appState.currentTab = .settings
+            NavigationCard(
+                title: "Calibrate",
+                background: .customBlue,
+                cornerRadius: 22,
+                firstCombo: nil,
+                secondCombo: nil
+            ) {
+                if viewModel.isCalibrating {
+                    viewModel.endCalibration()
+                } else {
+                    viewModel.beginCalibration()
                 }
             }
+       
             if let settingsCombo = viewModel.settings.settingsCombo {
                 NavigationCard(
                     title: "Settings",
@@ -212,6 +209,32 @@ struct InformationView: View {
                     }
                 }
                 .frame(height: 20)
+            }
+        }
+    }
+
+    private var lastInputSection: some View {
+        Card {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("LAST INPUT")
+                    .font(.headline)
+                    .foregroundColor(.primary)
+
+                Divider()
+
+                VStack(spacing: 10) {
+                    ForEach(Array(viewModel.recentCombos.prefix(3).enumerated()), id: \.offset) { _, pair in
+                        HStack(spacing: 16) {
+                            Image(systemName: pair.0.iconName)
+                            Image(systemName: pair.1.iconName)
+                        }
+                        .font(.system(size: 18, weight: .semibold))
+                        .padding(.vertical, 10)
+                        .frame(maxWidth: .infinity)
+                        .background(Color(.systemGray6))
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                    }
+                }
             }
         }
     }
