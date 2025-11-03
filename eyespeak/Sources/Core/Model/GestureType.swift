@@ -37,6 +37,19 @@ public enum GestureType: String, Codable, CaseIterable {
         case .smile: return "face.smiling"          // Standard smile
         }
     }
+
+    /// Returns the asset name used in the legend for gestures that have custom artwork.
+    public var legendAssetName: String? {
+        switch self {
+        case .lookLeft: return "LeftArrow"
+        case .lookRight: return "RightArrow"
+        case .lookUp: return "UpArrow"
+        case .lookDown: return "DownArrow"
+        case .winkLeft: return "L"
+        case .winkRight: return "R"
+        default: return nil
+        }
+    }
     
     public var displayName: String {
         return self.rawValue
