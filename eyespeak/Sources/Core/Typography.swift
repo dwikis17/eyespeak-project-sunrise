@@ -24,6 +24,13 @@ enum Typography {
     static let body       = AppFont.Montserrat.regular(17, relativeTo: .body)
     static let caption    = AppFont.Montserrat.regular(12, relativeTo: .caption)
 
+    // Common aliases used in views
+    static let montserratMediumBody = AppFont.Montserrat.medium(17, relativeTo: .body)
+    static let montserratBoldBody   = AppFont.Montserrat.bold(17, relativeTo: .body)
+
     // Helvetica Neue preset as requested
     static let helveticaCaption = Font.custom("HelveticaNeue", size: 16.5549, relativeTo: .caption)
+
+    // Legends small label preset
+    static let legendLabel = AppFont.Montserrat.bold(9, relativeTo: .caption2)
 }

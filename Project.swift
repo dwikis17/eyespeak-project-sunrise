@@ -20,15 +20,15 @@ let project = Project(
                     ],
                     "NSCameraUsageDescription": "This app uses the camera for eye tracking and face detection to provide accessibility features for communication.",
                     "UIAppFonts": [
-                        "Fonts/Montserrat-Regular.ttf",
-                        "Fonts/Montserrat-Medium.ttf",
-                        "Fonts/Montserrat-SemiBold.ttf",
-                        "Fonts/Montserrat-Bold.ttf",
+                        "Montserrat-Regular.ttf",
+                        "Montserrat-Medium.ttf",
+                        "Montserrat-SemiBold.ttf",
+                        "Montserrat-Bold.ttf",
                     ]
                 ]
             ),
             sources: ["eyespeak/Sources/**"],
-            resources: ["eyespeak/Resources/**"],
+            resources: ["eyespeak/Resources/**",],
             dependencies: []
         ),
         .target(
