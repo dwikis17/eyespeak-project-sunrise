@@ -159,7 +159,8 @@ extension ModelContainer {
             
             // Add sample data for previews
             let context = container.mainContext
-            SampleData.populate(context: context) 
+            
+            SampleData.populate(context: context)
             
             return container
         } catch {
@@ -174,6 +175,7 @@ extension ModelContainer {
             AACard.self,
             ActionCombo.self,
             GridPosition.self,
+            UserGesture.self
         ])
         
         let configuration = ModelConfiguration(

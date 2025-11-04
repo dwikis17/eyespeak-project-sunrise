@@ -44,8 +44,9 @@ struct AACView: View {
 
 
 #Preview {
-    let container = AACDIContainer.makePreviewContainer()
-    return AACView(container: AACDIContainer.shared)
+    let modelContainer = AACDIContainer.makePreviewContainer()
+    let di = AACDIContainer.makePreviewDI(modelContainer: modelContainer)
+    return AACView(container: di)
         .environment(AppStateManager())
-        .modelContainer(container)
+        .modelContainer(modelContainer)
 }

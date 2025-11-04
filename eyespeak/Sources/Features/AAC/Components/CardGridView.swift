@@ -234,7 +234,13 @@ struct CardGridView: View {
 
 #Preview("Default") {
     let container = AACDIContainer.makePreviewContainer()
+    let vm = AACViewModel(
+        modelContext: container.mainContext,
+        dataManager: DataManager(modelContext: container.mainContext),
+        gestureInputManager: GestureInputManager(),
+        speechService: SpeechService.shared
+    )
     return CardGridView()
-        .environmentObject(AACDIContainer.shared.makeAACViewModel())
+        .environmentObject(vm)
         .modelContainer(container)
 }

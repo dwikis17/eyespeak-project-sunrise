@@ -56,6 +56,8 @@ public struct ContentView: View {
 
 
 struct ContentView_Previews: PreviewProvider {
+    let modelContainer = AACDIContainer.makePreviewContainer()
+
     static var previews: some View {
         ContentView()
             .environment(AppStateManager())
