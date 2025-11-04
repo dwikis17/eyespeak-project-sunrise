@@ -175,10 +175,12 @@ extension ModelContainer {
             AACard.self,
             ActionCombo.self,
             GridPosition.self,
+            UserGesture.self
         ])
         
         let configuration = ModelConfiguration(
             schema: schema,
+            isStoredInMemoryOnly: true
         )
         
         do {

@@ -42,7 +42,17 @@ public final class AACDIContainer {
     // MARK: - Singleton
     public static let shared = AACDIContainer()
     
-    private init() {}
+    private let injectedModelContext: ModelContext?
+    
+    /// Default initializer uses the shared persistent container
+    private init() {
+        self.injectedModelContext = nil
+    }
+    
+    /// Designated initializer for previews/tests to inject a custom ModelContext
+    public init(modelContext: ModelContext) {
+        self.injectedModelContext = modelContext
+    }
     
     // MARK: - Core Dependencies
     @MainActor
@@ -50,10 +60,16 @@ public final class AACDIContainer {
         ModelContainer.shared.mainContext
     }
     
+    /// Resolves to injected context if provided, otherwise falls back to shared
+    @MainActor
+    private var resolvedModelContext: ModelContext {
+        injectedModelContext ?? ModelContainer.shared.mainContext
+    }
+    
     // MARK: - Lazy Singletons for Managers
     @MainActor
     private lazy var _dataManager: DataManager = {
-        DataManager(modelContext: Self.modelContext)
+        DataManager(modelContext: resolvedModelContext)
     }()
     
     private lazy var _gestureInputManager: GestureInputManager = {
@@ -70,7 +86,7 @@ public final class AACDIContainer {
     /// Creates a new DataManager instance
     @MainActor
     public func makeDataManager() -> DataManager {
-        DataManager(modelContext: Self.modelContext)
+        DataManager(modelContext: resolvedModelContext)
     }
     
     /// Creates a new GestureInputManager instance
@@ -107,7 +123,7 @@ public final class AACDIContainer {
     @MainActor
     public func makeAACViewModel() -> AACViewModel {
         AACViewModel(
-            modelContext: Self.modelContext,
+            modelContext: resolvedModelContext,
             dataManager: makeDataManager(),
             gestureInputManager: makeGestureInputManager(),
             speechService: makeSpeechService()
@@ -118,7 +134,7 @@ public final class AACDIContainer {
     @MainActor
     public func makeOnboardingViewModel() -> OnboardingViewModel {
         OnboardingViewModel(
-            modelContext: Self.modelContext,
+            modelContext: resolvedModelContext,
             dataManager: makeDataManager()
         )
     }
@@ -134,7 +150,7 @@ public final class AACDIContainer {
         speechService: SpeechService
     ) {
         return (
-            modelContext: Self.modelContext,
+            modelContext: resolvedModelContext,
             dataManager: makeDataManager(),
             gestureInputManager: makeGestureInputManager(),
             speechService: makeSpeechService()
@@ -148,7 +164,7 @@ public final class AACDIContainer {
         dataManager: DataManager
     ) {
         return (
-            modelContext: Self.modelContext,
+            modelContext: resolvedModelContext,
             dataManager: makeDataManager()
         )
     }
@@ -165,5 +181,11 @@ public final class AACDIContainer {
     @MainActor
     public static func makePreviewContainer(gridSize: Int) -> ModelContainer {
         return ModelContainer.preview(gridSize: gridSize)
+    }
+    
+    /// Helper to build a DI container bound to a specific preview ModelContainer
+    @MainActor
+    public static func makePreviewDI(modelContainer: ModelContainer) -> AACDIContainer {
+        AACDIContainer(modelContext: modelContainer.mainContext)
     }
 }
