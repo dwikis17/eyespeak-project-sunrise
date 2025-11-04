@@ -33,7 +33,8 @@ struct LegendsView: View {
             
             Rectangle()
                 .foregroundColor(.clear)
-                .frame(width: 262.70313, height: 1)
+                .frame(height: 1)
+                .frame(maxWidth: .infinity)
                 .background(Color(red: 0.95, green: 0.95, blue: 0.95))
             
             if items.isEmpty {
@@ -51,7 +52,9 @@ struct LegendsView: View {
                 LegendColumn(items: items)
             }
         }
-        .frame(height: 275.56)
+        .padding(16.679)
+        .background(Color.white)
+        .cornerRadius(22.239)
     }
 }
 
@@ -122,13 +125,19 @@ private struct LegendRow: View {
 }
 
 #Preview("Six Gestures") {
-    LegendsView()
-        .modelContainer(makeLegendPreviewContainer(enabledCount: 4))
+    ZStack {
+        Color.black.ignoresSafeArea()
+        LegendsView()
+            .modelContainer(makeLegendPreviewContainer(enabledCount: 4))
+    }
 }
 
 #Preview("Nine Gestures") {
-    LegendsView()
-        .modelContainer(makeLegendPreviewContainer(enabledCount: 9))
+    ZStack {
+        Color.black.ignoresSafeArea()
+        LegendsView()
+            .modelContainer(makeLegendPreviewContainer(enabledCount: 9))
+    }
 }
 
 @MainActor
