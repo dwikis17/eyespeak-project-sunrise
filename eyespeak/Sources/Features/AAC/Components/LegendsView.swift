@@ -52,7 +52,6 @@ struct LegendsView: View {
                 LegendColumn(items: items)
             }
         }
-        .frame(height: 275.56)
         .padding(16.679)
         .background(Color.white)
         .cornerRadius(22.239)
