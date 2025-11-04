@@ -52,6 +52,9 @@ struct LegendsView: View {
             }
         }
         .frame(height: 275.56)
+        .padding(16.679)
+        .background(Color.white)
+        .cornerRadius(22.239)
     }
 }
 
@@ -122,13 +125,19 @@ private struct LegendRow: View {
 }
 
 #Preview("Six Gestures") {
-    LegendsView()
-        .modelContainer(makeLegendPreviewContainer(enabledCount: 4))
+    ZStack {
+        Color.black.ignoresSafeArea()
+        LegendsView()
+            .modelContainer(makeLegendPreviewContainer(enabledCount: 4))
+    }
 }
 
 #Preview("Nine Gestures") {
-    LegendsView()
-        .modelContainer(makeLegendPreviewContainer(enabledCount: 9))
+    ZStack {
+        Color.black.ignoresSafeArea()
+        LegendsView()
+            .modelContainer(makeLegendPreviewContainer(enabledCount: 9))
+    }
 }
 
 @MainActor
