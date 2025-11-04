@@ -87,7 +87,7 @@ struct CardContentView: View {
             } else {
                 Image(systemName: "questionmark.square.dashed")
                     .font(.system(size: 50))
-                    .foregroundColor(.gray.opacity(0.5))
+                    .foregroundColor(.white)
             }
             
             // Card title
@@ -101,9 +101,10 @@ struct CardContentView: View {
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(isHighlighted ? Color.green.opacity(0.2) : Color(uiColor: .systemBackground))
+                .fill(isHighlighted ? Color.green.opacity(0.2) : card.color)
                 .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
         )
+        .foregroundStyle(.white)
         .scaleEffect(isPressed ? 0.95 : 1.0)
         .overlay(
             RoundedRectangle(cornerRadius: 16)

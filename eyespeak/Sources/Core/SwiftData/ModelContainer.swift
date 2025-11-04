@@ -159,7 +159,8 @@ extension ModelContainer {
             
             // Add sample data for previews
             let context = container.mainContext
-            SampleData.populate(context: context) 
+            
+            SampleData.populate(context: context)
             
             return container
         } catch {
@@ -178,7 +179,6 @@ extension ModelContainer {
         
         let configuration = ModelConfiguration(
             schema: schema,
-            isStoredInMemoryOnly: true
         )
         
         do {
