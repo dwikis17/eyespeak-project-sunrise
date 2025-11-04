@@ -33,7 +33,8 @@ struct LegendsView: View {
             
             Rectangle()
                 .foregroundColor(.clear)
-                .frame(width: 262.70313, height: 1)
+                .frame(height: 1)
+                .frame(maxWidth: .infinity)
                 .background(Color(red: 0.95, green: 0.95, blue: 0.95))
             
             if items.isEmpty {
