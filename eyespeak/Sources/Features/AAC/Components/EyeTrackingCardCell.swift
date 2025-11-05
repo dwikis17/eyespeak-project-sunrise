@@ -409,9 +409,10 @@ struct EyeTrackingEmptyCellView: View {
 }
 
 #Preview("Eye Tracking Card Cell") {
-    let container = AACDIContainer.makePreviewContainer()
-    let viewModel = AACDIContainer.shared.makeAACViewModel()
-    let position = try! container.mainContext.fetch(FetchDescriptor<GridPosition>()).first!
+    let modelContainer = AACDIContainer.makePreviewContainer()
+    let di = AACDIContainer.makePreviewDI(modelContainer: modelContainer)
+    let viewModel = di.makeAACViewModel()
+    let position = try! modelContainer.mainContext.fetch(FetchDescriptor<GridPosition>()).first!
     
     return EyeTrackingCardCell(
         position: position,
@@ -421,5 +422,5 @@ struct EyeTrackingEmptyCellView: View {
     )
     .frame(width: 150, height: 150)
     .padding()
-    .modelContainer(container)
+    .modelContainer(modelContainer)
 }

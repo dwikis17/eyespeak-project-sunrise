@@ -267,7 +267,8 @@ struct AACPhoneTestingView: View {
 }
 
 #Preview {
-    let container = AACDIContainer.makePreviewContainer()
-    return AACPhoneTestingView(container: AACDIContainer.shared)
-        .modelContainer(container)
+    let modelContainer = AACDIContainer.makePreviewContainer()
+    let di = AACDIContainer.makePreviewDI(modelContainer: modelContainer)
+    return AACPhoneTestingView(container: di)
+        .modelContainer(modelContainer)
 }

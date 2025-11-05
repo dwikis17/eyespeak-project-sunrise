@@ -4,6 +4,11 @@ import SwiftData
 public struct ContentView: View {
     @Environment(AppStateManager.self) private var appState
     @Environment(\.modelContext) private var modelContext
+    private let container: AACDIContainer?
+    
+    public init(container: AACDIContainer? = nil) {
+        self.container = container
+    }
 
     
     public var body: some View {
@@ -25,7 +30,7 @@ public struct ContentView: View {
                         .tag(Tab.keyboard)
                     
                     // AAC Tab
-                    AACView()
+                    AACView(container: container ?? AACDIContainer.shared)
                         .tabItem {
                             Image(systemName: "bubble.left.and.bubble.right")
                             Text("AAC")
@@ -56,11 +61,11 @@ public struct ContentView: View {
 
 
 struct ContentView_Previews: PreviewProvider {
-    let modelContainer = AACDIContainer.makePreviewContainer()
-
     static var previews: some View {
-        ContentView()
+        let modelContainer = ModelContainer.preview
+        let di = AACDIContainer.makePreviewDI(modelContainer: modelContainer)
+        return ContentView(container: di)
             .environment(AppStateManager())
-            .modelContainer(ModelContainer.preview)
+            .modelContainer(modelContainer)
     }
 }

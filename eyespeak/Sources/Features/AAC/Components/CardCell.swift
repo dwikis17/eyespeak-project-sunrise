@@ -157,9 +157,10 @@ struct GestureIndicatorBadge: View {
 }
 
 #Preview("Card Cell with Highlight") {
-    let container = AACDIContainer.makePreviewContainer()
-    let viewModel = AACDIContainer.shared.makeAACViewModel()
-    let position = try! container.mainContext.fetch(FetchDescriptor<GridPosition>()).first!
+    let modelContainer = AACDIContainer.makePreviewContainer()
+    let di = AACDIContainer.makePreviewDI(modelContainer: modelContainer)
+    let viewModel = di.makeAACViewModel()
+    let position = try! modelContainer.mainContext.fetch(FetchDescriptor<GridPosition>()).first!
     
     return CardCell(
         position: position,
@@ -170,5 +171,5 @@ struct GestureIndicatorBadge: View {
     )
     .frame(width: 150, height: 150)
     .padding()
-    .modelContainer(container)
+    .modelContainer(modelContainer)
 }

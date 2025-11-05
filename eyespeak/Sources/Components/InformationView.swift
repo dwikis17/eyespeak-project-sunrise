@@ -268,8 +268,11 @@ struct InformationView: View {
 }
 
 #Preview {
-    InformationView()
-        .environmentObject(AACDIContainer.shared.makeAACViewModel())
+    let modelContainer = AACDIContainer.makePreviewContainer()
+    let di = AACDIContainer.makePreviewDI(modelContainer: modelContainer)
+    return InformationView()
+        .environmentObject(di.makeAACViewModel())
         .environment(AppStateManager())
+        .modelContainer(modelContainer)
         .frame(width: 360)
 }
