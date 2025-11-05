@@ -42,7 +42,10 @@ struct AACFaceTrackingPanel: View {
                 ZStack(alignment: .topLeading) {
                     AACFaceTrackingView(
                         status: statusBinding,
-                        onGesture: { viewModel.handleDetectedGesture($0) }
+                        onGesture: { viewModel.handleDetectedGesture($0) },
+                        onEyesClosed: {
+                            viewModel.toggleCalibration()
+                        }
                     )
                     .clipShape(RoundedRectangle(cornerRadius: 18))
 

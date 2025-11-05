@@ -11,14 +11,17 @@ import SwiftUI
 import ARKit
 import SceneKit
 import AudioToolbox
+import QuartzCore
 
 struct AACFaceTrackingView: UIViewRepresentable {
     @Binding var status: FaceStatus
     var onGesture: ((GestureType) -> Void)?
+    var onEyesClosed: (() -> Void)? = nil
 
     func makeCoordinator() -> Coordinator {
         let coordinator = Coordinator(status: $status)
         coordinator.onGesture = onGesture
+        coordinator.onEyesClosed = onEyesClosed
         return coordinator
     }
 
@@ -37,6 +40,7 @@ struct AACFaceTrackingView: UIViewRepresentable {
         config.isLightEstimationEnabled = true
         uiView.session.run(config, options: [.resetTracking, .removeExistingAnchors])
         context.coordinator.onGesture = onGesture
+        context.coordinator.onEyesClosed = onEyesClosed
     }
 
     final class Coordinator: NSObject, ARSCNViewDelegate, ARSessionDelegate {
@@ -64,6 +68,10 @@ struct AACFaceTrackingView: UIViewRepresentable {
         private var lastLipRightState = false
         private var lastSmileState = false
         private var directionLatch: FaceStatus.Direction = .center
+        private var eyesClosedStartTime: CFAbsoluteTime?
+        private var eyesClosedTriggered = false
+        private let eyesClosedDuration: CFTimeInterval = 2.0
+        var onEyesClosed: (() -> Void)?
 
         init(status: Binding<FaceStatus>) {
             self._status = status
@@ -201,6 +209,22 @@ struct AACFaceTrackingView: UIViewRepresentable {
                 if lipsPuckerLeft && !self.lastLipLeftState { self.onGesture?(.lipPuckerRight) }
                 if lipsPuckerRight && !self.lastLipRightState { self.onGesture?(.lipPuckerLeft) }
                 if smiling && !self.lastSmileState { self.onGesture?(.smile) }
+
+                // Detect sustained eye closure for calibration trigger
+                if leftBlink && rightBlink {
+                    if self.eyesClosedStartTime == nil {
+                        self.eyesClosedStartTime = CACurrentMediaTime()
+                    }
+                    if let start = self.eyesClosedStartTime,
+                       !self.eyesClosedTriggered,
+                       CACurrentMediaTime() - start >= self.eyesClosedDuration {
+                        self.eyesClosedTriggered = true
+                        self.onEyesClosed?()
+                    }
+                } else {
+                    self.eyesClosedStartTime = nil
+                    self.eyesClosedTriggered = false
+                }
 
                 // Update last-state flags
                 self.lastLeftBlinkState = leftBlink

@@ -84,11 +84,7 @@ struct InformationView: View {
                 firstCombo: nil,
                 secondCombo: nil
             ) {
-                if viewModel.isCalibrating {
-                    viewModel.endCalibration()
-                } else {
-                    viewModel.beginCalibration()
-                }
+                viewModel.toggleCalibration()
             }
        
             if let settingsCombo = viewModel.settings.settingsCombo {
