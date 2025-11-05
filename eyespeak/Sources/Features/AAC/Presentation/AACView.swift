@@ -26,7 +26,7 @@ struct AACView: View {
                 Spacer()
                 CardGridView()
                     .padding()
-                    .frame( width: geo.size.width * 0.7, height: geo.size.height)
+                    .frame( width: geo.size.width * 0.75, height: geo.size.height)
 
             }
             .padding()

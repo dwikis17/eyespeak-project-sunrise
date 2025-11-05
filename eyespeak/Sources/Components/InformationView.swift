@@ -17,7 +17,7 @@ struct Card<Content: View>: View {
                     .fill(Color(.systemBackground))
                     .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
             )
-            .fixedSize(horizontal: false, vertical: true)  // important: allow card to fit its content height
+            .fixedSize(horizontal: false, vertical: false)  // important: allow card to fit its content height
     }
 }
 
@@ -31,16 +31,15 @@ struct InformationView: View {
     ]
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 15) {
             currentInputSection
             if viewModel.isGestureMode {
-                HStack(alignment: .top, spacing: 12) {
+                HStack(alignment: .top, spacing: 15) {
                     AACFaceTrackingPanel()
-                        .frame(maxWidth: .infinity)
-                        .layoutPriority(1)
                     lastInputSection
-                        .frame(width: 105)
                 }
+                .frame(height:191)
+             
             } else {
                 gestureModePlaceholder
             }
@@ -140,7 +139,7 @@ struct InformationView: View {
         Card {
             VStack(alignment: .leading, spacing: 12) {
                 Text("CURRENT INPUT")
-                    .font(.headline)
+                    .font(Typography.montserratBoldBody)
                     .foregroundColor(.primary)
 
                 Divider()
@@ -213,11 +212,9 @@ struct InformationView: View {
         Card {
             VStack(alignment: .leading, spacing: 12) {
                 Text("LAST INPUT")
-                    .font(.headline)
+                    .font(Typography.montserratBoldBody)
                     .foregroundColor(.primary)
-
-                Divider()
-
+                    Spacer()
                 VStack(spacing: 10) {
                     ForEach(Array(viewModel.recentCombos.prefix(3).enumerated()), id: \.offset) { _, pair in
                         HStack(spacing: 16) {
