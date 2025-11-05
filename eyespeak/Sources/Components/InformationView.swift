@@ -34,12 +34,18 @@ struct InformationView: View {
         VStack(spacing: 15) {
             currentInputSection
             if viewModel.isGestureMode {
-                HStack(alignment: .top, spacing: 15) {
-                    AACFaceTrackingPanel()
-                    lastInputSection
+                GeometryReader { geo in
+                    HStack(alignment: .top, spacing: 15) {
+                        AACFaceTrackingPanel()
+                            .frame(maxWidth: .infinity)
+        
+                        lastInputSection
+                            .frame(width: 112)
+                            .frame(maxHeight: .infinity)
+                    }
+                    
                 }
-                .frame(height:191)
-             
+                .frame(maxHeight: 191) // Stretches the HStack
             } else {
                 gestureModePlaceholder
             }
@@ -176,7 +182,7 @@ struct InformationView: View {
                         }
                     }
                 }
-                .frame(height: 107)
+                .frame(maxHeight: .infinity)
 
                 // Live countdown bar linked to gesture timing window
                 GeometryReader { geo in
@@ -210,25 +216,26 @@ struct InformationView: View {
 
     private var lastInputSection: some View {
         Card {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .center, spacing: 12) {
                 Text("LAST INPUT")
-                    .font(Typography.montserratBoldBody)
-                    .foregroundColor(.primary)
-                    Spacer()
+                    .font(AppFont.Montserrat.bold(13))
+                Divider()
                 VStack(spacing: 10) {
                     ForEach(Array(viewModel.recentCombos.prefix(3).enumerated()), id: \.offset) { _, pair in
-                        HStack(spacing: 16) {
+                        HStack(spacing: 12) {
                             Image(systemName: pair.0.iconName)
                             Image(systemName: pair.1.iconName)
                         }
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.system(size: 12, weight: .semibold))
                         .padding(.vertical, 10)
                         .frame(maxWidth: .infinity)
                         .background(Color(.systemGray6))
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                     }
                 }
+            
             }
+            .frame(maxHeight: .infinity, alignment: .top)
         }
     }
 

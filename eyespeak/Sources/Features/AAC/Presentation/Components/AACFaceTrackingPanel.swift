@@ -5,8 +5,8 @@
 //  Lightweight overlay that embeds the face tracking camera inside the AAC experience.
 //
 
-import SwiftUI
 import ARKit
+import SwiftUI
 
 struct AACFaceTrackingPanel: View {
     @EnvironmentObject private var viewModel: AACViewModel
@@ -21,11 +21,14 @@ struct AACFaceTrackingPanel: View {
             set: { viewModel.isCalibrating = $0 }
         )
 
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 0) {
             trackingPreview(statusBinding: statusBinding)
-//            statusSummary statusSummary
+            //            statusSummary statusSummary
         }
-        .sheet(isPresented: calibratingBinding, onDismiss: viewModel.endCalibration) {
+        .sheet(
+            isPresented: calibratingBinding,
+            onDismiss: viewModel.endCalibration
+        ) {
             AACCalibrationSheet(
                 status: statusBinding,
                 isPresented: calibratingBinding
@@ -36,7 +39,9 @@ struct AACFaceTrackingPanel: View {
     // MARK: - Subviews
 
     @ViewBuilder
-    private func trackingPreview(statusBinding: Binding<FaceStatus>) -> some View {
+    private func trackingPreview(statusBinding: Binding<FaceStatus>)
+        -> some View
+    {
         Group {
             if ARFaceTrackingConfiguration.isSupported {
                 ZStack(alignment: .topLeading) {
@@ -50,9 +55,9 @@ struct AACFaceTrackingPanel: View {
                     .clipShape(RoundedRectangle(cornerRadius: 18))
 
                     previewHeader
-                        .padding(12)
+                        .padding(4)
                 }
-                .frame(height: 220)
+
                 .clipShape(RoundedRectangle(cornerRadius: 18))
                 .overlay(
                     RoundedRectangle(cornerRadius: 18)
@@ -62,23 +67,27 @@ struct AACFaceTrackingPanel: View {
                 VStack(spacing: 12) {
                     Image(systemName: "faceid")
                         .font(.largeTitle)
-                    Text("Face tracking requires a device with a TrueDepth camera.")
-                        .multilineTextAlignment(.center)
-                        .foregroundStyle(.secondary)
+                    Text(
+                        "Face tracking requires a device with a TrueDepth camera."
+                    )
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.secondary)
                 }
-                .frame(maxWidth: .infinity)
                 .padding()
                 .background(Color(uiColor: .secondarySystemGroupedBackground))
                 .clipShape(RoundedRectangle(cornerRadius: 18))
             }
         }
+    
     }
 
     private var previewHeader: some View {
         HStack {
             Label(
-                viewModel.faceStatus.isCalibrated ? "Calibrated" : "Not Calibrated",
-                systemImage: viewModel.faceStatus.isCalibrated ? "checkmark.seal.fill" : "exclamationmark.triangle"
+                viewModel.faceStatus.isCalibrated
+                    ? "Calibrated" : "Not Calibrated",
+                systemImage: viewModel.faceStatus.isCalibrated
+                    ? "checkmark.seal.fill" : "exclamationmark.triangle"
             )
             .font(.caption)
             .padding(.vertical, 6)
@@ -90,7 +99,7 @@ struct AACFaceTrackingPanel: View {
     }
 
     private var statusSummary: some View {
-        VStack(alignment: .leading, spacing: 12) { 
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Label("Direction", systemImage: "eyes")
                     .font(.caption)
@@ -98,9 +107,14 @@ struct AACFaceTrackingPanel: View {
                 Spacer()
                 Text(viewModel.faceStatus.direction.rawValue)
                     .font(.headline)
-                Text(String(format: "%.0f%%", viewModel.faceStatus.gazeActivation * 100))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(
+                    String(
+                        format: "%.0f%%",
+                        viewModel.faceStatus.gazeActivation * 100
+                    )
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
 
             Divider()
@@ -131,9 +145,14 @@ struct AACFaceTrackingPanel: View {
                 Spacer()
                 Text(viewModel.faceStatus.mouthOpen ? "Open" : "Closed")
                     .font(.subheadline)
-                Text(String(format: "%.0f%%", viewModel.faceStatus.jawOpenValue * 100))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(
+                    String(
+                        format: "%.0f%%",
+                        viewModel.faceStatus.jawOpenValue * 100
+                    )
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
 
             HStack {
@@ -143,9 +162,14 @@ struct AACFaceTrackingPanel: View {
                 Spacer()
                 Text(viewModel.faceStatus.eyebrowsRaised ? "Raised" : "Neutral")
                     .font(.subheadline)
-                Text(String(format: "%.0f%%", viewModel.faceStatus.browRaiseValue * 100))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(
+                    String(
+                        format: "%.0f%%",
+                        viewModel.faceStatus.browRaiseValue * 100
+                    )
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
 
             HStack {
@@ -155,9 +179,14 @@ struct AACFaceTrackingPanel: View {
                 Spacer()
                 Text(viewModel.faceStatus.isSmiling ? "Smiling" : "Neutral")
                     .font(.subheadline)
-                Text(String(format: "%.0f%%", viewModel.faceStatus.smileValue * 100))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(
+                    String(
+                        format: "%.0f%%",
+                        viewModel.faceStatus.smileValue * 100
+                    )
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
 
             HStack {
@@ -168,15 +197,31 @@ struct AACFaceTrackingPanel: View {
                 VStack(alignment: .trailing, spacing: 4) {
                     HStack {
                         Text("Left")
-                        Text(viewModel.faceStatus.lipsPuckeredLeft ? "Puckered" : "Neutral")
-                        Text(String(format: "%.0f%%", viewModel.faceStatus.lipPuckerLeftValue * 100))
+                        Text(
+                            viewModel.faceStatus.lipsPuckeredLeft
+                                ? "Puckered" : "Neutral"
+                        )
+                        Text(
+                            String(
+                                format: "%.0f%%",
+                                viewModel.faceStatus.lipPuckerLeftValue * 100
+                            )
+                        )
                     }
                     .font(.caption)
 
                     HStack {
                         Text("Right")
-                        Text(viewModel.faceStatus.lipsPuckeredRight ? "Puckered" : "Neutral")
-                        Text(String(format: "%.0f%%", viewModel.faceStatus.lipPuckerRightValue * 100))
+                        Text(
+                            viewModel.faceStatus.lipsPuckeredRight
+                                ? "Puckered" : "Neutral"
+                        )
+                        Text(
+                            String(
+                                format: "%.0f%%",
+                                viewModel.faceStatus.lipPuckerRightValue * 100
+                            )
+                        )
                     }
                     .font(.caption)
                 }
@@ -185,9 +230,12 @@ struct AACFaceTrackingPanel: View {
             Divider()
 
             VStack(alignment: .leading, spacing: 6) {
-                Label("Active Sequence", systemImage: "arrow.triangle.2.circlepath")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Label(
+                    "Active Sequence",
+                    systemImage: "arrow.triangle.2.circlepath"
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
 
                 if viewModel.gestureInputManager.gestureSequence.isEmpty {
                     Text("No gestures detected yet")
@@ -196,7 +244,13 @@ struct AACFaceTrackingPanel: View {
                 } else {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
-                            ForEach(Array(viewModel.gestureInputManager.gestureSequence.enumerated()), id: \.offset) { _, gesture in
+                            ForEach(
+                                Array(
+                                    viewModel.gestureInputManager
+                                        .gestureSequence.enumerated()
+                                ),
+                                id: \.offset
+                            ) { _, gesture in
                                 HStack(spacing: 4) {
                                     Image(systemName: gesture.iconName)
                                     Text(gesture.rawValue)
