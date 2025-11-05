@@ -84,11 +84,7 @@ struct AACPhoneTestingView: View {
             
             if viewModel.isGestureMode {
                 Button {
-                    if viewModel.isCalibrating {
-                        viewModel.endCalibration()
-                    } else {
-                        viewModel.beginCalibration()
-                    }
+                    viewModel.toggleCalibration()
                 } label: {
                     Label(viewModel.isCalibrating ? "Calibrating…" : "Calibrate",
                           systemImage: "camera.fill")

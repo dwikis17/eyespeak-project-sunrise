@@ -179,6 +179,15 @@ public final class AACViewModel: ObservableObject {
     public func endCalibration() {
         isCalibrating = false
     }
+
+    public func toggleCalibration() {
+        guard isGestureMode else { return }
+        if isCalibrating {
+            endCalibration()
+        } else {
+            beginCalibration()
+        }
+    }
     
     // MARK: - Settings Methods
     
