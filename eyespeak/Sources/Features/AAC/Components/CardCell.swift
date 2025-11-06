@@ -36,7 +36,7 @@ struct CardCell: View {
                 VStack {
                     HStack {
                         Spacer()
-                        GestureIndicatorBadge(combo: combo)
+                        GestureIndicatorBadge(combo: combo, badgeColor: position.card?.color)
                     }
                     Spacer()
                 }
@@ -135,23 +135,20 @@ struct EmptyCellView: View {
 
 struct GestureIndicatorBadge: View {
     let combo: ActionCombo
+    var badgeColor: Color? = nil
     
     var body: some View {
-        HStack(spacing: 4) {
-            Image(systemName: combo.firstGesture.iconName)
-                .font(.caption2)
-            Image(systemName: "arrow.right")
-                .font(.system(size: 8))
-            Image(systemName: combo.secondGesture.iconName)
-                .font(.caption2)
-        }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(
-            Capsule()
-                .fill(Color.blue.opacity(0.8))
+        ComboPill(
+            firstGesture: combo.firstGesture,
+            secondGesture: combo.secondGesture,
+            foreground: badgeColor ?? .mellowBlue,
+            background: .whiteWhite,
+            size: CGSize(width: 38.431, height: 21.679),
+            paddingValue: 4.927,
+            iconSize: 11.825,
+            spacing: 4.927,
+            cornerRadius: 64.0517
         )
-        .foregroundColor(.white)
         .padding(8)
     }
 }
