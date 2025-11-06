@@ -38,14 +38,14 @@ struct InformationView: View {
                     HStack(alignment: .top, spacing: 15) {
                         AACFaceTrackingPanel()
                             .frame(maxWidth: .infinity)
-        
+
                         lastInputSection
                             .frame(width: 112)
                             .frame(maxHeight: .infinity)
                     }
-                    
+
                 }
-                .frame(maxHeight: 191) // Stretches the HStack
+                .frame(maxHeight: 191)  // Stretches the HStack
             } else {
                 gestureModePlaceholder
             }
@@ -57,30 +57,55 @@ struct InformationView: View {
     private var controlPanelSection: some View {
         LazyVGrid(columns: columns, spacing: 10) {
             // Settings button with optional combo badge
-            if let settingsCombo = viewModel.settings.settingsCombo {
-                NavigationCard(
-                    title: "Settings",
-                    background: .mellowBlue,
-                    cornerRadius: 22,
-                    firstCombo: settingsCombo.0.iconName,
-                    secondCombo: settingsCombo.1.iconName
-                ) {
-                    // action closure
-                    appState.currentTab = .settings
+            if viewModel.currentMenu != .settings {
+                if let settingsCombo = viewModel.settings.settingsCombo {
+                    NavigationCard(
+                        title: "Settings",
+                        background: .mellowBlue,
+                        cornerRadius: 22,
+                        firstCombo: settingsCombo.0.iconName,
+                        secondCombo: settingsCombo.1.iconName
+                    ) {
+                        // action closure
+                        appState.currentTab = .settings
+                    }
+                } else {
+                    // no combo configured — keep same visual but without pill
+                    NavigationCard(
+                        title: "Settings",
+                        background: .mellowBlue,
+                        cornerRadius: 22,
+                        firstCombo: nil,
+                        secondCombo: nil
+                    ) {
+                        appState.currentTab = .settings
+                    }
                 }
             } else {
-                // no combo configured — keep same visual but without pill
-                NavigationCard(
-                    title: "Settings",
-                    background: .mellowBlue,
-                    cornerRadius: 22,
-                    firstCombo: nil,
-                    secondCombo: nil
-                ) {
-                    appState.currentTab = .settings
+                if let settingsCombo = viewModel.settings.settingsCombo {
+                    NavigationCard(
+                        title: "AAC Board",
+                        background: .mellowBlue,
+                        cornerRadius: 22,
+                        firstCombo: settingsCombo.0.iconName,
+                        secondCombo: settingsCombo.1.iconName
+                    ) {
+                        // action closure
+                        appState.currentTab = .aac
+                    }
+                } else {
+                    // no combo configured — keep same visual but without pill
+                    NavigationCard(
+                        title: "AAC Board",
+                        background: .mellowBlue,
+                        cornerRadius: 22,
+                        firstCombo: nil,
+                        secondCombo: nil
+                    ) {
+                        appState.currentTab = .aac
+                    }
                 }
             }
-            
             // Calibrate card
             NavigationCard(
                 title: "Calibrate",
@@ -174,7 +199,10 @@ struct InformationView: View {
                     .font(AppFont.Montserrat.bold(13))
                 Divider()
                 VStack(spacing: 10) {
-                    ForEach(Array(viewModel.recentCombos.prefix(3).enumerated()), id: \.offset) { _, pair in
+                    ForEach(
+                        Array(viewModel.recentCombos.prefix(3).enumerated()),
+                        id: \.offset
+                    ) { _, pair in
                         HStack(spacing: 12) {
                             Image(systemName: pair.0.iconName)
                             Image(systemName: pair.1.iconName)
@@ -186,7 +214,7 @@ struct InformationView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                     }
                 }
-            
+
             }
             .frame(maxHeight: .infinity, alignment: .top)
         }
