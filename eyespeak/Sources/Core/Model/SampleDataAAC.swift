@@ -13,42 +13,42 @@ struct SampleData {
         // Sample Cards - Expanded Essential Communication Vocabulary
         let cards = [
             // Basic Communication
-            AACard(title: "HOW ARE YOU", imageData: nil, colorHex: CustomColor.green.rawValue),
-            AACard(title: "YES", imageData: nil, colorHex: CustomColor.green.rawValue),
-            AACard(title: "NO", imageData: nil, colorHex: CustomColor.green.rawValue),
-            AACard(title: "THANK YOU", imageData: nil, colorHex: CustomColor.green.rawValue),
-            AACard(title: "PLEASE", imageData: nil, colorHex: CustomColor.green.rawValue),
+            AACard(title: "HOW ARE YOU", imageData: nil, colorHex: CustomColor.oldHulkGreen.rawValue),
+            AACard(title: "YES", imageData: nil, colorHex: CustomColor.oldHulkGreen.rawValue),
+            AACard(title: "NO", imageData: nil, colorHex: CustomColor.oldHulkGreen.rawValue),
+            AACard(title: "THANK YOU", imageData: nil, colorHex: CustomColor.oldHulkGreen.rawValue),
+            AACard(title: "PLEASE", imageData: nil, colorHex: CustomColor.oldHulkGreen.rawValue),
             
             // People & Pronouns
-            AACard(title: "I'M GOOD", imageData: nil, colorHex: CustomColor.blue.rawValue),
-            AACard(title: "I LOVE YOU", imageData: nil, colorHex: CustomColor.blue.rawValue),
-            AACard(title: "I'M HAPPY", imageData: nil, colorHex: CustomColor.blue.rawValue),
-            AACard(title: "I'M SAD", imageData: nil, colorHex: CustomColor.blue.rawValue),
-            AACard(title: "I'M FRUSTRATED", imageData: nil, colorHex: CustomColor.orange.rawValue),
+            AACard(title: "I'M GOOD", imageData: nil, colorHex: CustomColor.mellowBlue.rawValue),
+            AACard(title: "I LOVE YOU", imageData: nil, colorHex: CustomColor.mellowBlue.rawValue),
+            AACard(title: "I'M HAPPY", imageData: nil, colorHex: CustomColor.mellowBlue.rawValue),
+            AACard(title: "I'M SAD", imageData: nil, colorHex: CustomColor.mellowBlue.rawValue),
+            AACard(title: "I'M FRUSTRATED", imageData: nil, colorHex: CustomColor.energeticOrange.rawValue),
             
             // Emotions & Feelings
-            AACard(title: "THIRSTY", imageData: nil, colorHex: CustomColor.orange.rawValue),
-            AACard(title: "HUNGRY", imageData: nil, colorHex: CustomColor.orange.rawValue),
-            AACard(title: "BATHROOM", imageData: nil, colorHex: CustomColor.orange.rawValue),
+            AACard(title: "THIRSTY", imageData: nil, colorHex: CustomColor.energeticOrange.rawValue),
+            AACard(title: "HUNGRY", imageData: nil, colorHex: CustomColor.energeticOrange.rawValue),
+            AACard(title: "BATHROOM", imageData: nil, colorHex: CustomColor.energeticOrange.rawValue),
 
             // Activities & Actions
-            AACard(title: "FAMILY", imageData: nil, colorHex: CustomColor.purple.rawValue),
-            AACard(title: "FRIENDS", imageData: nil, colorHex: CustomColor.purple.rawValue),
+            AACard(title: "FAMILY", imageData: nil, colorHex: CustomColor.widowPurple.rawValue),
+            AACard(title: "FRIENDS", imageData: nil, colorHex: CustomColor.widowPurple.rawValue),
 
             
             // Descriptors
-            AACard(title: "REPOSITION ME", imageData: nil, colorHex: CustomColor.orange.rawValue),
-            AACard(title: "TIRED", imageData: nil, colorHex: CustomColor.orange.rawValue),
-            AACard(title: "HOT/COLD", imageData: nil, colorHex: CustomColor.orange.rawValue),
+            AACard(title: "REPOSITION ME", imageData: nil, colorHex: CustomColor.energeticOrange.rawValue),
+            AACard(title: "TIRED", imageData: nil, colorHex: CustomColor.energeticOrange.rawValue),
+            AACard(title: "HOT/COLD", imageData: nil, colorHex: CustomColor.energeticOrange.rawValue),
          
             
             // Places
-            AACard(title: "DOCTOR", imageData: nil, colorHex: CustomColor.purple.rawValue),
-            AACard(title: "NURSE", imageData: nil, colorHex: CustomColor.purple.rawValue),
+            AACard(title: "DOCTOR", imageData: nil, colorHex: CustomColor.widowPurple.rawValue),
+            AACard(title: "NURSE", imageData: nil, colorHex: CustomColor.widowPurple.rawValue),
    
             // Time & Questions
-            AACard(title: "MORE", imageData: nil, colorHex: CustomColor.yellow.rawValue),
-            AACard(title: "LESS", imageData: nil, colorHex: CustomColor.yellow.rawValue),
+            AACard(title: "MORE", imageData: nil, colorHex: CustomColor.charmingYellow.rawValue),
+            AACard(title: "LESS", imageData: nil, colorHex: CustomColor.charmingYellow.rawValue),
         ]
         
         // Insert all cards

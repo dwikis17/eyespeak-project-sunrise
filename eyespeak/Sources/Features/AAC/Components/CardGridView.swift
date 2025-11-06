@@ -210,7 +210,7 @@ struct CardGridView: View {
                 // 🔹 Add border with 72.28 corner radius
                 .overlay(
                     RoundedRectangle(cornerRadius: 72.28)
-                        .stroke(Color.customBlue, lineWidth: 1)
+                        .stroke(Color.mellowBlue, lineWidth: 1)
                 )
             }
         }

@@ -18,19 +18,15 @@ enum AppFont {
 }
 
 enum Typography {
-    static let largeTitle = AppFont.Montserrat.semibold(34, relativeTo: .largeTitle)
-    static let title      = AppFont.Montserrat.semibold(28, relativeTo: .title)
-    static let headline   = AppFont.Montserrat.semibold(17, relativeTo: .headline)
-    static let body       = AppFont.Montserrat.regular(17, relativeTo: .body)
-    static let caption    = AppFont.Montserrat.regular(12, relativeTo: .caption)
+    // Headers (18pt)
+    static let boldHeader = AppFont.Montserrat.bold(18, relativeTo: .title3)
+    static let regularHeader = AppFont.Montserrat.regular(18, relativeTo: .title3)
 
-    // Common aliases used in views
-    static let montserratMediumBody = AppFont.Montserrat.medium(17, relativeTo: .body)
-    static let montserratBoldBody   = AppFont.Montserrat.bold(17, relativeTo: .body)
+    // Titles (14pt)
+    static let boldTitle = AppFont.Montserrat.bold(14, relativeTo: .body)
+    static let regularTitle = AppFont.Montserrat.regular(14, relativeTo: .body)
 
-    // Helvetica Neue preset as requested
-    static let helveticaCaption = Font.custom("HelveticaNeue", size: 16.5549, relativeTo: .caption)
-
-    // Legends small label preset
-    static let legendLabel = AppFont.Montserrat.bold(9, relativeTo: .caption2)
+    // Body (9pt)
+    static let boldBody = AppFont.Montserrat.bold(9, relativeTo: .caption2)
+    static let regularBody = AppFont.Montserrat.regular(9, relativeTo: .caption2)
 }

@@ -9,12 +9,16 @@ import Foundation
 import SwiftUI
 
 extension LinearGradient {
-    static let redOrange = LinearGradient(
+    /// Orange Gradient - From #F6924F to #E21E1E
+    static let orangeGradient = LinearGradient(
         gradient: Gradient(colors: [
-            Color(red: 226/255, green: 30/255, blue: 30/255),
-            Color(red: 246/255, green: 146/255, blue: 79/255)
+            Color(hex: "#F6924F")!,
+            Color(hex: "#E21E1E")!
         ]),
         startPoint: .leading,
         endPoint: .trailing
     )
+
+    /// Legacy alias (backward compatibility)
+    static let redOrange = LinearGradient.orangeGradient
 }

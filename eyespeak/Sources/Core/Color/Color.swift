@@ -8,7 +8,41 @@
 import SwiftUI
 
 extension Color {
-    static let customBlue = Color(red: 88/255, green: 108/255, blue: 157/255, opacity: 1.0)
+    // MARK: - Primary Colors
+
+    /// Energetic Orange - #FE773C
+    static let energeticOrange = Color(hex: "#FE773C")!
+
+    /// Old Hulk Green - #2FA553
+    static let oldHulkGreen = Color(hex: "#2FA553")!
+
+    /// Mellow Blue - #586C9D
+    static let mellowBlue = Color(hex: "#586C9D")!
+
+    /// Widow Purple - #AD6AE3
+    static let widowPurple = Color(hex: "#AD6AE3")!
+
+    /// Charming Yellow - #F6CA33
+    static let charmingYellow = Color(hex: "#F6CA33")!
+
+    // MARK: - Black, White, and Shades
+
+    /// White White - #FFFFFF
+    static let whiteWhite = Color(hex: "#FFFFFF")!
+
+    /// Bone White - #F2F2F2
+    static let boneWhite = Color(hex: "#F2F2F2")!
+
+    /// Placeholder - #ACACAC
+    static let placeholder = Color(hex: "#ACACAC")!
+
+    /// Blueack - #363636
+    static let blueack = Color(hex: "#363636")!
+
+    // MARK: - Legacy Support
+
+    /// Legacy alias for mellowBlue (backward compatibility)
+    static let customBlue = Color.mellowBlue
 
     // Initialize from hex string like "#RRGGBB" or "RRGGBB"
     init?(hex: String) {
@@ -28,9 +62,17 @@ extension Color {
 
 
 public enum CustomColor: String {
-    case blue = "#586C9D"
-    case green = "#2FA553"
-    case orange = "FE773C"
-    case purple = "AD6AE3"
-    case yellow = "F6CA33"
+    case energeticOrange = "#FE773C"
+    case oldHulkGreen = "#2FA553"
+    case mellowBlue = "#586C9D"
+    case widowPurple = "#AD6AE3"
+    case charmingYellow = "#F6CA33"
+    case whiteWhite = "#FFFFFF"
+    case boneWhite = "#F2F2F2"
+    case placeholder = "#ACACAC"
+    case blueack = "#363636"
+
+    var color: Color {
+        Color(hex: rawValue) ?? .clear
+    }
 }
