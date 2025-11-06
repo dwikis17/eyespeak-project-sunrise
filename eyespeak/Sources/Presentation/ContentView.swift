@@ -83,6 +83,12 @@ private struct MainContentView: View {
             aacViewModel.onNavigateToSettings = {
                 appState.currentTab = .settings
             }
+            // Set initial menu
+            aacViewModel.setCurrentMenu(appState.currentTab)
+        }
+        .onChange(of: appState.currentTab) { oldTab, newTab in
+            // Reload combos when tab changes
+            aacViewModel.setCurrentMenu(newTab)
         }
     }
 }
