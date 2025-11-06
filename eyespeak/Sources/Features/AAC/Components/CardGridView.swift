@@ -12,21 +12,16 @@ struct CardGridView: View {
     @EnvironmentObject private var viewModel: AACViewModel
 
     var body: some View {
-        mainContent
+        gridSection
             .onAppear {
                 viewModel.setupManagers()
             }
 
     }
 
-    private var mainContent: some View {
-        
-            gridSection
-        
-    }
 
     private var gridSection: some View {
-        HStack(alignment: .center, spacing: 40) {
+        HStack(alignment: .center, spacing: 15) {
             VStack(spacing: 8) {
                 comboBadge(for: viewModel.settings.navPrevCombo)
                 Button(action: { viewModel.goToPreviousPage() }) {
@@ -48,7 +43,6 @@ struct CardGridView: View {
                 }
                 .disabled(viewModel.currentPage == 0)
             }
-
             LazyVGrid(
                 columns: Array(
                     repeating: GridItem(.flexible(), spacing: 8),
@@ -212,6 +206,11 @@ struct CardGridView: View {
                 .padding(.vertical, 4)
                 .background(
                     Capsule().fill(Color(uiColor: .systemBackground))
+                )
+                // 🔹 Add border with 72.28 corner radius
+                .overlay(
+                    RoundedRectangle(cornerRadius: 72.28)
+                        .stroke(Color.mellowBlue, lineWidth: 1)
                 )
             }
         }
