@@ -57,9 +57,7 @@ struct InformationView: View {
     private var controlPanelSection: some View {
         LazyVGrid(columns: columns, spacing: 10) {
             // Settings button with optional combo badge
-            // Use NavigationCard directly and pass optional combos + action
-            // Calibrate card (moved from panel)
-                 if let settingsCombo = viewModel.settings.settingsCombo {
+            if let settingsCombo = viewModel.settings.settingsCombo {
                 NavigationCard(
                     title: "Settings",
                     background: .mellowBlue,
@@ -82,6 +80,8 @@ struct InformationView: View {
                     appState.currentTab = .settings
                 }
             }
+            
+            // Calibrate card
             NavigationCard(
                 title: "Calibrate",
                 background: .mellowBlue,
@@ -90,53 +90,6 @@ struct InformationView: View {
                 secondCombo: nil
             ) {
                 viewModel.toggleCalibration()
-            }
-       
-            if let settingsCombo = viewModel.settings.settingsCombo {
-                NavigationCard(
-                    title: "Settings",
-                    background: .mellowBlue,
-                    cornerRadius: 22,
-                    firstCombo: settingsCombo.0.iconName,
-                    secondCombo: settingsCombo.1.iconName
-                ) {
-                    // action closure
-                    appState.currentTab = .settings
-                }
-            } else {
-                // no combo configured — keep same visual but without pill
-                NavigationCard(
-                    title: "Settings",
-                    background: .mellowBlue,
-                    cornerRadius: 22,
-                    firstCombo: nil,
-                    secondCombo: nil
-                ) {
-                    appState.currentTab = .settings
-                }
-            }
-            if let settingsCombo = viewModel.settings.settingsCombo {
-                NavigationCard(
-                    title: "Settings",
-                    background: .mellowBlue,
-                    cornerRadius: 22,
-                    firstCombo: settingsCombo.0.iconName,
-                    secondCombo: settingsCombo.1.iconName
-                ) {
-                    // action closure
-                    appState.currentTab = .settings
-                }
-            } else {
-                // no combo configured — keep same visual but without pill
-                NavigationCard(
-                    title: "Settings",
-                    background: .mellowBlue,
-                    cornerRadius: 22,
-                    firstCombo: nil,
-                    secondCombo: nil
-                ) {
-                    appState.currentTab = .settings
-                }
             }
         }
     }
