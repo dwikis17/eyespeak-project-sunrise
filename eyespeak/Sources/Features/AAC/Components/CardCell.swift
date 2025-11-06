@@ -16,6 +16,7 @@ struct CardCell: View {
     let viewModel: AACViewModel
     
     @State private var isPressed = false
+    @State private var wiggleOffset: CGFloat = 0
     
     var body: some View {
         ZStack {
@@ -43,8 +44,43 @@ struct CardCell: View {
             }
         }
         .aspectRatio(1, contentMode: .fit)
+        .rotationEffect(.degrees(viewModel.isEditMode ? wiggleOffset : 0))
         .onTapGesture {
             handleCardTap()
+        }
+        .onChange(of: viewModel.isEditMode) { oldValue, newValue in
+            if newValue {
+                startWiggleAnimation()
+            } else {
+                stopWiggleAnimation()
+            }
+        }
+        .onAppear {
+            if viewModel.isEditMode {
+                startWiggleAnimation()
+            }
+        }
+    }
+    
+    private func startWiggleAnimation() {
+        // Create a unique delay based on position to create a wave effect
+        let delay = Double(position.order % 5) * 0.05
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+            // Use a consistent wiggle pattern based on position for better visual effect
+            let baseAngle = Double(position.order % 4) * 2.0 - 3.0 // -3, -1, 1, 3 degrees
+            withAnimation(
+                Animation.easeInOut(duration: 0.1)
+                    .repeatForever(autoreverses: true)
+            ) {
+                wiggleOffset = baseAngle
+            }
+        }
+    }
+    
+    private func stopWiggleAnimation() {
+        withAnimation(.easeOut(duration: 0.3)) {
+            wiggleOffset = 0
         }
     }
     

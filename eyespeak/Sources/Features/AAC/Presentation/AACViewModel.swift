@@ -46,6 +46,9 @@ public final class AACViewModel: ObservableObject {
     // Current active menu/tab
     public var currentMenu: Tab = .aac
     
+    // Edit mode for AAC grid
+    public var isEditMode = false
+    
     // Menu-specific combo storage (for Settings and Keyboard menus)
     // Key: menu name ("settings", "keyboard"), Value: Dictionary of combo -> action ID
     private var menuCombos: [String: [ActionCombo: Int]] = [:]
@@ -259,6 +262,14 @@ public final class AACViewModel: ObservableObject {
             endCalibration()
         } else {
             beginCalibration()
+        }
+    }
+    
+    // MARK: - Edit Mode Methods
+    
+    public func toggleEditMode() {
+        withAnimation {
+            isEditMode.toggle()
         }
     }
     
