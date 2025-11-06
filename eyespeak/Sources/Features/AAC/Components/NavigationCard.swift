@@ -2,7 +2,7 @@ import SwiftUI
 
 struct NavigationCard: View {
     var title: String
-    var background: Color = .customBlue
+    var background: Color = .mellowBlue
     var cornerRadius: CGFloat = 22
     var pillSize = CGSize(width: 45, height: 24.46)
 
@@ -69,6 +69,6 @@ struct NavigationCard: View {
 
 #Preview {
 
-    NavigationCard(title: "Settings", background: .customBlue, cornerRadius: 28, firstCombo: "arrow.up",secondCombo: "arrow.right")
+    NavigationCard(title: "Settings", background: .mellowBlue, cornerRadius: 28, firstCombo: "arrow.up",secondCombo: "arrow.right")
     
 }

@@ -62,7 +62,7 @@ struct InformationView: View {
                  if let settingsCombo = viewModel.settings.settingsCombo {
                 NavigationCard(
                     title: "Settings",
-                    background: .customBlue,
+                    background: .mellowBlue,
                     cornerRadius: 22,
                     firstCombo: settingsCombo.0.iconName,
                     secondCombo: settingsCombo.1.iconName
@@ -74,7 +74,7 @@ struct InformationView: View {
                 // no combo configured — keep same visual but without pill
                 NavigationCard(
                     title: "Settings",
-                    background: .customBlue,
+                    background: .mellowBlue,
                     cornerRadius: 22,
                     firstCombo: nil,
                     secondCombo: nil
@@ -84,7 +84,7 @@ struct InformationView: View {
             }
             NavigationCard(
                 title: "Calibrate",
-                background: .customBlue,
+                background: .mellowBlue,
                 cornerRadius: 22,
                 firstCombo: nil,
                 secondCombo: nil
@@ -95,7 +95,7 @@ struct InformationView: View {
             if let settingsCombo = viewModel.settings.settingsCombo {
                 NavigationCard(
                     title: "Settings",
-                    background: .customBlue,
+                    background: .mellowBlue,
                     cornerRadius: 22,
                     firstCombo: settingsCombo.0.iconName,
                     secondCombo: settingsCombo.1.iconName
@@ -107,7 +107,7 @@ struct InformationView: View {
                 // no combo configured — keep same visual but without pill
                 NavigationCard(
                     title: "Settings",
-                    background: .customBlue,
+                    background: .mellowBlue,
                     cornerRadius: 22,
                     firstCombo: nil,
                     secondCombo: nil
@@ -118,7 +118,7 @@ struct InformationView: View {
             if let settingsCombo = viewModel.settings.settingsCombo {
                 NavigationCard(
                     title: "Settings",
-                    background: .customBlue,
+                    background: .mellowBlue,
                     cornerRadius: 22,
                     firstCombo: settingsCombo.0.iconName,
                     secondCombo: settingsCombo.1.iconName
@@ -130,7 +130,7 @@ struct InformationView: View {
                 // no combo configured — keep same visual but without pill
                 NavigationCard(
                     title: "Settings",
-                    background: .customBlue,
+                    background: .mellowBlue,
                     cornerRadius: 22,
                     firstCombo: nil,
                     secondCombo: nil
@@ -145,7 +145,7 @@ struct InformationView: View {
         Card {
             VStack(alignment: .leading, spacing: 12) {
                 Text("CURRENT INPUT")
-                    .font(Typography.montserratBoldBody)
+                    .font(Typography.boldTitle)
                     .foregroundColor(.primary)
 
                 Divider()
@@ -153,7 +153,7 @@ struct InformationView: View {
                 // Inner gradient card with live last-input icons
                 ZStack(alignment: .center) {
                     RoundedRectangle(cornerRadius: 14)
-                        .fill(LinearGradient.redOrange)
+                        .fill(LinearGradient.orangeGradient)
                         .shadow(
                             color: .black.opacity(0.08),
                             radius: 6,
