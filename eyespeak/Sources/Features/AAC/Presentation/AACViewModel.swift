@@ -53,6 +53,9 @@ public final class AACViewModel: ObservableObject {
     // Callback to navigate to settings (needs to be set by parent view)
     public var onNavigateToSettings: (() -> Void)?
     
+    // Callback to navigate to AAC (needs to be set by parent view)
+    public var onNavigateToAAC: (() -> Void)?
+    
     // Callback for menu-specific combo matches (Settings, Keyboard)
     public var onMenuComboMatched: ((String, ActionCombo, Int) -> Void)?
     
@@ -117,18 +120,38 @@ public final class AACViewModel: ObservableObject {
             // Check if we're in a menu that has its own combos (Settings, Keyboard)
             if self.currentMenu == .settings || self.currentMenu == .keyboard {
                 let menuName = self.currentMenu == .settings ? "settings" : "keyboard"
-                if let menuComboMap = self.menuCombos[menuName],
-                   let actionId = menuComboMap[combo] {
-                    // Match found in menu-specific combos
-                    print("✨ Menu combo matched: \(combo.name) in \(menuName) menu")
-                    
-                    // Trigger the callback
-                    self.onMenuComboMatched?(menuName, combo, actionId)
-                    
-                    // Also set the published trigger for UI updates
-                    self.menuActionTrigger = MenuActionTrigger(menu: menuName, actionId: actionId)
-                    
+                
+                // First check if this is the settings navigation combo (works from any menu)
+                if let settingsCombo = self.settings.settingsCombo,
+                   combo.firstGesture == settingsCombo.0 && combo.secondGesture == settingsCombo.1 {
+                    // Settings combo - navigate bidirectionally
+                    print("✨ Settings navigation combo matched in \(menuName) menu")
+                    if self.currentMenu == .aac {
+                        self.onNavigateToSettings?()
+                    } else if self.currentMenu == .settings {
+                        self.onNavigateToAAC?()
+                    }
                     return
+                }
+                
+                // Find the combo in menuCombos by matching the gesture pattern
+                if let menuComboMap = self.menuCombos[menuName] {
+                    // Search for matching combo by gesture pattern (not by object reference)
+                    for (menuCombo, actionId) in menuComboMap {
+                        if menuCombo.firstGesture == combo.firstGesture && 
+                           menuCombo.secondGesture == combo.secondGesture {
+                            // Match found in menu-specific combos
+                            print("✨ Menu combo matched: \(combo.name) in \(menuName) menu -> actionId \(actionId)")
+                            
+                            // Trigger the callback
+                            self.onMenuComboMatched?(menuName, menuCombo, actionId)
+                            
+                            // Also set the published trigger for UI updates
+                            self.menuActionTrigger = MenuActionTrigger(menu: menuName, actionId: actionId)
+                            
+                            return
+                        }
+                    }
                 }
                 // If no match in menu combos, don't trigger AAC actions
                 print("❌ No match found in \(menuName) menu combos")
@@ -340,8 +363,15 @@ public final class AACViewModel: ObservableObject {
         if slotIndex == -1 { recordRecentCombo(combo); goToNextPage(); return }
         if slotIndex == -2 { recordRecentCombo(combo); goToPreviousPage(); return }
         if slotIndex == -3 { 
-            // Navigate to settings - need to set callback from parent
-            onNavigateToSettings?()
+            // Settings combo - navigate bidirectionally based on current menu
+            recordRecentCombo(combo)
+            if currentMenu == .aac {
+                // From AAC → navigate to Settings
+                onNavigateToSettings?()
+            } else if currentMenu == .settings {
+                // From Settings → navigate to AAC
+                onNavigateToAAC?()
+            }
             return 
         }
 
@@ -567,7 +597,8 @@ public final class AACViewModel: ObservableObject {
         
         switch currentMenu {
         case .aac:
-            // Load AAC combos from grid positions
+            // Load AAC combos from grid positions (these are stored in the database)
+            // Make sure we're using the actual positions, not temporary ones
             if totalPages > 1 {
                 gestureInputManager.setNavigationCombos(
                     prev: settings.navPrevCombo,
@@ -577,25 +608,22 @@ public final class AACViewModel: ObservableObject {
                 gestureInputManager.setNavigationCombos(prev: nil, next: nil)
             }
             gestureInputManager.setSettingsCombo(settings.settingsCombo)
+            // Use the actual positions from the database - this is a computed property that fetches fresh
             gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
             
         case .settings, .keyboard:
-            // Load menu-specific combos
+            // Load menu-specific combos (stored in memory, separate from database positions)
             let menuName = currentMenu == .settings ? "settings" : "keyboard"
             let menuComboMap = menuCombos[menuName] ?? [:]
             
-            // Convert menu combos to positions-like format for loading
-            var menuPositions: [GridPosition] = []
-            for (combo, actionId) in menuComboMap {
-                let position = GridPosition(order: actionId)
-                position.actionCombo = combo
-                menuPositions.append(position)
-            }
-            
-            // Clear navigation combos for non-AAC menus (or keep settings navigation)
+            // Convert menu combos directly to the format GestureInputManager expects
+            // We'll create a custom loading method to avoid creating temporary GridPosition objects
+            // that might interfere with the database
             gestureInputManager.setNavigationCombos(prev: nil, next: nil)
             gestureInputManager.setSettingsCombo(settings.settingsCombo)
-            gestureInputManager.loadCombosTemplate(from: menuPositions, pageSize: max(menuComboMap.count, 1))
+            
+            // Load menu combos directly without creating temporary positions
+            gestureInputManager.loadMenuCombos(menuComboMap)
             
         case .eyeTrackingAccessible, .eyeTrackingSimple:
             // Legacy tabs use AAC
