@@ -79,9 +79,12 @@ private struct MainContentView: View {
         }
         .environmentObject(aacViewModel)
         .onAppear {
-            // Wire up settings navigation callback
+            // Wire up navigation callbacks
             aacViewModel.onNavigateToSettings = {
                 appState.currentTab = .settings
+            }
+            aacViewModel.onNavigateToAAC = {
+                appState.currentTab = .aac
             }
             // Set initial menu
             aacViewModel.setCurrentMenu(appState.currentTab)

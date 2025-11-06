@@ -53,6 +53,9 @@ public final class AACViewModel: ObservableObject {
     // Callback to navigate to settings (needs to be set by parent view)
     public var onNavigateToSettings: (() -> Void)?
     
+    // Callback to navigate to AAC (needs to be set by parent view)
+    public var onNavigateToAAC: (() -> Void)?
+    
     // Callback for menu-specific combo matches (Settings, Keyboard)
     public var onMenuComboMatched: ((String, ActionCombo, Int) -> Void)?
     
@@ -117,6 +120,19 @@ public final class AACViewModel: ObservableObject {
             // Check if we're in a menu that has its own combos (Settings, Keyboard)
             if self.currentMenu == .settings || self.currentMenu == .keyboard {
                 let menuName = self.currentMenu == .settings ? "settings" : "keyboard"
+                
+                // First check if this is the settings navigation combo (works from any menu)
+                if let settingsCombo = self.settings.settingsCombo,
+                   combo.firstGesture == settingsCombo.0 && combo.secondGesture == settingsCombo.1 {
+                    // Settings combo - navigate bidirectionally
+                    print("✨ Settings navigation combo matched in \(menuName) menu")
+                    if self.currentMenu == .aac {
+                        self.onNavigateToSettings?()
+                    } else if self.currentMenu == .settings {
+                        self.onNavigateToAAC?()
+                    }
+                    return
+                }
                 
                 // Find the combo in menuCombos by matching the gesture pattern
                 if let menuComboMap = self.menuCombos[menuName] {
@@ -347,8 +363,15 @@ public final class AACViewModel: ObservableObject {
         if slotIndex == -1 { recordRecentCombo(combo); goToNextPage(); return }
         if slotIndex == -2 { recordRecentCombo(combo); goToPreviousPage(); return }
         if slotIndex == -3 { 
-            // Navigate to settings - need to set callback from parent
-            onNavigateToSettings?()
+            // Settings combo - navigate bidirectionally based on current menu
+            recordRecentCombo(combo)
+            if currentMenu == .aac {
+                // From AAC → navigate to Settings
+                onNavigateToSettings?()
+            } else if currentMenu == .settings {
+                // From Settings → navigate to AAC
+                onNavigateToAAC?()
+            }
             return 
         }
 
