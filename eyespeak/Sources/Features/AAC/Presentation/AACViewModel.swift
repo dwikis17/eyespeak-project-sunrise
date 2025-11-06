@@ -10,6 +10,19 @@ import Observation
 import SwiftData
 import SwiftUI
 
+/// Represents a menu action trigger for UI updates
+public struct MenuActionTrigger: Equatable {
+    public let menu: String
+    public let actionId: Int
+    public let timestamp: Date
+    
+    public init(menu: String, actionId: Int) {
+        self.menu = menu
+        self.actionId = actionId
+        self.timestamp = Date()
+    }
+}
+
 @Observable
 public final class AACViewModel: ObservableObject {
     public let modelContext: ModelContext
@@ -30,8 +43,24 @@ public final class AACViewModel: ObservableObject {
     public var lastDetectedGesture: GestureType?
     public var recentCombos: [(GestureType, GestureType)] = []
     
+    // Current active menu/tab
+    public var currentMenu: Tab = .aac
+    
+    // Menu-specific combo storage (for Settings and Keyboard menus)
+    // Key: menu name ("settings", "keyboard"), Value: Dictionary of combo -> action ID
+    private var menuCombos: [String: [ActionCombo: Int]] = [:]
+    
     // Callback to navigate to settings (needs to be set by parent view)
     public var onNavigateToSettings: (() -> Void)?
+    
+    // Callback to navigate to AAC (needs to be set by parent view)
+    public var onNavigateToAAC: (() -> Void)?
+    
+    // Callback for menu-specific combo matches (Settings, Keyboard)
+    public var onMenuComboMatched: ((String, ActionCombo, Int) -> Void)?
+    
+    // Published trigger for menu-specific actions (for UI updates)
+    public var menuActionTrigger: MenuActionTrigger? = nil
     
     // MARK: - Manager Access
     public var dataManagerInstance: DataManager { dataManager }
@@ -86,7 +115,51 @@ public final class AACViewModel: ObservableObject {
     
     private func setupGestureManager() {
         gestureInputManager.onComboMatchedBySlot = { [weak self] combo, slotIndex in
-            self?.handleComboMatched(combo: combo, slotIndex: slotIndex)
+            guard let self = self else { return }
+            
+            // Check if we're in a menu that has its own combos (Settings, Keyboard)
+            if self.currentMenu == .settings || self.currentMenu == .keyboard {
+                let menuName = self.currentMenu == .settings ? "settings" : "keyboard"
+                
+                // First check if this is the settings navigation combo (works from any menu)
+                if let settingsCombo = self.settings.settingsCombo,
+                   combo.firstGesture == settingsCombo.0 && combo.secondGesture == settingsCombo.1 {
+                    // Settings combo - navigate bidirectionally
+                    print("✨ Settings navigation combo matched in \(menuName) menu")
+                    if self.currentMenu == .aac {
+                        self.onNavigateToSettings?()
+                    } else if self.currentMenu == .settings {
+                        self.onNavigateToAAC?()
+                    }
+                    return
+                }
+                
+                // Find the combo in menuCombos by matching the gesture pattern
+                if let menuComboMap = self.menuCombos[menuName] {
+                    // Search for matching combo by gesture pattern (not by object reference)
+                    for (menuCombo, actionId) in menuComboMap {
+                        if menuCombo.firstGesture == combo.firstGesture && 
+                           menuCombo.secondGesture == combo.secondGesture {
+                            // Match found in menu-specific combos
+                            print("✨ Menu combo matched: \(combo.name) in \(menuName) menu -> actionId \(actionId)")
+                            
+                            // Trigger the callback
+                            self.onMenuComboMatched?(menuName, menuCombo, actionId)
+                            
+                            // Also set the published trigger for UI updates
+                            self.menuActionTrigger = MenuActionTrigger(menu: menuName, actionId: actionId)
+                            
+                            return
+                        }
+                    }
+                }
+                // If no match in menu combos, don't trigger AAC actions
+                print("❌ No match found in \(menuName) menu combos")
+                return
+            }
+            
+            // For AAC menu, use the existing handler
+            self.handleComboMatched(combo: combo, slotIndex: slotIndex)
         }
     }
     
@@ -290,8 +363,15 @@ public final class AACViewModel: ObservableObject {
         if slotIndex == -1 { recordRecentCombo(combo); goToNextPage(); return }
         if slotIndex == -2 { recordRecentCombo(combo); goToPreviousPage(); return }
         if slotIndex == -3 { 
-            // Navigate to settings - need to set callback from parent
-            onNavigateToSettings?()
+            // Settings combo - navigate bidirectionally based on current menu
+            recordRecentCombo(combo)
+            if currentMenu == .aac {
+                // From AAC → navigate to Settings
+                onNavigateToSettings?()
+            } else if currentMenu == .settings {
+                // From Settings → navigate to AAC
+                onNavigateToAAC?()
+            }
             return 
         }
 
@@ -501,5 +581,94 @@ public final class AACViewModel: ObservableObject {
 
     public func speakSentence(_ text: String, language: String? = nil) {
         speak(text: text, language: language)
+    }
+    
+    // MARK: - Menu-Specific Combo Management
+    
+    /// Set the current active menu and reload combos accordingly
+    public func setCurrentMenu(_ menu: Tab) {
+        currentMenu = menu
+        reloadCombosForCurrentMenu()
+    }
+    
+    /// Reload combos based on the current menu
+    private func reloadCombosForCurrentMenu() {
+        guard isGestureMode else { return }
+        
+        switch currentMenu {
+        case .aac:
+            // Load AAC combos from grid positions (these are stored in the database)
+            // Make sure we're using the actual positions, not temporary ones
+            if totalPages > 1 {
+                gestureInputManager.setNavigationCombos(
+                    prev: settings.navPrevCombo,
+                    next: settings.navNextCombo
+                )
+            } else {
+                gestureInputManager.setNavigationCombos(prev: nil, next: nil)
+            }
+            gestureInputManager.setSettingsCombo(settings.settingsCombo)
+            // Use the actual positions from the database - this is a computed property that fetches fresh
+            gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
+            
+        case .settings, .keyboard:
+            // Load menu-specific combos (stored in memory, separate from database positions)
+            let menuName = currentMenu == .settings ? "settings" : "keyboard"
+            let menuComboMap = menuCombos[menuName] ?? [:]
+            
+            // Convert menu combos directly to the format GestureInputManager expects
+            // We'll create a custom loading method to avoid creating temporary GridPosition objects
+            // that might interfere with the database
+            gestureInputManager.setNavigationCombos(prev: nil, next: nil)
+            gestureInputManager.setSettingsCombo(settings.settingsCombo)
+            
+            // Load menu combos directly without creating temporary positions
+            gestureInputManager.loadMenuCombos(menuComboMap)
+            
+        case .eyeTrackingAccessible, .eyeTrackingSimple:
+            // Legacy tabs use AAC
+            setCurrentMenu(.aac)
+        }
+    }
+    
+    /// Assign a combo to a menu-specific action (Settings, Keyboard)
+    public func assignComboToMenu(_ combo: ActionCombo, menu: Tab, actionId: Int) {
+        let menuName: String
+        switch menu {
+        case .settings:
+            menuName = "settings"
+        case .keyboard:
+            menuName = "keyboard"
+        default:
+            print("⚠️ Cannot assign combo to menu \(menu). Only .settings and .keyboard are supported.")
+            return
+        }
+        
+        if menuCombos[menuName] == nil {
+            menuCombos[menuName] = [:]
+        }
+        
+        menuCombos[menuName]?[combo] = actionId
+        print("✅ Assigned combo \(combo.name) to \(menuName) menu action \(actionId)")
+        
+        // Reload combos if this is the current menu
+        if currentMenu == menu {
+            reloadCombosForCurrentMenu()
+        }
+    }
+    
+    /// Get combos for a specific menu
+    public func getCombosForMenu(_ menu: Tab) -> [ActionCombo: Int] {
+        let menuName: String
+        switch menu {
+        case .settings:
+            menuName = "settings"
+        case .keyboard:
+            menuName = "keyboard"
+        default:
+            return [:]
+        }
+        
+        return menuCombos[menuName] ?? [:]
     }
 }

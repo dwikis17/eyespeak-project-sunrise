@@ -102,6 +102,28 @@ import Observation
             self.settingsCombo = combo
         }
         
+        /// Load menu-specific combos directly (for Settings/Keyboard menus)
+        /// This avoids creating temporary GridPosition objects that might interfere with the database
+        func loadMenuCombos(_ menuComboMap: [ActionCombo: Int]) {
+            availableCombosBySlot.removeAll()
+            guard !menuComboMap.isEmpty else { return }
+            
+            // Sort by actionId to ensure consistent slot mapping
+            let sortedCombos = menuComboMap.sorted { $0.value < $1.value }
+            
+            for (index, (combo, actionId)) in sortedCombos.enumerated() {
+                if combo.isEnabled {
+                    // Skip combos reserved for navigation priority
+                    if let n = navNext, combo.firstGesture == n.0 && combo.secondGesture == n.1 { continue }
+                    if let p = navPrev, combo.firstGesture == p.0 && combo.secondGesture == p.1 { continue }
+                    if let s = settingsCombo, combo.firstGesture == s.0 && combo.secondGesture == s.1 { continue }
+                    // Use the index as the slot (0-based)
+                    availableCombosBySlot[combo] = index
+                }
+            }
+            print("✅ Loaded \(availableCombosBySlot.count) menu-specific combos")
+        }
+        
         /// Reset gesture sequence
         func reset() {
             print("🔄 Resetting gesture sequence")
