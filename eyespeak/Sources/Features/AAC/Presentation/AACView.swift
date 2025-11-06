@@ -21,11 +21,11 @@ struct AACView: View {
         GeometryReader { geo in
             HStack (alignment: .center) {
                 InformationView()
-                    .frame(width: geo.size.width * 0.2, height: geo.size.height)
+                    .frame(width: geo.size.width * 0.21, height: geo.size.height)
                     .padding()
                 Spacer()
                 CardGridView()
-                    .frame( width: geo.size.width * 0.8, height: geo.size.height)
+                    .frame( width: geo.size.width * 0.75, height: geo.size.height)
 
             }
             .padding(.horizontal)
