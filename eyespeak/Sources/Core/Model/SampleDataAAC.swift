@@ -147,11 +147,9 @@ struct SampleData {
     private static func populateUserGesture(context: ModelContext) {
         let descriptor = FetchDescriptor<UserGesture>()
         let existing = (try? context.fetch(descriptor)) ?? []
-        print(existing,"EXSGIN")
         if existing.isEmpty {
             for (index, gestureType) in GestureType.allCases.enumerated() {
-                let userGesture = UserGesture(gestureType: gestureType, isEnabled: false, order: index)
-                print(userGesture,"USER")
+                let userGesture = UserGesture(gestureType: gestureType, isEnabled: true, order: index)
                 context.insert(userGesture)
             }
             

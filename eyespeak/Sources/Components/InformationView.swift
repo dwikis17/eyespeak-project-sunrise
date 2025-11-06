@@ -17,7 +17,7 @@ struct Card<Content: View>: View {
                     .fill(Color(.systemBackground))
                     .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
             )
-            .fixedSize(horizontal: false, vertical: true)  // important: allow card to fit its content height
+            .fixedSize(horizontal: false, vertical: false)  // important: allow card to fit its content height
     }
 }
 
@@ -31,16 +31,21 @@ struct InformationView: View {
     ]
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 15) {
             currentInputSection
             if viewModel.isGestureMode {
-                HStack(alignment: .top, spacing: 12) {
-                    AACFaceTrackingPanel()
-                        .frame(maxWidth: .infinity)
-                        .layoutPriority(1)
-                    lastInputSection
-                        .frame(width: 105)
+                GeometryReader { geo in
+                    HStack(alignment: .top, spacing: 15) {
+                        AACFaceTrackingPanel()
+                            .frame(maxWidth: .infinity)
+        
+                        lastInputSection
+                            .frame(width: 112)
+                            .frame(maxHeight: .infinity)
+                    }
+                    
                 }
+                .frame(maxHeight: 191) // Stretches the HStack
             } else {
                 gestureModePlaceholder
             }
@@ -140,7 +145,7 @@ struct InformationView: View {
         Card {
             VStack(alignment: .leading, spacing: 12) {
                 Text("CURRENT INPUT")
-                    .font(.headline)
+                    .font(Typography.montserratBoldBody)
                     .foregroundColor(.primary)
 
                 Divider()
@@ -177,7 +182,7 @@ struct InformationView: View {
                         }
                     }
                 }
-                .frame(height: 107)
+                .frame(maxHeight: .infinity)
 
                 // Live countdown bar linked to gesture timing window
                 GeometryReader { geo in
@@ -211,27 +216,26 @@ struct InformationView: View {
 
     private var lastInputSection: some View {
         Card {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .center, spacing: 12) {
                 Text("LAST INPUT")
-                    .font(.headline)
-                    .foregroundColor(.primary)
-
+                    .font(AppFont.Montserrat.bold(13))
                 Divider()
-
                 VStack(spacing: 10) {
                     ForEach(Array(viewModel.recentCombos.prefix(3).enumerated()), id: \.offset) { _, pair in
-                        HStack(spacing: 16) {
+                        HStack(spacing: 12) {
                             Image(systemName: pair.0.iconName)
                             Image(systemName: pair.1.iconName)
                         }
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.system(size: 12, weight: .semibold))
                         .padding(.vertical, 10)
                         .frame(maxWidth: .infinity)
                         .background(Color(.systemGray6))
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                     }
                 }
+            
             }
+            .frame(maxHeight: .infinity, alignment: .top)
         }
     }
 
