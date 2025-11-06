@@ -1,9 +1,11 @@
 # Design System Update Instructions
 
 ## Overview
+
 This document contains the design system specifications from Figma that need to be implemented in the SwiftUI codebase. The typography system needs to be updated to match the Figma design tokens.
 
 ## Current Implementation Location
+
 - **Typography File**: `eyespeak/Sources/Core/Typography.swift`
 - **Font Family**: Montserrat (Regular, Medium, SemiBold, Bold variants available)
 
@@ -14,6 +16,7 @@ This document contains the design system specifications from Figma that need to 
 Based on the Figma design system, the following typography styles are defined:
 
 1. **BoldHeader** (Bold/18)
+
    - Font: Montserrat Bold
    - Size: 18pt
    - Weight: 700
@@ -21,6 +24,7 @@ Based on the Figma design system, the following typography styles are defined:
    - Usage: Headers
 
 2. **RegularHeader** (Regular/18)
+
    - Font: Montserrat Regular
    - Size: 18pt
    - Weight: 400
@@ -28,6 +32,7 @@ Based on the Figma design system, the following typography styles are defined:
    - Usage: Regular headers
 
 3. **BoldTitle** (Bold/14)
+
    - Font: Montserrat Bold
    - Size: 14pt
    - Weight: 700
@@ -35,6 +40,7 @@ Based on the Figma design system, the following typography styles are defined:
    - Usage: Titles
 
 4. **RegularTitle** (Regular/14)
+
    - Font: Montserrat Regular
    - Size: 14pt
    - Weight: 400
@@ -42,6 +48,7 @@ Based on the Figma design system, the following typography styles are defined:
    - Usage: Regular titles
 
 5. **BoldBody** (Bold/9)
+
    - Font: Montserrat Bold
    - Size: 9pt
    - Weight: 700
@@ -56,12 +63,15 @@ Based on the Figma design system, the following typography styles are defined:
    - Usage: Regular body text
 
 ### Color Tokens
+
 - **Bone White**: #F2F2F2
 
 ## Required Updates to Typography.swift
 
 ### Current State
+
 The current `Typography` enum exposes the Figma typography tokens:
+
 - `boldHeader`: Montserrat Bold 18pt
 - `regularHeader`: Montserrat Regular 18pt
 - `boldTitle`: Montserrat Bold 14pt
@@ -76,12 +86,14 @@ Ensure new UI work references these tokens so typography stays consistent. Legac
 ## Implementation Notes
 
 1. **Font Weights**: The Figma design uses:
+
    - Bold = 700 (use `AppFont.Montserrat.bold()`)
    - Regular = 400 (use `AppFont.Montserrat.regular()`)
 
 2. **Line Height**: Figma specifies 100% line height. In SwiftUI, this is typically the default behavior when using custom fonts.
 
-3. **SwiftUI TextStyle Mapping**: 
+3. **SwiftUI TextStyle Mapping**:
+
    - 18pt → `.title3` (closest to 18pt)
    - 14pt → `.body` (closest to 14pt)
    - 9pt → `.caption2` (closest to 9pt)
@@ -91,6 +103,7 @@ Ensure new UI work references these tokens so typography stays consistent. Legac
 ## Figma Design System Structure
 
 The Figma design shows a Typography section with 6 text style variants:
+
 - Bold/18 (Bold Header)
 - Regular/18 (Regular Header)
 - Bold/14 (Bold Title)
@@ -108,6 +121,7 @@ The Figma design shows a Typography section with 6 text style variants:
 ## Color Token Reference
 
 If colors need to be added:
+
 - **Bone White** (#F2F2F2) - Add to `eyespeak/Sources/Core/Color/Color.swift` if needed
 
 ---
