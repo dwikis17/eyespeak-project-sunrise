@@ -106,6 +106,30 @@ struct InformationView: View {
                     }
                 }
             }
+            
+            // Keyboard button (mirrors style, navigates to Keyboard tab)
+            if viewModel.currentMenu != .keyboard {
+                NavigationCard(
+                    title: "Keyboard",
+                    background: .mellowBlue,
+                    cornerRadius: 22,
+                    firstCombo: nil,
+                    secondCombo: nil
+                ) {
+                    appState.currentTab = .keyboard
+                }
+            } else {
+                NavigationCard(
+                    title: "AAC Board",
+                    background: .mellowBlue,
+                    cornerRadius: 22,
+                    firstCombo: nil,
+                    secondCombo: nil
+                ) {
+                    appState.currentTab = .aac
+                }
+            }
+            
             // Calibrate card
             NavigationCard(
                 title: "Calibrate",
