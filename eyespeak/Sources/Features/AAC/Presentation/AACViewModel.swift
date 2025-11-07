@@ -44,7 +44,7 @@ public final class AACViewModel: ObservableObject {
     public var recentCombos: [(GestureType, GestureType)] = []
     
     // Current active menu/tab
-    public var currentMenu: Tab = .aac
+    public var currentMenu: Tab = .settings
     
     // Edit mode for AAC grid
     public var isEditMode = false
