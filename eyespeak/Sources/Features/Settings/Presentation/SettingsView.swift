@@ -21,6 +21,7 @@ struct SettingsView: View {
             EditLayoutview()
             Spacer()
         }
+        .environmentObject(viewModel)
     
     }
 //    var body: some View {

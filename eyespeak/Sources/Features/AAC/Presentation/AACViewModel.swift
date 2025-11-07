@@ -190,6 +190,9 @@ public final class AACViewModel: ObservableObject {
             }
             // Always set settings combo regardless of page count
             gestureInputManager.setSettingsCombo(settings.settingsCombo)
+            print("settings.editLayoutCombo: \(settings.editLayoutCombo)")
+            // Always set edit layout combo regardless of page count
+            gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
             // Always sanitize conflicts if nav combos are configured (even with 1 page)
             sanitizeNavigationComboConflicts()
             gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
@@ -213,6 +216,8 @@ public final class AACViewModel: ObservableObject {
                 }
                 // Always set settings combo regardless of page count
                 gestureInputManager.setSettingsCombo(settings.settingsCombo)
+                // Always set edit layout combo regardless of page count
+                gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
                 // Always sanitize conflicts if nav combos are configured (even with 1 page)
                 sanitizeNavigationComboConflicts()
                 gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
@@ -385,6 +390,12 @@ public final class AACViewModel: ObservableObject {
             }
             return 
         }
+        if slotIndex == -4 {
+            // Edit Layout combo - toggle edit mode
+            recordRecentCombo(combo)
+            toggleEditMode()
+            return
+        }
 
         let index = currentPage * pageSize + slotIndex
         guard index >= 0, index < positions.count else {
@@ -472,6 +483,8 @@ public final class AACViewModel: ObservableObject {
             }
             // Always set settings combo regardless of page count
             gestureInputManager.setSettingsCombo(settings.settingsCombo)
+            // Always set edit layout combo regardless of page count
+            gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
             // Always sanitize conflicts if nav combos are configured (even with 1 page)
             sanitizeNavigationComboConflicts()
             gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
@@ -487,13 +500,15 @@ public final class AACViewModel: ObservableObject {
         let navNext = settings.navNextCombo
         let navPrev = settings.navPrevCombo
         let settingsCombo = settings.settingsCombo
+        let editLayoutCombo = settings.editLayoutCombo
         // Only sanitize if priority combos are actually configured
-        guard navNext != nil || navPrev != nil || settingsCombo != nil else { return }
+        guard navNext != nil || navPrev != nil || settingsCombo != nil || editLayoutCombo != nil else { return }
 
         func isNavCombo(_ c: ActionCombo) -> Bool {
             if let n = navNext, c.firstGesture == n.0 && c.secondGesture == n.1 { return true }
             if let p = navPrev, c.firstGesture == p.0 && c.secondGesture == p.1 { return true }
             if let s = settingsCombo, c.firstGesture == s.0 && c.secondGesture == s.1 { return true }
+            if let e = editLayoutCombo, c.firstGesture == e.0 && c.secondGesture == e.1 { return true }
             return false
         }
 
@@ -619,6 +634,7 @@ public final class AACViewModel: ObservableObject {
                 gestureInputManager.setNavigationCombos(prev: nil, next: nil)
             }
             gestureInputManager.setSettingsCombo(settings.settingsCombo)
+            gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
             // Use the actual positions from the database - this is a computed property that fetches fresh
             gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
             
@@ -632,6 +648,7 @@ public final class AACViewModel: ObservableObject {
             // that might interfere with the database
             gestureInputManager.setNavigationCombos(prev: nil, next: nil)
             gestureInputManager.setSettingsCombo(settings.settingsCombo)
+            gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
             
             // Load menu combos directly without creating temporary positions
             gestureInputManager.loadMenuCombos(menuComboMap)

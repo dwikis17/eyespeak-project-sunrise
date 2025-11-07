@@ -110,6 +110,9 @@ struct SampleData {
         let settings = UserSettings()
         let navNext = settings.navNextCombo
         let navPrev = settings.navPrevCombo
+        let settingsCombo = settings.settingsCombo
+        let editLayoutCombo = settings.editLayoutCombo
+        
         for index in 0..<gridSize {
             let position = GridPosition(order: index)
             
@@ -118,19 +121,22 @@ struct SampleData {
                 position.card = cards[index]
             }
             
-            // Assign combos cyclically, but avoid navigation combos if configured
+            // Assign combos cyclically, but avoid priority combos (nav, settings, edit layout) if configured
             if !combos.isEmpty {
                 var assigned = combos[index % combos.count]
-                if let n = navNext, assigned.firstGesture == n.0 && assigned.secondGesture == n.1 {
+                let isNavNext = navNext != nil && assigned.firstGesture == navNext!.0 && assigned.secondGesture == navNext!.1
+                let isNavPrev = navPrev != nil && assigned.firstGesture == navPrev!.0 && assigned.secondGesture == navPrev!.1
+                let isSettings = settingsCombo != nil && assigned.firstGesture == settingsCombo!.0 && assigned.secondGesture == settingsCombo!.1
+                let isEditLayout = editLayoutCombo != nil && assigned.firstGesture == editLayoutCombo!.0 && assigned.secondGesture == editLayoutCombo!.1
+                
+                if isNavNext || isNavPrev || isSettings || isEditLayout {
                     // choose next non-conflicting combo
                     if let alt = combos.first(where: { c in
-                        !(navNext?.0 == c.firstGesture && navNext?.1 == c.secondGesture) &&
-                        !(navPrev?.0 == c.firstGesture && navPrev?.1 == c.secondGesture)
-                    }) { assigned = alt }
-                } else if let p = navPrev, assigned.firstGesture == p.0 && assigned.secondGesture == p.1 {
-                    if let alt = combos.first(where: { c in
-                        !(navNext?.0 == c.firstGesture && navNext?.1 == c.secondGesture) &&
-                        !(navPrev?.0 == c.firstGesture && navPrev?.1 == c.secondGesture)
+                        let isNavNextAlt = navNext != nil && c.firstGesture == navNext!.0 && c.secondGesture == navNext!.1
+                        let isNavPrevAlt = navPrev != nil && c.firstGesture == navPrev!.0 && c.secondGesture == navPrev!.1
+                        let isSettingsAlt = settingsCombo != nil && c.firstGesture == settingsCombo!.0 && c.secondGesture == settingsCombo!.1
+                        let isEditLayoutAlt = editLayoutCombo != nil && c.firstGesture == editLayoutCombo!.0 && c.secondGesture == editLayoutCombo!.1
+                        return !isNavNextAlt && !isNavPrevAlt && !isSettingsAlt && !isEditLayoutAlt
                     }) { assigned = alt }
                 }
                 position.actionCombo = assigned
