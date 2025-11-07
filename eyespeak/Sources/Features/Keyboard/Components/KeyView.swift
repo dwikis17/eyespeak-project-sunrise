@@ -11,7 +11,7 @@ struct KeyView: View {
         secondGesture: GestureType = .lookRight
     ) {
         self.letter = letter
-        self.firstGesture = firstGesture d
+        self.firstGesture = firstGesture
         self.secondGesture = secondGesture
     }
 
