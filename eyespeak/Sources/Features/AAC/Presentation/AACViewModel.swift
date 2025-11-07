@@ -136,6 +136,13 @@ public final class AACViewModel: ObservableObject {
                     }
                     return
                 }
+
+                if let editLayoutCombo = self.settings.editLayoutCombo,
+                   combo.firstGesture == editLayoutCombo.0 && combo.secondGesture == editLayoutCombo.1 {
+                    print("✨ Edit Layout combo matched in \(menuName) menu")
+                    self.toggleEditMode()
+                    return
+                }
                 
                 // Find the combo in menuCombos by matching the gesture pattern
                 if let menuComboMap = self.menuCombos[menuName] {
@@ -191,8 +198,13 @@ public final class AACViewModel: ObservableObject {
             // Always set settings combo regardless of page count
             gestureInputManager.setSettingsCombo(settings.settingsCombo)
             print("settings.editLayoutCombo: \(settings.editLayoutCombo)")
-            // Always set edit layout combo regardless of page count
-            gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
+            // Only set edit layout combo as priority when in edit mode or Settings menu
+            // Otherwise, let it be used normally for card activation
+            // if isEditMode || currentMenu == .settings {
+            //     gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
+            // } else {
+            //     gestureInputManager.setEditLayoutCombo(nil)
+            // }
             // Always sanitize conflicts if nav combos are configured (even with 1 page)
             sanitizeNavigationComboConflicts()
             gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
@@ -216,8 +228,12 @@ public final class AACViewModel: ObservableObject {
                 }
                 // Always set settings combo regardless of page count
                 gestureInputManager.setSettingsCombo(settings.settingsCombo)
-                // Always set edit layout combo regardless of page count
-                gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
+                // Only set edit layout combo as priority when in edit mode or Settings menu
+                // if isEditMode || currentMenu == .settings {
+                //     gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
+                // } else {
+                //     gestureInputManager.setEditLayoutCombo(nil)
+                // }
                 // Always sanitize conflicts if nav combos are configured (even with 1 page)
                 sanitizeNavigationComboConflicts()
                 gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
@@ -275,6 +291,20 @@ public final class AACViewModel: ObservableObject {
     public func toggleEditMode() {
         withAnimation {
             isEditMode.toggle()
+            // Update editLayoutCombo priority when edit mode changes
+            if isGestureMode {
+                if isEditMode {
+                    // When entering edit mode, set editLayoutCombo as priority (to allow exit)
+                    gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
+                } else {
+                    // When exiting edit mode, remove priority so combo can be used normally
+                    gestureInputManager.setEditLayoutCombo(nil)
+                }
+                // Reload combos to reflect the change
+                if currentMenu == .aac {
+                    gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
+                }
+            }
         }
     }
     
@@ -392,8 +422,12 @@ public final class AACViewModel: ObservableObject {
         }
         if slotIndex == -4 {
             // Edit Layout combo - toggle edit mode
+            // This only triggers when priority is set (Settings menu or when already in edit mode)
             recordRecentCombo(combo)
-            toggleEditMode()
+            if currentMenu == .settings {
+                print("toggleEditMode")
+                toggleEditMode()
+            }
             return
         }
 
@@ -483,8 +517,12 @@ public final class AACViewModel: ObservableObject {
             }
             // Always set settings combo regardless of page count
             gestureInputManager.setSettingsCombo(settings.settingsCombo)
-            // Always set edit layout combo regardless of page count
-            gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
+            // Only set edit layout combo as priority when in edit mode or Settings menu
+            if isEditMode || currentMenu == .settings {
+                gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
+            } else {
+                gestureInputManager.setEditLayoutCombo(nil)
+            }
             // Always sanitize conflicts if nav combos are configured (even with 1 page)
             sanitizeNavigationComboConflicts()
             gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
@@ -634,7 +672,13 @@ public final class AACViewModel: ObservableObject {
                 gestureInputManager.setNavigationCombos(prev: nil, next: nil)
             }
             gestureInputManager.setSettingsCombo(settings.settingsCombo)
-            gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
+            // Only set editLayoutCombo as priority when in edit mode (to allow exit)
+            // Otherwise, let it be used normally for card activation
+            if isEditMode {
+                gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
+            } else {
+                gestureInputManager.setEditLayoutCombo(nil)
+            }
             // Use the actual positions from the database - this is a computed property that fetches fresh
             gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
             
@@ -648,6 +692,7 @@ public final class AACViewModel: ObservableObject {
             // that might interfere with the database
             gestureInputManager.setNavigationCombos(prev: nil, next: nil)
             gestureInputManager.setSettingsCombo(settings.settingsCombo)
+            // In Settings menu, always allow editLayoutCombo to work
             gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
             
             // Load menu combos directly without creating temporary positions

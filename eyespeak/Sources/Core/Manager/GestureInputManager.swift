@@ -182,6 +182,7 @@ import Observation
                 return
             }
             // 3) Edit Layout combo (priority 4)
+            print("editLayoutCombo: \(editLayoutCombo)")
             if let e = editLayoutCombo, first == e.0 && second == e.1 {
                 let combo = ActionCombo(name: "Edit Layout", firstGesture: e.0, secondGesture: e.1)
                 onComboMatchedBySlot?(combo, -4) // special slot index for edit layout
