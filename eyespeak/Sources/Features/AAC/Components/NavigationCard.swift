@@ -4,11 +4,11 @@ struct NavigationCard: View {
     var title: String
     var background: Color = .mellowBlue
     var cornerRadius: CGFloat = 22
-    var pillSize = CGSize(width: 45, height: 24.46)
+    var pillSize = CGSize(width: 38.431, height: 21.679)
 
     // optional combo icons (use nil when not configured)
-    var firstCombo: String? = nil
-    var secondCombo: String? = nil
+    var firstCombo: GestureType? = nil
+    var secondCombo: GestureType? = nil
 
     // optional tap action
     var action: (() -> Void)? = nil
@@ -22,18 +22,16 @@ struct NavigationCard: View {
 
             // Top-right white pill with arrows (only if both icons provided)
             if let first = firstCombo, let second = secondCombo {
-                Capsule(style: .continuous)
-                    .fill(.white)
-                    .frame(width: pillSize.width, height: pillSize.height)
-                    .overlay(
-                        HStack(spacing: 4) {
-                            Image(systemName: first)
-                            Image(systemName: second)
-                        }
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(background)
-                        .padding(.horizontal, 6) // inner padding for icons
-                    )
+                ComboPill(
+                    firstGesture: first,
+                    secondGesture: second,
+                    foreground: background,
+                    background: .whiteWhite,
+                    size: pillSize,
+                    paddingValue: 4.927,
+                    iconSize: 11.825,
+                    spacing: 4.927
+                )
                     .padding(10) // outer padding around capsule
             }
 
@@ -69,6 +67,6 @@ struct NavigationCard: View {
 
 #Preview {
 
-    NavigationCard(title: "Settings", background: .mellowBlue, cornerRadius: 28, firstCombo: "arrow.up",secondCombo: "arrow.right")
+    NavigationCard(title: "Settings", background: .mellowBlue, cornerRadius: 28, firstCombo: .lookUp, secondCombo: .lookRight)
     
 }

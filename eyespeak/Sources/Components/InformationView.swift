@@ -63,8 +63,8 @@ struct InformationView: View {
                         title: "Settings",
                         background: .mellowBlue,
                         cornerRadius: 22,
-                        firstCombo: settingsCombo.0.iconName,
-                        secondCombo: settingsCombo.1.iconName
+                        firstCombo: settingsCombo.0,
+                        secondCombo: settingsCombo.1
                     ) {
                         // action closure
                         appState.currentTab = .settings
@@ -87,8 +87,8 @@ struct InformationView: View {
                         title: "AAC Board",
                         background: .mellowBlue,
                         cornerRadius: 22,
-                        firstCombo: settingsCombo.0.iconName,
-                        secondCombo: settingsCombo.1.iconName
+                        firstCombo: settingsCombo.0,
+                        secondCombo: settingsCombo.1
                     ) {
                         // action closure
                         appState.currentTab = .aac
