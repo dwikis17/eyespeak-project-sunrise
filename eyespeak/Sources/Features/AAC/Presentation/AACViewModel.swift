@@ -47,7 +47,7 @@ public final class AACViewModel: ObservableObject {
     public var currentMenu: Tab = .settings
     
     // Edit mode for AAC grid
-    public var isEditMode = false
+    public var isEditMode = true
     
     // Menu-specific combo storage (for Settings and Keyboard menus)
     // Key: menu name ("settings", "keyboard"), Value: Dictionary of combo -> action ID
@@ -58,6 +58,7 @@ public final class AACViewModel: ObservableObject {
     
     // Callback to navigate to AAC (needs to be set by parent view)
     public var onNavigateToAAC: (() -> Void)?
+
     
     // Callback for menu-specific combo matches (Settings, Keyboard)
     public var onMenuComboMatched: ((String, ActionCombo, Int) -> Void)?
@@ -141,6 +142,8 @@ public final class AACViewModel: ObservableObject {
                    combo.firstGesture == editLayoutCombo.0 && combo.secondGesture == editLayoutCombo.1 {
                     print("✨ Edit Layout combo matched in \(menuName) menu")
                     self.toggleEditMode()
+                    onNavigateToAAC?()
+                    
                     return
                 }
                 
@@ -299,6 +302,8 @@ public final class AACViewModel: ObservableObject {
                 } else {
                     // When exiting edit mode, remove priority so combo can be used normally
                     gestureInputManager.setEditLayoutCombo(nil)
+                    // Clear selection when exiting edit mode
+                    selectedPosition = nil
                 }
                 // Reload combos to reflect the change
                 if currentMenu == .aac {
@@ -390,16 +395,23 @@ public final class AACViewModel: ObservableObject {
             selectedPosition = position
         }
         
-        // Trigger card action
+        // In edit mode, don't trigger card action and keep selection persistent
+        if isEditMode {
+            // Selection persists in edit mode for editing actions
+            return
+        }
+        
+        // Trigger card action (only when not in edit mode)
         if let card = position.card {
             incrementCardUsage(card)
             speak(text: card.title)
         }
         
-        // Reset highlight after delay
+        // Reset highlight after delay (only when not in edit mode)
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            guard let self = self, !self.isEditMode else { return }
             withAnimation {
-                self?.selectedPosition = nil
+                self.selectedPosition = nil
             }
         }
     }

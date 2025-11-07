@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 // Reusable Card wrapper
 struct Card<Content: View>: View {
@@ -9,7 +10,6 @@ struct Card<Content: View>: View {
     }
 
     var body: some View {
-
         content
             .padding()  // internal padding for content
             .background(
@@ -49,7 +49,11 @@ struct InformationView: View {
             } else {
                 gestureModePlaceholder
             }
-            controlPanelSection
+            if viewModel.isEditMode {
+                editView
+            } else {
+                controlPanelSection
+            }
             LegendsView()
         }
     }
@@ -220,6 +224,148 @@ struct InformationView: View {
         }
     }
 
+    
+    private var editView: some View {
+        Card {
+            VStack(alignment: .center, spacing: 20) {
+                Text("Edit Mode")
+                    .font(AppFont.Montserrat.bold(13))
+                    .foregroundColor(.primary)
+                
+                Divider()
+                
+                HStack(alignment: .center, spacing: 15) {
+                    // Selected Item (Left)
+                    VStack(spacing: 8) {
+                        selectedCardView
+                        Text("Selected")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    // Connector Arrow (Middle)
+                    Image("arrow")
+                        .renderingMode(.template)
+                        .foregroundColor(.primary)
+                    
+                    // Edit Options (Right)
+                    editOptionsView
+                }
+            }
+        }
+    }
+    
+    private var selectedCardView: some View {
+        Group {
+            if let position = viewModel.selectedPosition,
+               let card = position.card,
+               !card.title.isEmpty {
+                // Selected card with content
+                CardContentView(
+                    card: card,
+                    isPressed: false,
+                    isHighlighted: false
+                )
+                .frame(width:103, height:103)
+            } else {
+                // Default fallback - empty card placeholder
+                EmptyCellView()
+                    .frame(width:103, height:103)
+    
+            }
+        }
+    }
+    
+    private var editOptionsView: some View {
+        VStack(spacing: 10) {
+            // Delete button
+            editOptionButton(
+                icon: "arrow.left",
+                title: "Delete",
+                combo: viewModel.recentCombos.first
+            ) {
+                // TODO: Implement delete action
+                if let position = viewModel.selectedPosition,
+                   let card = position.card {
+                    viewModel.deleteCard(card)
+                    viewModel.selectedPosition = nil
+                }
+            }
+            
+            // Swap button
+            editOptionButton(
+                icon: "questionmark",
+                title: "Swap",
+                combo: nil,
+                useDoubleIcon: true
+            ) {
+                // TODO: Implement swap action
+            }
+            
+            // Color button
+            editOptionButton(
+                icon: "arrow.left",
+                title: "Color",
+                combo: viewModel.recentCombos.first
+            ) {
+                // TODO: Implement color action
+            }
+        }
+    }
+    
+    private func editOptionButton(
+        icon: String,
+        title: String,
+        combo: (GestureType, GestureType)?,
+        useDoubleIcon: Bool = false,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                // Combo badge or icon on left
+                if let combo = combo {
+                    ComboPill(
+                        firstGesture: combo.0,
+                        secondGesture: combo.1,
+                        foreground: .whiteWhite,
+                        background: Color.gray.opacity(0.3),
+                        size: CGSize(width: 38.431, height: 21.679),
+                        paddingValue: 4.927,
+                        iconSize: 11.825,
+                        spacing: 4.927,
+                        cornerRadius: 64.0517
+                    )
+                } else {
+                    // For Swap button with question marks or other double icons
+                    HStack(spacing: 4) {
+                        Image(systemName: icon)
+                            .font(.system(size: 11.825, weight: .semibold))
+                        if useDoubleIcon {
+                            Image(systemName: icon)
+                                .font(.system(size: 11.825, weight: .semibold))
+                        }
+                    }
+                    .foregroundColor(.whiteWhite)
+                    .padding(4.927)
+                    .frame(width: 38.431, height: 21.679)
+                    .background(Color.gray.opacity(0.3))
+                    .cornerRadius(64.0517)
+                }
+                
+                // Button title
+                Text(title)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.whiteWhite)
+                
+                Spacer()
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(Color.mellowBlue.opacity(0.8))
+            .cornerRadius(12)
+        }
+    }
+    
     private var gestureModePlaceholder: some View {
         Card {
             VStack(spacing: 16) {

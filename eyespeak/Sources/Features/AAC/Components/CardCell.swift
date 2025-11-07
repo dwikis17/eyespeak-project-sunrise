@@ -5,8 +5,8 @@
 //  Created by Dwiki on [date]
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct CardCell: View {
     let position: GridPosition
@@ -14,10 +14,10 @@ struct CardCell: View {
     let columns: Int
     var isHighlighted: Bool = false
     let viewModel: AACViewModel
-    
+
     @State private var isPressed = false
     @State private var wiggleOffset: CGFloat = 0
-    
+
     var body: some View {
         ZStack {
             if let card = position.card {
@@ -31,13 +31,16 @@ struct CardCell: View {
                 // Empty cell
                 EmptyCellView()
             }
-            
+
             // Gesture combo indicator
             if let combo = position.actionCombo {
                 VStack {
                     HStack {
                         Spacer()
-                        GestureIndicatorBadge(combo: combo, badgeColor: position.card?.color)
+                        GestureIndicatorBadge(
+                            combo: combo,
+                            badgeColor: position.card?.color
+                        )
                     }
                     Spacer()
                 }
@@ -61,14 +64,14 @@ struct CardCell: View {
             }
         }
     }
-    
+
     private func startWiggleAnimation() {
         // Create a unique delay based on position to create a wave effect
         let delay = Double(position.order % 5) * 0.05
-        
+
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
             // Use a consistent wiggle pattern based on position for better visual effect
-            let baseAngle = Double(position.order % 4) * 2.0 - 3.0 // -3, -1, 1, 3 degrees
+            let baseAngle = Double(position.order % 4) * 2.0 - 3.0  // -3, -1, 1, 3 degrees
             withAnimation(
                 Animation.easeInOut(duration: 0.1)
                     .repeatForever(autoreverses: true)
@@ -77,24 +80,24 @@ struct CardCell: View {
             }
         }
     }
-    
+
     private func stopWiggleAnimation() {
         withAnimation(.easeOut(duration: 0.3)) {
             wiggleOffset = 0
         }
     }
-    
+
     private func handleCardTap() {
         guard let card = position.card else { return }
-        
+
         // Visual feedback
         withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
             isPressed = true
         }
-        
+
         // Use view model to handle the card tap
         viewModel.handleCardTap(for: card)
-        
+
         // Reset animation
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             withAnimation {
@@ -110,12 +113,13 @@ struct CardContentView: View {
     let card: AACard
     let isPressed: Bool
     var isHighlighted: Bool = false
-    
+
     var body: some View {
         VStack(spacing: 8) {
             // Card image
             if let imageData = card.imageData,
-               let uiImage = UIImage(data: imageData) {
+                let uiImage = UIImage(data: imageData)
+            {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFit()
@@ -125,7 +129,7 @@ struct CardContentView: View {
                     .font(.system(size: 50))
                     .foregroundColor(.white)
             }
-            
+
             // Card title
             Text(card.title)
                 .font(.headline)
@@ -145,7 +149,8 @@ struct CardContentView: View {
         .overlay(
             RoundedRectangle(cornerRadius: 16)
                 .stroke(
-                    isHighlighted ? Color.green : (isPressed ? Color.blue : Color.clear),
+                    isHighlighted
+                        ? Color.green : (isPressed ? Color.blue : Color.clear),
                     lineWidth: isHighlighted ? 4 : 3
                 )
         )
@@ -172,7 +177,7 @@ struct EmptyCellView: View {
 struct GestureIndicatorBadge: View {
     let combo: ActionCombo
     var badgeColor: Color? = nil
-    
+
     var body: some View {
         ComboPill(
             firstGesture: combo.firstGesture,
@@ -193,8 +198,10 @@ struct GestureIndicatorBadge: View {
     let modelContainer = AACDIContainer.makePreviewContainer()
     let di = AACDIContainer.makePreviewDI(modelContainer: modelContainer)
     let viewModel = di.makeAACViewModel()
-    let position = try! modelContainer.mainContext.fetch(FetchDescriptor<GridPosition>()).first!
-    
+    let position = try! modelContainer.mainContext.fetch(
+        FetchDescriptor<GridPosition>()
+    ).first!
+
     return CardCell(
         position: position,
         dataManager: viewModel.dataManager,
