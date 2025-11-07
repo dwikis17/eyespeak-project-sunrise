@@ -1,21 +1,23 @@
 import SwiftUI
-import UIKit
 
-struct ShiftKeyView: View {
+struct CompletionKeyView: View {
+    private let title: String
     private let firstGesture: GestureType
     private let secondGesture: GestureType
-    private let backgroundColor = Color(red: 0.87, green: 0.88, blue: 0.93)
+    private let backgroundColor: Color = .blueholder
 
     init(
-        firstGesture: GestureType = .lookDown,
-        secondGesture: GestureType = .lookLeft
+        title: String,
+        firstGesture: GestureType = .lookUp,
+        secondGesture: GestureType = .lookRight
     ) {
+        self.title = title
         self.firstGesture = firstGesture
         self.secondGesture = secondGesture
     }
 
     var body: some View {
-        VStack(alignment: .center, spacing: 0) {
+        VStack(alignment: .center, spacing: 8.22631) {
             OutlineComboPill(
                 firstGesture: firstGesture,
                 secondGesture: secondGesture,
@@ -24,25 +26,23 @@ struct ShiftKeyView: View {
                 iconColor: .mellowBlue
             )
 
-            Image("shift")
-                .renderingMode(.template)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 32, height: 32)
+            Text(title)
+                .font(Typography.boldHeader)
+                .multilineTextAlignment(.center)
                 .foregroundColor(.mellowBlue)
-                .frame(height: 32)
-                .offset(y: 4)
         }
-        .padding(0)
-        .frame(width: 125, height: 76, alignment: .center)
+        .padding(.leading, 74.00215)
+        .padding(.trailing, 74.79784)
+        .padding(.top, 15.61809)
+        .padding(.bottom, 9.7723)
+        .frame(maxWidth: .infinity, alignment: .bottom)
         .background(backgroundColor)
         .cornerRadius(5.14114)
     }
-
 }
 
 #Preview {
-    ShiftKeyView()
+    CompletionKeyView(title: "Completion")
         .padding()
         .background(Color.boneWhite)
 }
