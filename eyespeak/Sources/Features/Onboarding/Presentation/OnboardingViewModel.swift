@@ -235,13 +235,40 @@ public final class OnboardingViewModel {
         }
         settings.editLayoutCombo = editLayoutCombo
 
-        // Build assignment order, excluding priority combos (nav, settings, and edit layout)
+        // Assign swap combo (priority 5) - use next available combo that's not nav, settings, or edit layout
+        var swapCombo: (GestureType, GestureType)?
+        for combo in combos {
+            let isNavNext = navNext != nil && combo.firstGesture == navNext!.0 && combo.secondGesture == navNext!.1
+            let isNavPrev = navPrev != nil && combo.firstGesture == navPrev!.0 && combo.secondGesture == navPrev!.1
+            let isSettings = settingsCombo != nil && combo.firstGesture == settingsCombo!.0 && combo.secondGesture == settingsCombo!.1
+            let isEditLayout = editLayoutCombo != nil && combo.firstGesture == editLayoutCombo!.0 && combo.secondGesture == editLayoutCombo!.1
+            if !isNavNext && !isNavPrev && !isSettings && !isEditLayout {
+                swapCombo = (combo.firstGesture, combo.secondGesture)
+                break
+            }
+        }
+        // Fallback: if no combo found, use first combo that's not nav, settings, or edit layout
+        if swapCombo == nil {
+            if let firstNonPriority = combos.first(where: { c in
+                let isNavNext = navNext != nil && c.firstGesture == navNext!.0 && c.secondGesture == navNext!.1
+                let isNavPrev = navPrev != nil && c.firstGesture == navPrev!.0 && c.secondGesture == navPrev!.1
+                let isSettings = settingsCombo != nil && c.firstGesture == settingsCombo!.0 && c.secondGesture == settingsCombo!.1
+                let isEditLayout = editLayoutCombo != nil && c.firstGesture == editLayoutCombo!.0 && c.secondGesture == editLayoutCombo!.1
+                return !isNavNext && !isNavPrev && !isSettings && !isEditLayout
+            }) {
+                swapCombo = (firstNonPriority.firstGesture, firstNonPriority.secondGesture)
+            }
+        }
+        settings.swapCombo = swapCombo
+
+        // Build assignment order, excluding priority combos (nav, settings, edit layout, and swap)
         var assignmentOrder = combos.filter { combo in
             let isNavNext = navNext != nil && combo.firstGesture == navNext!.0 && combo.secondGesture == navNext!.1
             let isNavPrev = navPrev != nil && combo.firstGesture == navPrev!.0 && combo.secondGesture == navPrev!.1
             let isSettings = settingsCombo != nil && combo.firstGesture == settingsCombo!.0 && combo.secondGesture == settingsCombo!.1
             let isEditLayout = editLayoutCombo != nil && combo.firstGesture == editLayoutCombo!.0 && combo.secondGesture == editLayoutCombo!.1
-            return !isNavNext && !isNavPrev && !isSettings && !isEditLayout
+            let isSwap = swapCombo != nil && combo.firstGesture == swapCombo!.0 && combo.secondGesture == swapCombo!.1
+            return !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap
         }
 
         for (index, position) in updatedPositions.enumerated() {

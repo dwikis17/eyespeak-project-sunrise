@@ -47,7 +47,11 @@ public final class AACViewModel: ObservableObject {
     public var currentMenu: Tab = .settings
     
     // Edit mode for AAC grid
-    public var isEditMode = true
+    public var isEditMode = false
+    
+    // Swap mode state
+    public var isSwapMode = false
+    public var firstSwapPosition: GridPosition?
     
     // Menu-specific combo storage (for Settings and Keyboard menus)
     // Key: menu name ("settings", "keyboard"), Value: Dictionary of combo -> action ID
@@ -208,6 +212,12 @@ public final class AACViewModel: ObservableObject {
             // } else {
             //     gestureInputManager.setEditLayoutCombo(nil)
             // }
+            // Set swap combo when in edit mode
+            if isEditMode {
+                gestureInputManager.setSwapCombo(settings.swapCombo)
+            } else {
+                gestureInputManager.setSwapCombo(nil)
+            }
             // Always sanitize conflicts if nav combos are configured (even with 1 page)
             sanitizeNavigationComboConflicts()
             gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
@@ -237,6 +247,12 @@ public final class AACViewModel: ObservableObject {
                 // } else {
                 //     gestureInputManager.setEditLayoutCombo(nil)
                 // }
+                // Set swap combo when in edit mode
+                if isEditMode {
+                    gestureInputManager.setSwapCombo(settings.swapCombo)
+                } else {
+                    gestureInputManager.setSwapCombo(nil)
+                }
                 // Always sanitize conflicts if nav combos are configured (even with 1 page)
                 sanitizeNavigationComboConflicts()
                 gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
@@ -291,6 +307,59 @@ public final class AACViewModel: ObservableObject {
     
     // MARK: - Edit Mode Methods
     
+    public func performSwapAction() {
+        // Enter swap mode: lock AAC and wait for second selection
+        print("🔄 Swap mode activated - waiting for second card selection")
+        if let selectedPosition = selectedPosition {
+            withAnimation {
+                isSwapMode = true
+                firstSwapPosition = selectedPosition
+            }
+            print("First position selected: \(selectedPosition.order)")
+        } else {
+            print("⚠️ No position selected for swap")
+        }
+    }
+    
+    private func performSwap(first: GridPosition, second: GridPosition) {
+        print("🔄 Swapping cards between positions \(first.order) and \(second.order)")
+        
+        // Swap the cards
+        let firstCard = first.card
+        let secondCard = second.card
+        
+        first.card = secondCard
+        second.card = firstCard
+        
+        // Save changes
+        try? modelContext.save()
+        
+        // Exit swap mode
+        withAnimation {
+            isSwapMode = false
+            firstSwapPosition = nil
+            selectedPosition = second // Highlight the second position after swap
+        }
+        
+        print("✅ Swap completed")
+        toggleEditMode()
+        
+        // Reset selection after a delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            withAnimation {
+                self?.selectedPosition = nil
+            }
+        }
+    }
+    
+    public func cancelSwapMode() {
+        withAnimation {
+            isSwapMode = false
+            firstSwapPosition = nil
+        }
+        print("❌ Swap mode cancelled")
+    }
+    
     public func toggleEditMode() {
         withAnimation {
             isEditMode.toggle()
@@ -299,11 +368,16 @@ public final class AACViewModel: ObservableObject {
                 if isEditMode {
                     // When entering edit mode, set editLayoutCombo as priority (to allow exit)
                     gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
+                    // Set swap combo when entering edit mode
+                    gestureInputManager.setSwapCombo(settings.swapCombo)
                 } else {
                     // When exiting edit mode, remove priority so combo can be used normally
                     gestureInputManager.setEditLayoutCombo(nil)
-                    // Clear selection when exiting edit mode
+                    // Remove swap combo when exiting edit mode
+                    gestureInputManager.setSwapCombo(nil)
+                    // Clear selection and swap mode when exiting edit mode
                     selectedPosition = nil
+                    cancelSwapMode()
                 }
                 // Reload combos to reflect the change
                 if currentMenu == .aac {
@@ -390,28 +464,51 @@ public final class AACViewModel: ObservableObject {
         print("🎯 Combo matched: \(combo.name) at position \(position.order)")
         recordRecentCombo(combo)
         
+        // Check if we're in swap mode
+        if isSwapMode, let firstPosition = firstSwapPosition {
+            // This is the second selection for swap
+            if firstPosition.id == position.id {
+                // Same position selected - cancel swap mode
+                cancelSwapMode()
+                return
+            }
+            
+            // Perform the swap
+            performSwap(first: firstPosition, second: position)
+            return
+        }
+        
         // Highlight the matched position
         withAnimation {
             selectedPosition = position
         }
         
         // In edit mode, don't trigger card action and keep selection persistent
-        if isEditMode {
+        // But allow swap mode to work
+        if isEditMode && !isSwapMode {
             // Selection persists in edit mode for editing actions
             return
         }
         
-        // Trigger card action (only when not in edit mode)
-        if let card = position.card {
-            incrementCardUsage(card)
-            speak(text: card.title)
+        // If in swap mode but no first position, enter swap mode with this position
+        if isSwapMode && firstSwapPosition == nil {
+            firstSwapPosition = position
+            return
         }
         
-        // Reset highlight after delay (only when not in edit mode)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            guard let self = self, !self.isEditMode else { return }
-            withAnimation {
-                self.selectedPosition = nil
+        // Trigger card action (only when not in edit mode or swap mode)
+        if !isEditMode && !isSwapMode {
+            if let card = position.card {
+                incrementCardUsage(card)
+                speak(text: card.title)
+            }
+            
+            // Reset highlight after delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                guard let self = self else { return }
+                withAnimation {
+                    self.selectedPosition = nil
+                }
             }
         }
     }
@@ -439,6 +536,14 @@ public final class AACViewModel: ObservableObject {
             if currentMenu == .settings {
                 print("toggleEditMode")
                 toggleEditMode()
+            }
+            return
+        }
+        if slotIndex == -5 {
+            // Swap combo - perform swap action in edit mode
+            recordRecentCombo(combo)
+            if isEditMode {
+                performSwapAction()
             }
             return
         }
@@ -535,6 +640,12 @@ public final class AACViewModel: ObservableObject {
             } else {
                 gestureInputManager.setEditLayoutCombo(nil)
             }
+            // Set swap combo when in edit mode
+            if isEditMode {
+                gestureInputManager.setSwapCombo(settings.swapCombo)
+            } else {
+                gestureInputManager.setSwapCombo(nil)
+            }
             // Always sanitize conflicts if nav combos are configured (even with 1 page)
             sanitizeNavigationComboConflicts()
             gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
@@ -551,14 +662,16 @@ public final class AACViewModel: ObservableObject {
         let navPrev = settings.navPrevCombo
         let settingsCombo = settings.settingsCombo
         let editLayoutCombo = settings.editLayoutCombo
+        let swapCombo = settings.swapCombo
         // Only sanitize if priority combos are actually configured
-        guard navNext != nil || navPrev != nil || settingsCombo != nil || editLayoutCombo != nil else { return }
+        guard navNext != nil || navPrev != nil || settingsCombo != nil || editLayoutCombo != nil || swapCombo != nil else { return }
 
         func isNavCombo(_ c: ActionCombo) -> Bool {
             if let n = navNext, c.firstGesture == n.0 && c.secondGesture == n.1 { return true }
             if let p = navPrev, c.firstGesture == p.0 && c.secondGesture == p.1 { return true }
             if let s = settingsCombo, c.firstGesture == s.0 && c.secondGesture == s.1 { return true }
             if let e = editLayoutCombo, c.firstGesture == e.0 && c.secondGesture == e.1 { return true }
+            if let sw = swapCombo, c.firstGesture == sw.0 && c.secondGesture == sw.1 { return true }
             return false
         }
 
@@ -690,6 +803,12 @@ public final class AACViewModel: ObservableObject {
                 gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
             } else {
                 gestureInputManager.setEditLayoutCombo(nil)
+            }
+            // Set swap combo when in edit mode
+            if isEditMode {
+                gestureInputManager.setSwapCombo(settings.swapCombo)
+            } else {
+                gestureInputManager.setSwapCombo(nil)
             }
             // Use the actual positions from the database - this is a computed property that fetches fresh
             gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)

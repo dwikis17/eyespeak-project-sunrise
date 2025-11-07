@@ -228,28 +228,60 @@ struct InformationView: View {
     private var editView: some View {
         Card {
             VStack(alignment: .center, spacing: 20) {
-                Text("Edit Mode")
-                    .font(AppFont.Montserrat.bold(13))
-                    .foregroundColor(.primary)
+                HStack {
+                    Text("Edit Mode")
+                        .font(AppFont.Montserrat.bold(13))
+                        .foregroundColor(.primary)
+                    
+                    if viewModel.isSwapMode {
+                        Spacer()
+                        Text("SWAP MODE")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(.orange)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.orange.opacity(0.2))
+                            .cornerRadius(8)
+                    }
+                }
                 
                 Divider()
                 
-                HStack(alignment: .center, spacing: 15) {
-                    // Selected Item (Left)
-                    VStack(spacing: 8) {
+                if viewModel.isSwapMode {
+                    // Swap mode: show first selected card and waiting message
+                    VStack(spacing: 12) {
                         selectedCardView
-                        Text("Selected")
+                        Text("Select second card to swap")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.orange)
+                            .multilineTextAlignment(.center)
+                        
+                        Button("Cancel Swap") {
+                            viewModel.cancelSwapMode()
+                        }
+                        .font(.caption)
+                        .foregroundColor(.red)
+                        .padding(.top, 8)
                     }
-                    
-                    // Connector Arrow (Middle)
-                    Image("arrow")
-                        .renderingMode(.template)
-                        .foregroundColor(.primary)
-                    
-                    // Edit Options (Right)
-                    editOptionsView
+                } else {
+                    HStack(alignment: .center, spacing: 15) {
+                        // Selected Item (Left)
+                        VStack(spacing: 8) {
+                            selectedCardView
+                            Text("Selected")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        // Connector Arrow (Middle)
+                        Image("arrow")
+                            .renderingMode(.template)
+                            .foregroundColor(.primary)
+                        
+                        // Edit Options (Right)
+                        editOptionsView
+                    }
                 }
             }
         }
@@ -257,7 +289,10 @@ struct InformationView: View {
     
     private var selectedCardView: some View {
         Group {
-            if let position = viewModel.selectedPosition,
+            // In swap mode, show first swap position; otherwise show selected position
+            let positionToShow = viewModel.isSwapMode ? viewModel.firstSwapPosition : viewModel.selectedPosition
+            
+            if let position = positionToShow,
                let card = position.card,
                !card.title.isEmpty {
                 // Selected card with content
@@ -296,10 +331,13 @@ struct InformationView: View {
             editOptionButton(
                 icon: "questionmark",
                 title: "Swap",
-                combo: nil,
+                combo: viewModel.settings.swapCombo,
                 useDoubleIcon: true
             ) {
-                // TODO: Implement swap action
+                // Swap action is handled by combo matching in edit mode
+                if let position = viewModel.selectedPosition {
+                    viewModel.performSwapAction()
+                }
             }
             
             // Color button
@@ -324,6 +362,7 @@ struct InformationView: View {
             HStack(spacing: 10) {
                 // Combo badge or icon on left
                 if let combo = combo {
+                    // Show combo badge if combo is provided
                     ComboPill(
                         firstGesture: combo.0,
                         secondGesture: combo.1,
@@ -335,21 +374,28 @@ struct InformationView: View {
                         spacing: 4.927,
                         cornerRadius: 64.0517
                     )
-                } else {
-                    // For Swap button with question marks or other double icons
+                } else if useDoubleIcon {
+                    // For Swap button with question marks when no combo is provided
                     HStack(spacing: 4) {
                         Image(systemName: icon)
                             .font(.system(size: 11.825, weight: .semibold))
-                        if useDoubleIcon {
-                            Image(systemName: icon)
-                                .font(.system(size: 11.825, weight: .semibold))
-                        }
+                        Image(systemName: icon)
+                            .font(.system(size: 11.825, weight: .semibold))
                     }
                     .foregroundColor(.whiteWhite)
                     .padding(4.927)
                     .frame(width: 38.431, height: 21.679)
                     .background(Color.gray.opacity(0.3))
                     .cornerRadius(64.0517)
+                } else {
+                    // Single icon fallback
+                    Image(systemName: icon)
+                        .font(.system(size: 11.825, weight: .semibold))
+                        .foregroundColor(.whiteWhite)
+                        .padding(4.927)
+                        .frame(width: 38.431, height: 21.679)
+                        .background(Color.gray.opacity(0.3))
+                        .cornerRadius(64.0517)
                 }
                 
                 // Button title

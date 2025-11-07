@@ -26,6 +26,7 @@ public class UserSettings {
     @AppStorage("navPrevCombo") private var navPrevRaw: String?
     @AppStorage("settingsCombo") private var settingsComboRaw: String?
     @AppStorage("editLayoutCombo") private var editLayoutComboRaw: String?
+    @AppStorage("swapCombo") private var swapComboRaw: String?
 
     @AppStorage("comboInputSettings") private var comboInputSettingsData: Data?
 
@@ -57,6 +58,10 @@ public class UserSettings {
     var editLayoutCombo: (GestureType, GestureType)? {
         get { decodePair(editLayoutComboRaw) }
         set { editLayoutComboRaw = encodePair(newValue) }
+    }
+    var swapCombo: (GestureType, GestureType)? {
+        get { decodePair(swapComboRaw) }
+        set { swapComboRaw = encodePair(newValue) }
     }
 
     private func encodePair(_ pair: (GestureType, GestureType)?) -> String? {

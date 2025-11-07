@@ -112,6 +112,7 @@ struct SampleData {
         let navPrev = settings.navPrevCombo
         let settingsCombo = settings.settingsCombo
         let editLayoutCombo = settings.editLayoutCombo
+        let swapCombo = settings.swapCombo
         
         for index in 0..<gridSize {
             let position = GridPosition(order: index)
@@ -128,15 +129,17 @@ struct SampleData {
                 let isNavPrev = navPrev != nil && assigned.firstGesture == navPrev!.0 && assigned.secondGesture == navPrev!.1
                 let isSettings = settingsCombo != nil && assigned.firstGesture == settingsCombo!.0 && assigned.secondGesture == settingsCombo!.1
                 let isEditLayout = editLayoutCombo != nil && assigned.firstGesture == editLayoutCombo!.0 && assigned.secondGesture == editLayoutCombo!.1
+                let isSwap = swapCombo != nil && assigned.firstGesture == swapCombo!.0 && assigned.secondGesture == swapCombo!.1
                 
-                if isNavNext || isNavPrev || isSettings || isEditLayout {
+                if isNavNext || isNavPrev || isSettings || isEditLayout || isSwap {
                     // choose next non-conflicting combo
                     if let alt = combos.first(where: { c in
                         let isNavNextAlt = navNext != nil && c.firstGesture == navNext!.0 && c.secondGesture == navNext!.1
                         let isNavPrevAlt = navPrev != nil && c.firstGesture == navPrev!.0 && c.secondGesture == navPrev!.1
                         let isSettingsAlt = settingsCombo != nil && c.firstGesture == settingsCombo!.0 && c.secondGesture == settingsCombo!.1
                         let isEditLayoutAlt = editLayoutCombo != nil && c.firstGesture == editLayoutCombo!.0 && c.secondGesture == editLayoutCombo!.1
-                        return !isNavNextAlt && !isNavPrevAlt && !isSettingsAlt && !isEditLayoutAlt
+                        let isSwapAlt = swapCombo != nil && c.firstGesture == swapCombo!.0 && c.secondGesture == swapCombo!.1
+                        return !isNavNextAlt && !isNavPrevAlt && !isSettingsAlt && !isEditLayoutAlt && !isSwapAlt
                     }) { assigned = alt }
                 }
                 position.actionCombo = assigned
