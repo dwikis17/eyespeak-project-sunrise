@@ -1,20 +1,34 @@
 import SwiftUI
 
 struct KeyView: View {
+    let letter: String
+    let firstGesture: GestureType
+    let secondGesture: GestureType
+
+    init(
+        letter: String = "q",
+        firstGesture: GestureType = .lookUp,
+        secondGesture: GestureType = .lookRight
+    ) {
+        self.letter = letter
+        self.firstGesture = firstGesture d
+        self.secondGesture = secondGesture
+    }
+
     var body: some View {
         VStack(alignment: .center, spacing: 0) {
             OutlineComboPill(
-                firstGesture: .lookUp,
-                secondGesture: .lookRight,
+                firstGesture: firstGesture,
+                secondGesture: secondGesture,
                 strokeColor: .placeholder,
                 background: .whiteWhite,
                 iconColor: .placeholder
             )
 
-            Text("q")
+            Text(letter)
                 .font(Typography.keyboardMedium)
                 .multilineTextAlignment(.center)
-                .foregroundColor(Color(red: 0.34, green: 0.42, blue: 0.62))
+                .foregroundColor(.mellowBlue)
         }
         .padding(0)
         .frame(width: 83.3047, height: 75.57471, alignment: .center)
@@ -24,8 +38,7 @@ struct KeyView: View {
 }
 
 #Preview {
-    KeyView()
+    KeyView(letter: "a", firstGesture: .lookDown, secondGesture: .lookRight)
         .padding(20)
         .background(Color.boneWhite)
 }
-
