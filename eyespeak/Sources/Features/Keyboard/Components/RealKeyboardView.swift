@@ -26,14 +26,11 @@ struct RealKeyboardView: View {
                                 firstGesture: .lookUp,
                                 secondGesture: .lookRight,
                                 strokeColor: .mellowBlue,
-                                background: .whiteWhite,
+                                background: .boneWhite,
                                 iconColor: .mellowBlue
                             )
                         }
-                        .padding(.horizontal, 0)
-                        .padding(.top, 31)
-                        .padding(.bottom, 0)
-                        .frame(minWidth: 39.312, maxWidth: 39.312, maxHeight: .infinity, alignment: .center)
+                        .frame(width: 60, alignment: .center)
                     }
                     .padding(0)
                     .frame(maxWidth: .infinity, alignment: .leading)
