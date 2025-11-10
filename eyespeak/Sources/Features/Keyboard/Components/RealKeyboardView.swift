@@ -89,7 +89,6 @@ struct RealKeyboardView: View {
                     }
                     
                     SpeakKeyView()
-                        .frame(width: 150)
                 }
                 .padding(.horizontal, 7.6044)
                 .padding(.vertical, 0)
