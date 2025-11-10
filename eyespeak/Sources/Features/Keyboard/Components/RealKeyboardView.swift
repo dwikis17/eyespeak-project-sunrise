@@ -68,7 +68,7 @@ struct RealKeyboardView: View {
                         KeyView(letter: letter)
                     }
                     
-                    TrashKeyView()
+                    DeleteKeyView()
                 }
                 .padding(.horizontal, 7.6044)
                 .padding(.vertical, 0)
@@ -103,7 +103,7 @@ struct RealKeyboardView: View {
                     
                     SpaceKeyView()
                     
-                    DeleteKeyView()
+                    TrashKeyView()
                 }
                 .padding(.horizontal, 7.6044)
                 .padding(.vertical, 0)

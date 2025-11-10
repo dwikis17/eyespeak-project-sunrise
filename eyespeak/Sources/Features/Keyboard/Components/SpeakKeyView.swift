@@ -26,7 +26,7 @@ struct SpeakKeyView: View {
                 .renderingMode(.template)
                 .resizable()
                 .scaledToFit()
-                .frame(width: 32, height: 32)
+                .frame(width: 28, height: 28)
                 .foregroundColor(.whiteWhite)
                 .frame(height: 32)
         }
