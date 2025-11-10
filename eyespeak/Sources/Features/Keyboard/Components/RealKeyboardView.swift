@@ -18,9 +18,13 @@ struct RealKeyboardView: View {
                 HStack(alignment: .center) {
                     // Space Between
                     HStack(alignment: .center, spacing: 10) {
-                        Text("Can I eat a dozen of donut")
-                            .font(Font.custom("Montserrat", size: 64))
-                            .foregroundColor(.black)
+                        (
+                            Text("Can I ")
+                                .foregroundColor(.blueack)
+                            + Text("eat a dozen of donut")
+                                .foregroundColor(.blueholder)
+                        )
+                        .font(Font.custom("Montserrat", size: 64))
                         VStack(alignment: .center, spacing: 10) {
                             OutlineComboPill(
                                 firstGesture: .lookUp,
