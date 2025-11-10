@@ -127,6 +127,11 @@ import Observation
             self.deleteCombo = combo
         }
         
+        /// Configure timing window from settings
+        func setTimingWindow(_ window: TimeInterval) {
+            self.timingWindow = window
+        }
+        
         /// Load menu-specific combos directly (for Settings/Keyboard menus)
         /// This avoids creating temporary GridPosition objects that might interfere with the database
         func loadMenuCombos(_ menuComboMap: [ActionCombo: Int]) {

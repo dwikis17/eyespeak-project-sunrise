@@ -82,4 +82,3 @@ public class UserSettings {
         return (g1, g2)
     }
 }
-

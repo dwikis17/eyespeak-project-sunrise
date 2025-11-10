@@ -204,6 +204,8 @@ public final class AACViewModel: ObservableObject {
             }
             // Always set settings combo regardless of page count
             gestureInputManager.setSettingsCombo(settings.settingsCombo)
+            // Set timing window from settings
+            gestureInputManager.setTimingWindow(settings.timerSpeed)
             print("settings.editLayoutCombo: \(settings.editLayoutCombo)")
             // Only set edit layout combo as priority when in edit mode or Settings menu
             // Otherwise, let it be used normally for card activation
@@ -241,6 +243,8 @@ public final class AACViewModel: ObservableObject {
                 }
                 // Always set settings combo regardless of page count
                 gestureInputManager.setSettingsCombo(settings.settingsCombo)
+                // Set timing window from settings
+                gestureInputManager.setTimingWindow(settings.timerSpeed)
                 // Only set edit layout combo as priority when in edit mode or Settings menu
                 // if isEditMode || currentMenu == .settings {
                 //     gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
@@ -834,6 +838,8 @@ public final class AACViewModel: ObservableObject {
                 gestureInputManager.setNavigationCombos(prev: nil, next: nil)
             }
             gestureInputManager.setSettingsCombo(settings.settingsCombo)
+            // Set timing window from settings
+            gestureInputManager.setTimingWindow(settings.timerSpeed)
             // Only set editLayoutCombo as priority when in edit mode (to allow exit)
             // Otherwise, let it be used normally for card activation
             if isEditMode {

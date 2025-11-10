@@ -8,6 +8,10 @@
 import SwiftUI
 
 struct ResetTimerView: View {
+    @Environment(AppStateManager.self) private var appState
+    @EnvironmentObject private var viewModel: AACViewModel
+    @AppStorage("timerSpeed") private var timerSpeed: Double = 4.0
+    
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 15) {
@@ -16,18 +20,77 @@ struct ResetTimerView: View {
                 Text("Time between action before resetting")
                     .font(Typography.regularTitle)
                     .foregroundStyle(Color.placeholder)
-                HStack {
-                    NavigationCard(title: "+")
-                        .frame(width: 68.5)
+                
+                HStack(spacing: 20) {
+                    // Decrement button (-)
+                    IncrementButtonView(
+                        title: "-",
+                        background: .mellowBlue
+                    ) {
+                        if timerSpeed > 0.5 {
+                            timerSpeed = max(0.5, timerSpeed - 1.0)
+                            syncSettings()
+                            updateTimingWindow()
+                        }
+                    }
+                    
+                    // Slider
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("\(timerSpeed, specifier: "%.1f")s")
+                            .font(Typography.regularTitle)
+                            .foregroundStyle(.primary)
+                        Slider(
+                            value: $timerSpeed,
+                            in: 0.5...5.0,
+                            step: 1.0
+                        )
+                        .tint(.mellowBlue)
+                        .onChange(of: timerSpeed) { oldValue, newValue in
+                            syncSettings()
+                            updateTimingWindow()
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    
+                    // Increment button (+)
+                    IncrementButtonView(
+                        title: "+",
+                        background: .mellowBlue
+                    ) {
+                        if timerSpeed < 5.0 {
+                            timerSpeed = min(5.0, timerSpeed + 1.0)
+                            syncSettings()
+                            updateTimingWindow()
+                        }
+                    }
                 }
+
+                
             }
-            
+            .frame(maxWidth: 650)
             
             Spacer()
         }
+    
+        .onAppear {
+            // Sync with settings on appear
+            timerSpeed = appState.settings.timerSpeed
+        }
+    }
+    
+    private func syncSettings() {
+        // Sync the @AppStorage value with the settings object
+        appState.settings.timerSpeed = timerSpeed
+    }
+    
+    private func updateTimingWindow() {
+        // Update the gesture input manager with the new timing window
+        viewModel.gestureInputManager.setTimingWindow(timerSpeed)
     }
 }
 
 #Preview {
     ResetTimerView()
+        .environment(AppStateManager())
+        .environmentObject(AACViewModel(modelContext: AACDIContainer.makePreviewContainer().mainContext))
 }
