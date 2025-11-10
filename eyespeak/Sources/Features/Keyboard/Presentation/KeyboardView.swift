@@ -24,7 +24,7 @@ struct KeyboardView: View {
                 .frame(width: Layout.infoPanelWidth, alignment: .top)
                 .frame(maxHeight: .infinity, alignment: .top)
 
-            RealKeyboardView()
+            KeyboardUIView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         }
         .padding(.horizontal, Layout.horizontalPadding)
