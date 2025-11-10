@@ -68,15 +68,7 @@ struct RealKeyboardView: View {
                         KeyView(letter: letter)
                     }
                     
-                    KeyView(
-                        content: .image(image: Image("shift"), tint: .mellowBlue),
-                        firstGesture: .lookUp,
-                        secondGesture: .lookRight,
-                        backgroundColor: .blueholder,
-                        comboStrokeColor: .mellowBlue,
-                        comboBackgroundColor: .blueholder,
-                        comboIconColor: .mellowBlue
-                    )
+                    TrashKeyView()
                 }
                 .padding(.horizontal, 7.6044)
                 .padding(.vertical, 0)
@@ -108,20 +100,10 @@ struct RealKeyboardView: View {
                 
                 // fifth row (.?123, space, trash)
                 HStack(alignment: .center, spacing: 6.84396) {
-                    KeyView(letter: ".?123")
                     
                     SpaceKeyView()
                     
-                    KeyView(
-                        content: .image(image: Image("trash"), tint: .whiteWhite),
-                        firstGesture: .lookUp,
-                        secondGesture: .lookRight,
-                        textColor: .whiteWhite,
-                        backgroundColor: .mellowBlue,
-                        comboStrokeColor: .whiteWhite,
-                        comboBackgroundColor: .mellowBlue,
-                        comboIconColor: .whiteWhite
-                    )
+                    DeleteKeyView()
                 }
                 .padding(.horizontal, 7.6044)
                 .padding(.vertical, 0)
