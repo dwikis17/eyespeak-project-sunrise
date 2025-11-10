@@ -114,6 +114,8 @@ struct SampleData {
         let editLayoutCombo = settings.editLayoutCombo
         let swapCombo = settings.swapCombo
         let deleteCombo = settings.deleteCombo
+        let decrementTimerCombo = settings.decrementTimerCombo
+        let incrementTimerCombo = settings.incrementTimerCombo
         
         for index in 0..<gridSize {
             let position = GridPosition(order: index)
@@ -132,8 +134,9 @@ struct SampleData {
                 let isEditLayout = editLayoutCombo != nil && assigned.firstGesture == editLayoutCombo!.0 && assigned.secondGesture == editLayoutCombo!.1
                 let isSwap = swapCombo != nil && assigned.firstGesture == swapCombo!.0 && assigned.secondGesture == swapCombo!.1
                 let isDelete = deleteCombo != nil && assigned.firstGesture == deleteCombo!.0 && assigned.secondGesture == deleteCombo!.1
-                
-                if isNavNext || isNavPrev || isSettings || isEditLayout || isSwap || isDelete {
+                let isDecrementTimer = decrementTimerCombo != nil && assigned.firstGesture == decrementTimerCombo!.0 && assigned.secondGesture == decrementTimerCombo!.1
+                let isIncrementTimer = incrementTimerCombo != nil && assigned.firstGesture == incrementTimerCombo!.0 && assigned.secondGesture == incrementTimerCombo!.1
+                if isNavNext || isNavPrev || isSettings || isEditLayout || isSwap || isDelete || isDecrementTimer || isIncrementTimer {
                     // choose next non-conflicting combo
                     if let alt = combos.first(where: { c in
                         let isNavNextAlt = navNext != nil && c.firstGesture == navNext!.0 && c.secondGesture == navNext!.1
@@ -142,7 +145,9 @@ struct SampleData {
                         let isEditLayoutAlt = editLayoutCombo != nil && c.firstGesture == editLayoutCombo!.0 && c.secondGesture == editLayoutCombo!.1
                         let isSwapAlt = swapCombo != nil && c.firstGesture == swapCombo!.0 && c.secondGesture == swapCombo!.1
                         let isDeleteAlt = deleteCombo != nil && c.firstGesture == deleteCombo!.0 && c.secondGesture == deleteCombo!.1
-                        return !isNavNextAlt && !isNavPrevAlt && !isSettingsAlt && !isEditLayoutAlt && !isSwapAlt && !isDeleteAlt
+                        let isDecrementTimerAlt = decrementTimerCombo != nil && c.firstGesture == decrementTimerCombo!.0 && c.secondGesture == decrementTimerCombo!.1
+                        let isIncrementTimerAlt = incrementTimerCombo != nil && c.firstGesture == incrementTimerCombo!.0 && c.secondGesture == incrementTimerCombo!.1
+                        return !isNavNextAlt && !isNavPrevAlt && !isSettingsAlt && !isEditLayoutAlt && !isSwapAlt && !isDeleteAlt && !isDecrementTimerAlt && !isIncrementTimerAlt
                     }) { assigned = alt }
                 }
                 position.actionCombo = assigned

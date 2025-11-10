@@ -142,6 +142,20 @@ public final class AACViewModel: ObservableObject {
                     return
                 }
 
+                if let decrementTimerCombo = self.settings.decrementTimerCombo,
+                   combo.firstGesture == decrementTimerCombo.0 && combo.secondGesture == decrementTimerCombo.1 {
+                    print("✨ Decrement Timer combo matched in \(menuName) menu")
+                    self.settings.timerSpeed = max(0.5, self.settings.timerSpeed - 1.0)
+                    return
+                }
+
+                if let incrementTimerCombo = self.settings.incrementTimerCombo,
+                   combo.firstGesture == incrementTimerCombo.0 && combo.secondGesture == incrementTimerCombo.1 {
+                    print("✨ Increment Timer combo matched in \(menuName) menu")
+                    self.settings.timerSpeed = min(5.0, self.settings.timerSpeed + 1.0)
+                    return
+                }
+
                 if let editLayoutCombo = self.settings.editLayoutCombo,
                    combo.firstGesture == editLayoutCombo.0 && combo.secondGesture == editLayoutCombo.1 {
                     print("✨ Edit Layout combo matched in \(menuName) menu")
@@ -206,6 +220,9 @@ public final class AACViewModel: ObservableObject {
             gestureInputManager.setSettingsCombo(settings.settingsCombo)
             // Set timing window from settings
             gestureInputManager.setTimingWindow(settings.timerSpeed)
+            // Set timer combos (always available)
+            gestureInputManager.setDecrementTimerCombo(settings.decrementTimerCombo)
+            gestureInputManager.setIncrementTimerCombo(settings.incrementTimerCombo)
             print("settings.editLayoutCombo: \(settings.editLayoutCombo)")
             // Only set edit layout combo as priority when in edit mode or Settings menu
             // Otherwise, let it be used normally for card activation
@@ -669,9 +686,14 @@ public final class AACViewModel: ObservableObject {
             } else {
                 gestureInputManager.setNavigationCombos(prev: nil, next: nil)
             }
-            // Always set settings combo regardless of page count
-            gestureInputManager.setSettingsCombo(settings.settingsCombo)
-            // Only set edit layout combo as priority when in edit mode or Settings menu
+                // Always set settings combo regardless of page count
+                gestureInputManager.setSettingsCombo(settings.settingsCombo)
+                // Set timing window from settings
+                gestureInputManager.setTimingWindow(settings.timerSpeed)
+                // Set timer combos (always available)
+                gestureInputManager.setDecrementTimerCombo(settings.decrementTimerCombo)
+                gestureInputManager.setIncrementTimerCombo(settings.incrementTimerCombo)
+                // Only set edit layout combo as priority when in edit mode or Settings menu
             if isEditMode || currentMenu == .settings {
                 gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
             } else {
@@ -703,8 +725,10 @@ public final class AACViewModel: ObservableObject {
         let editLayoutCombo = settings.editLayoutCombo
         let swapCombo = settings.swapCombo
         let deleteCombo = settings.deleteCombo
+        let decrementTimerCombo = settings.decrementTimerCombo
+        let incrementTimerCombo = settings.incrementTimerCombo
         // Only sanitize if priority combos are actually configured
-        guard navNext != nil || navPrev != nil || settingsCombo != nil || editLayoutCombo != nil || swapCombo != nil || deleteCombo != nil else { return }
+        guard navNext != nil || navPrev != nil || settingsCombo != nil || editLayoutCombo != nil || swapCombo != nil || deleteCombo != nil || decrementTimerCombo != nil || incrementTimerCombo != nil else { return }
 
         func isNavCombo(_ c: ActionCombo) -> Bool {
             if let n = navNext, c.firstGesture == n.0 && c.secondGesture == n.1 { return true }
@@ -713,6 +737,8 @@ public final class AACViewModel: ObservableObject {
             if let e = editLayoutCombo, c.firstGesture == e.0 && c.secondGesture == e.1 { return true }
             if let sw = swapCombo, c.firstGesture == sw.0 && c.secondGesture == sw.1 { return true }
             if let d = deleteCombo, c.firstGesture == d.0 && c.secondGesture == d.1 { return true }
+            if let dt = decrementTimerCombo, c.firstGesture == dt.0 && c.secondGesture == dt.1 { return true }  
+            if let it = incrementTimerCombo, c.firstGesture == it.0 && c.secondGesture == it.1 { return true }
             return false
         }
 
@@ -840,6 +866,9 @@ public final class AACViewModel: ObservableObject {
             gestureInputManager.setSettingsCombo(settings.settingsCombo)
             // Set timing window from settings
             gestureInputManager.setTimingWindow(settings.timerSpeed)
+            // Set timer combos (always available)
+            gestureInputManager.setDecrementTimerCombo(settings.decrementTimerCombo)
+            gestureInputManager.setIncrementTimerCombo(settings.incrementTimerCombo)
             // Only set editLayoutCombo as priority when in edit mode (to allow exit)
             // Otherwise, let it be used normally for card activation
             if isEditMode {
@@ -868,6 +897,11 @@ public final class AACViewModel: ObservableObject {
             // that might interfere with the database
             gestureInputManager.setNavigationCombos(prev: nil, next: nil)
             gestureInputManager.setSettingsCombo(settings.settingsCombo)
+            // Set timing window from settings
+            gestureInputManager.setTimingWindow(settings.timerSpeed)
+            // Set timer combos (always available)
+            gestureInputManager.setDecrementTimerCombo(settings.decrementTimerCombo)
+            gestureInputManager.setIncrementTimerCombo(settings.incrementTimerCombo)
             // In Settings menu, always allow editLayoutCombo to work
             gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
             

@@ -38,6 +38,11 @@ import Observation
         private var swapCombo: (GestureType, GestureType)?
         // Delete combo (priority 6)
         private var deleteCombo: (GestureType, GestureType)?
+
+        // Decrement timer combo (priority 7)
+        private var decrementTimerCombo: (GestureType, GestureType)?
+        // Increment timer combo (priority 8)
+        private var incrementTimerCombo: (GestureType, GestureType)?
         
         // MARK: - Public Methods
         
@@ -95,6 +100,8 @@ import Observation
                     if let e = editLayoutCombo, combo.firstGesture == e.0 && combo.secondGesture == e.1 { continue }
                     if let sw = swapCombo, combo.firstGesture == sw.0 && combo.secondGesture == sw.1 { continue }
                     if let d = deleteCombo, combo.firstGesture == d.0 && combo.secondGesture == d.1 { continue }
+                    if let dt = decrementTimerCombo, combo.firstGesture == dt.0 && combo.secondGesture == dt.1 { continue }
+                    if let it = incrementTimerCombo, combo.firstGesture == it.0 && combo.secondGesture == it.1 { continue }
                     availableCombosBySlot[combo] = slotIndex
                 }
             }
@@ -126,7 +133,16 @@ import Observation
         func setDeleteCombo(_ combo: (GestureType, GestureType)?) {
             self.deleteCombo = combo
         }
+
+        /// Configure decrement timer combo (priority 7, after delete)
+        func setDecrementTimerCombo(_ combo: (GestureType, GestureType)?) {
+            self.decrementTimerCombo = combo
+        }
         
+        /// Configure increment timer combo (priority 8, after decrement timer)
+        func setIncrementTimerCombo(_ combo: (GestureType, GestureType)?) {
+            self.incrementTimerCombo = combo
+        }
         /// Configure timing window from settings
         func setTimingWindow(_ window: TimeInterval) {
             self.timingWindow = window
@@ -150,6 +166,8 @@ import Observation
                     if let e = editLayoutCombo, combo.firstGesture == e.0 && combo.secondGesture == e.1 { continue }
                     if let sw = swapCombo, combo.firstGesture == sw.0 && combo.secondGesture == sw.1 { continue }
                     if let d = deleteCombo, combo.firstGesture == d.0 && combo.secondGesture == d.1 { continue }
+                    if let dt = decrementTimerCombo, combo.firstGesture == dt.0 && combo.secondGesture == dt.1 { continue }
+                    if let it = incrementTimerCombo, combo.firstGesture == it.0 && combo.secondGesture == it.1 { continue }
                     // Use the index as the slot (0-based)
                     availableCombosBySlot[combo] = index
                 }
@@ -224,6 +242,21 @@ import Observation
             if let d = deleteCombo, first == d.0 && second == d.1 {
                 let combo = ActionCombo(name: "Delete", firstGesture: d.0, secondGesture: d.1)
                 onComboMatchedBySlot?(combo, -6) // special slot index for delete
+                reset()
+                return
+            }
+
+            // 6) Decrement timer combo (priority 7)
+            if let dt = decrementTimerCombo, first == dt.0 && second == dt.1 {
+                let combo = ActionCombo(name: "Decrement Timer", firstGesture: dt.0, secondGesture: dt.1)
+                onComboMatchedBySlot?(combo, -7) // special slot index for decrement timer
+                reset()
+                return
+            }
+            // 7) Increment timer combo (priority 8)
+            if let it = incrementTimerCombo, first == it.0 && second == it.1 {
+                let combo = ActionCombo(name: "Increment Timer", firstGesture: it.0, secondGesture: it.1)
+                onComboMatchedBySlot?(combo, -8) // special slot index for increment timer
                 reset()
                 return
             }

@@ -25,7 +25,9 @@ struct ResetTimerView: View {
                     // Decrement button (-)
                     IncrementButtonView(
                         title: "-",
-                        background: .mellowBlue
+                        background: .mellowBlue,
+                        firstCombo: viewModel.settings.decrementTimerCombo?.0,
+                        secondCombo: viewModel.settings.decrementTimerCombo?.1
                     ) {
                         if timerSpeed > 0.5 {
                             timerSpeed = max(0.5, timerSpeed - 1.0)
@@ -55,7 +57,9 @@ struct ResetTimerView: View {
                     // Increment button (+)
                     IncrementButtonView(
                         title: "+",
-                        background: .mellowBlue
+                        background: .mellowBlue,
+                        firstCombo: viewModel.settings.incrementTimerCombo?.0,
+                        secondCombo: viewModel.settings.incrementTimerCombo?.1
                     ) {
                         if timerSpeed < 5.0 {
                             timerSpeed = min(5.0, timerSpeed + 1.0)
