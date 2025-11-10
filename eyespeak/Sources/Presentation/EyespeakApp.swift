@@ -8,6 +8,7 @@ struct EyespeakApp: App {
     var body: some Scene {
         WindowGroup {
           ContentView()
+                .background(Color.boneWhite.ignoresSafeArea())
         }
         .environment(appState)
         .modelContainer(ModelContainer.shared)
