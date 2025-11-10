@@ -56,7 +56,7 @@ private struct MainContentView: View {
                 // InformationView on the left
                 InformationView()
                     .frame(
-                        width: geo.size.width * 0.21,
+                        width: geo.size.width * 0.23,
                         height: geo.size.height
                     )
                     .padding()
@@ -96,7 +96,7 @@ private struct MainContentView: View {
                     }
                 }
             }
-            .padding(.horizontal)
+            .padding()
             .background(Color.boneWhite)
             .ignoresSafeArea()
         }

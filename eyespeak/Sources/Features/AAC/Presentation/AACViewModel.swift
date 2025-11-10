@@ -47,7 +47,7 @@ public final class AACViewModel: ObservableObject {
     public var currentMenu: Tab = .settings
     
     // Edit mode for AAC grid
-    public var isEditMode = false
+    public var isEditMode = true
     
     // Swap mode state
     public var isSwapMode = false

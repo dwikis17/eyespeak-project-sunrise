@@ -164,7 +164,7 @@ struct InformationView: View {
                         }
                     }
                 }
-                .frame(maxHeight: .infinity)
+                .frame(maxHeight: 206)
 
                 // Live countdown bar linked to gesture timing window
                 GeometryReader { geo in
@@ -366,8 +366,8 @@ struct InformationView: View {
                     ComboPill(
                         firstGesture: combo.0,
                         secondGesture: combo.1,
-                        foreground: .whiteWhite,
-                        background: Color.gray.opacity(0.3),
+                        foreground: .black,
+                        background: Color.customGray,
                         size: CGSize(width: 38.431, height: 21.679),
                         paddingValue: 4.927,
                         iconSize: 11.825,
@@ -400,15 +400,17 @@ struct InformationView: View {
                 
                 // Button title
                 Text(title)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.whiteWhite)
-                
-                Spacer()
+                    .font(AppFont.Montserrat.bold(7.4))
+                    .foregroundStyle(.white)
+    
+        
             }
+            .frame(maxWidth: 90)
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .background(Color.mellowBlue.opacity(0.8))
-            .cornerRadius(12)
+            .background(Color.mellowBlue)
+            .cornerRadius(16.44)
+           
         }
     }
     
