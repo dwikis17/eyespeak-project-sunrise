@@ -317,14 +317,10 @@ struct InformationView: View {
             editOptionButton(
                 icon: "arrow.left",
                 title: "Delete",
-                combo: viewModel.recentCombos.first
+                combo: viewModel.settings.deleteCombo
             ) {
-                // TODO: Implement delete action
-                if let position = viewModel.selectedPosition,
-                   let card = position.card {
-                    viewModel.deleteCard(card)
-                    viewModel.selectedPosition = nil
-                }
+                // Delete action is handled by combo matching in edit mode
+                viewModel.performDeleteAction()
             }
             
             // Swap button
