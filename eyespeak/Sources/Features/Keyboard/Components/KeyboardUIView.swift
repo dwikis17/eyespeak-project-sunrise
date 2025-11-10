@@ -161,7 +161,7 @@ private extension KeyboardUIView {
     func keyboardRow(keys: [KeyboardKey], horizontalInset: CGFloat = 0) -> some View {
         HStack(spacing: 8) {
             ForEach(keys) { key in
-                KeyButton(key: key)
+                KeyboardUIKeyButton(key: key)
             }
         }
         .padding(.horizontal, horizontalInset)
@@ -171,7 +171,7 @@ private extension KeyboardUIView {
         HStack(spacing: 8) {
             SpecialKeyButton(key: KeyboardKey(label: "shift", icon: "shift.fill"))
             ForEach(bottomRow) { key in
-                KeyButton(key: key)
+                KeyboardUIKeyButton(key: key)
             }
             SpecialKeyButton(key: KeyboardKey(label: "delete", icon: "delete.left.fill"))
         }
@@ -223,7 +223,7 @@ private struct SuggestionTile: View {
     }
 }
 
-private struct KeyButton: View {
+private struct KeyboardUIKeyButton: View {
     let key: KeyboardKey
 
     var body: some View {

@@ -26,7 +26,7 @@ struct NavigationCard: View {
                     firstGesture: first,
                     secondGesture: second,
                     foreground: background,
-                    background: .whiteWhite,
+                    background: Color.whiteWhite,
                     size: pillSize,
                     paddingValue: 4.927,
                     iconSize: 11.825,

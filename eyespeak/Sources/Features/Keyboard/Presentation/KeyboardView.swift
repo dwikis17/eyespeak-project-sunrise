@@ -811,6 +811,37 @@ struct KeyboardView: View {
                     showingKeyComboPicker = true
                 }
             )
+            Button(action: { SpeechService.shared.speak(text) }) {
+                ZStack(alignment: .top) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "speaker.wave.2.fill")
+                            .font(.system(size: 18, weight: .semibold))
+                    }
+                    .foregroundColor(.white)
+                    .frame(minWidth: 82, minHeight: 60)
+                    .padding(.horizontal, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(Color.mellowBlue)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke((scanGroup == .function ? scanIndex == 2 : false) ? Color.accentColor : Color.clear, lineWidth: 3)
+                            )
+                    )
+
+                    if let combo = assignedCombo(forKey: "speak") {
+                        ComboBadgeView(combo: combo)
+                            .padding(6)
+                    }
+                }
+            }
+            .accessibilityLabel("Speak")
+            .contextMenu {
+                Button("Assign combo") {
+                    keyToAssign = "speak"
+                    showingKeyComboPicker = true
+                }
+            }
             ReturnKeyView(
                 onTap: { appendText("\n") },
                 assignedCombo: assignedCombo(forKey: "return"),
@@ -1004,7 +1035,7 @@ struct KeyboardView: View {
         case .top: return topRowKeys.count
         case .middle: return middleRowKeys.count
         case .bottom: return bottomRowKeys.count
-        case .function: return 3
+        case .function: return 4
         }
     }
 
@@ -1095,7 +1126,9 @@ struct KeyboardView: View {
                 break
             case 1: // space
                 appendText(" ")
-            case 2: // return
+            case 2: // speak
+                SpeechService.shared.speak(text)
+            case 3: // return
                 appendText("\n")
             default:
                 break
@@ -1173,7 +1206,7 @@ struct KeyboardView: View {
         }
 
         // Assign to function keys if still available
-        let functionKeys: [Int] = [1001, 1002, 1003, 1004, 1005, 1006, 1007] // space, return, delete, caps, shift, numbers, accept inline
+        let functionKeys: [Int] = [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008] // space, return, delete, caps, shift, numbers, accept inline, speak
         for fid in functionKeys {
             guard !assignedActionIds.contains(fid), let next = candidates.first else { continue }
             aacVM.assignComboToMenu(next, menu: .keyboard, actionId: fid)
@@ -1242,6 +1275,7 @@ struct KeyboardView: View {
         case "shift": return 1005
         case "123": return 1006
         case "accept": return 1007
+        case "speak": return 1008
         default: break
         }
         
@@ -1293,6 +1327,9 @@ struct KeyboardView: View {
             if !predictionService.inlinePrediction.isEmpty {
                 acceptInlinePrediction()
             }
+        case 1008:
+            // Speak the current typed text
+            SpeechService.shared.speak(text)
             
         default:
             // Suggestions: 400...499 → apply suggestion at position
