@@ -9,7 +9,7 @@ import SwiftUI
 
 struct KeyboardView: View {
     var body: some View {
-        KeyboardUIView()
+        RealKeyboardView()
             .padding()
     }
 }

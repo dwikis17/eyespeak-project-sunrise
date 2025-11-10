@@ -1,6 +1,11 @@
 import SwiftUI
 
 struct RealKeyboardView: View {
+    private let suggestions = ["drink", "eat", "drive"]
+    private let topRowLetters = ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"]
+    private let middleRowLetters = ["a", "s", "d", "f", "g", "h", "j", "k", "l"]
+    private let bottomRowLetters = ["z", "x", "c", "v", "b", "n", "m"]
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top, spacing: 10) {
@@ -48,31 +53,77 @@ struct RealKeyboardView: View {
             // Keyboard Section
             VStack(alignment: .trailing, spacing: 7.6044) {
                 // first row
-                HStack(alignment: .center, spacing: 6.84396) { ... }
+                HStack(alignment: .center, spacing: 6.84396) {
+                    ForEach(suggestions, id: \.self) { word in
+                        CompletionKeyView(title: word)
+                    }
+                }
                 .padding(.horizontal, 7.6044)
                 .padding(.vertical, 0)
                 .frame(maxWidth: .infinity, alignment: .trailing)
                 
-                // second row
-                HStack(alignment: .center, spacing: 6.84396) { ... }
+                // second row (qwerty + icon key)
+                HStack(alignment: .center, spacing: 6.84396) {
+                    ForEach(topRowLetters, id: \.self) { letter in
+                        KeyView(letter: letter)
+                    }
+                    
+                    KeyView(
+                        content: .image(image: Image("shift"), tint: .mellowBlue),
+                        firstGesture: .lookUp,
+                        secondGesture: .lookRight,
+                        backgroundColor: .blueholder,
+                        comboStrokeColor: .mellowBlue,
+                        comboBackgroundColor: .blueholder,
+                        comboIconColor: .mellowBlue
+                    )
+                }
                 .padding(.horizontal, 7.6044)
                 .padding(.vertical, 0)
                 .frame(maxWidth: .infinity, alignment: .trailing)
                 
-                // third row
-                HStack(alignment: .top, spacing: 6.84396) { ... }
+                // third row (asdf... + speaker)
+                HStack(alignment: .center, spacing: 6.84396) {
+                    ForEach(middleRowLetters, id: \.self) { letter in
+                        KeyView(letter: letter)
+                    }
+                    
+                    SpeakKeyView()
+                        .frame(width: 150)
+                }
                 .padding(.horizontal, 7.6044)
                 .padding(.vertical, 0)
                 .frame(maxWidth: .infinity, alignment: .topLeading)
                 
-                // fourth row
-                HStack(alignment: .top, spacing: 6.84396) { ... }
+                // fourth row (shift + z row)
+                HStack(alignment: .center, spacing: 6.84396) {
+                    ShiftKeyView()
+                    
+                    ForEach(bottomRowLetters, id: \.self) { letter in
+                        KeyView(letter: letter)
+                    }
+                }
                 .padding(.horizontal, 7.6044)
                 .padding(.vertical, 0)
                 .frame(maxWidth: .infinity, alignment: .topLeading)
                 
-                // fifth row
-                HStack(alignment: .top, spacing: 6.84396) { ... }
+                // fifth row (.?123, space, trash)
+                HStack(alignment: .center, spacing: 6.84396) {
+                    KeyView(letter: ".?123")
+                    
+                    SpaceKeyView()
+                    
+                    KeyView(
+                        content: .image(image: Image("trash"), tint: .whiteWhite),
+                        firstGesture: .lookUp,
+                        secondGesture: .lookRight,
+                        textColor: .whiteWhite,
+                        backgroundColor: .mellowBlue,
+                        comboStrokeColor: .whiteWhite,
+                        comboBackgroundColor: .mellowBlue,
+                        comboIconColor: .whiteWhite
+                    )
+                }
                 .padding(.horizontal, 7.6044)
                 .padding(.vertical, 0)
                 .frame(maxWidth: .infinity, alignment: .topLeading)

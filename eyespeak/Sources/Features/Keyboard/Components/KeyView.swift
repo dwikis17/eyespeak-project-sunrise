@@ -11,19 +11,28 @@ struct KeyView: View {
     private let secondGesture: GestureType
     private let textColor: Color
     private let backgroundColor: Color
+    private let comboStrokeColor: Color
+    private let comboBackgroundColor: Color
+    private let comboIconColor: Color?
 
     init(
         content: Content,
         firstGesture: GestureType = .lookUp,
         secondGesture: GestureType = .lookRight,
         textColor: Color = .mellowBlue,
-        backgroundColor: Color = .whiteWhite
+        backgroundColor: Color = .whiteWhite,
+        comboStrokeColor: Color = .placeholder,
+        comboBackgroundColor: Color = .whiteWhite,
+        comboIconColor: Color? = .placeholder
     ) {
         self.content = content
         self.firstGesture = firstGesture
         self.secondGesture = secondGesture
         self.textColor = textColor
         self.backgroundColor = backgroundColor
+        self.comboStrokeColor = comboStrokeColor
+        self.comboBackgroundColor = comboBackgroundColor
+        self.comboIconColor = comboIconColor
     }
 
     init(
@@ -31,14 +40,20 @@ struct KeyView: View {
         firstGesture: GestureType = .lookUp,
         secondGesture: GestureType = .lookRight,
         textColor: Color = .mellowBlue,
-        backgroundColor: Color = .whiteWhite
+        backgroundColor: Color = .whiteWhite,
+        comboStrokeColor: Color = .placeholder,
+        comboBackgroundColor: Color = .whiteWhite,
+        comboIconColor: Color? = .placeholder
     ) {
         self.init(
             content: .text(letter),
             firstGesture: firstGesture,
             secondGesture: secondGesture,
             textColor: textColor,
-            backgroundColor: backgroundColor
+            backgroundColor: backgroundColor,
+            comboStrokeColor: comboStrokeColor,
+            comboBackgroundColor: comboBackgroundColor,
+            comboIconColor: comboIconColor
         )
     }
 
@@ -47,9 +62,9 @@ struct KeyView: View {
             OutlineComboPill(
                 firstGesture: firstGesture,
                 secondGesture: secondGesture,
-                strokeColor: .placeholder,
-                background: .whiteWhite,
-                iconColor: .placeholder
+                strokeColor: comboStrokeColor,
+                background: comboBackgroundColor,
+                iconColor: comboIconColor
             )
 
             keyContentView
