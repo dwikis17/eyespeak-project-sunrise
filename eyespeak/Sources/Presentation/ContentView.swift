@@ -53,16 +53,13 @@ private struct MainContentView: View {
     var body: some View {
         GeometryReader { geo in
             HStack(alignment: .center, spacing: 0) {
-                // InformationView on the left
                 InformationView()
                     .frame(
                         width: geo.size.width * 0.23,
                         height: geo.size.height
                     )
                     .padding()
-
                 Spacer()
-
                 Group {
                     switch appState.currentTab {
                     case .aac:
@@ -75,7 +72,7 @@ private struct MainContentView: View {
                     case .settings:
                         SettingsView()
                             .frame(
-                                width: geo.size.width * 0.73,
+                                width: geo.size.width * 0.72,
                                 height: geo.size.height
                             )
 

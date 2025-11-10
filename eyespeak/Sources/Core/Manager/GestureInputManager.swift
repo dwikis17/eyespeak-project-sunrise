@@ -17,6 +17,7 @@ import Observation
         // Timestamp of last gesture
         private var lastGestureTime: Date?
         
+        
         // Timing window (how long between gestures)
         var timingWindow: TimeInterval = 2.0
         

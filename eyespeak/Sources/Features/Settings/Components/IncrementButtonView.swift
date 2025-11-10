@@ -1,15 +1,15 @@
 import SwiftUI
 
-struct NavigationCard: View {
+struct IncrementButtonView: View {
     var title: String
     var background: Color = .mellowBlue
-    var cornerRadius: CGFloat = 22
-    var pillSize = CGSize(width: 38.431, height: 21.679)
+    var cornerRadius: CGFloat = 14
+    var pillSize = CGSize(width: 27.32, height: 15.41)
 
     // optional combo icons (use nil when not configured)
     var firstCombo: GestureType? = nil
     var secondCombo: GestureType? = nil
-    var height: CGFloat = 100.72
+    var height: CGFloat = 115.92
 
     // optional tap action
     var action: (() -> Void)? = nil
@@ -29,27 +29,25 @@ struct NavigationCard: View {
                     foreground: background,
                     background: .whiteWhite,
                     size: pillSize,
-                    paddingValue: 4.927,
-                    iconSize: 11.825,
-                    spacing: 4.927
+                    paddingValue: 2.927,
+                    iconSize: 10,
+                    spacing: 3.927
                 )
-                    .padding(10) // outer padding around capsule
+                .padding(10)  // outer padding around capsule
             }
 
             // Bottom-left title
-            VStack {
-                Spacer()
-                HStack {
-                    Text(title.uppercased())
-                        .font(.system(size: 14, design: .rounded))
-                        .tracking(3)
-                        .foregroundStyle(.white)
-                    Spacer()
-                }
-                .padding(12)
-            }
+            Text(title.uppercased())
+                .font(.system(size: 30, design: .rounded))
+                .tracking(3)
+                .foregroundStyle(.white)
+                .frame(
+                    maxWidth: .infinity,
+                    maxHeight: .infinity,
+                    alignment: .center
+                )
         }
-        .frame(height: height)
+        .frame(width: 68.75, height: height)
         .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 4)
     }
 
@@ -67,5 +65,9 @@ struct NavigationCard: View {
 }
 
 #Preview {
-    NavigationCard(title: "Settings", background: .mellowBlue, cornerRadius: 28, firstCombo: .lookUp, secondCombo: .lookRight)
+    IncrementButtonView(
+        title: "+",
+        firstCombo: .lookUp,
+        secondCombo: .lookRight
+    )
 }

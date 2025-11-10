@@ -17,10 +17,12 @@ struct SettingsView: View {
     var body: some View {
         VStack(spacing:15) {
             headerView
+            ResetTimerView()
             AvailableActionsView()
             EditLayoutview()
             Spacer()
         }
+        .padding(.vertical, 20)
         .environmentObject(viewModel)
     
     }
@@ -144,6 +146,7 @@ struct SettingsView: View {
                 .fill(Color.white)
         )
     }
+
 }
 
 // MARK: - Combo Picker View
