@@ -22,6 +22,7 @@ struct TrashKeyView: View {
     private enum Layout {
         static let keyHeight: CGFloat = 75.57471
         static let contentSpacing: CGFloat = 10
+        static let backgroundColor = Color(red: 0.87, green: 0.88, blue: 0.93)
     }
 
     var body: some View {
@@ -29,9 +30,9 @@ struct TrashKeyView: View {
             OutlineComboPill(
                 firstGesture: firstGesture,
                 secondGesture: secondGesture,
-                strokeColor: .whiteWhite,
-                background: .mellowBlue,
-                iconColor: .whiteWhite
+                strokeColor: .mellowBlue,
+                background: Layout.backgroundColor,
+                iconColor: .mellowBlue
             )
             .padding(.bottom, -8)
 
@@ -40,10 +41,10 @@ struct TrashKeyView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 28, height: 32)
-                .foregroundColor(.whiteWhite)
+                .foregroundColor(.mellowBlue)
         }
         .frame(maxWidth: .infinity, minHeight: Layout.keyHeight, maxHeight: Layout.keyHeight)
-        .background(Color.mellowBlue)
+        .background(Layout.backgroundColor)
         .cornerRadius(6.68328)
         .shadow(color: .black.opacity(0.12), radius: 2, x: 0, y: 2)
     }

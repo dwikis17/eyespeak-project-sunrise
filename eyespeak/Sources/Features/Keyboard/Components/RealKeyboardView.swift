@@ -21,19 +21,19 @@ struct RealKeyboardView: View {
                         Text("Can I eat a dozen of donut")
                             .font(Font.custom("Montserrat", size: 64))
                             .foregroundColor(.black)
-                        VStack(alignment: .leading, spacing: 10) {
+                        VStack(alignment: .center, spacing: 10) {
                             OutlineComboPill(
                                 firstGesture: .lookUp,
                                 secondGesture: .lookRight,
-                                strokeColor: .placeholder,
+                                strokeColor: .mellowBlue,
                                 background: .whiteWhite,
-                                iconColor: .placeholder
+                                iconColor: .mellowBlue
                             )
                         }
                         .padding(.horizontal, 0)
                         .padding(.top, 31)
                         .padding(.bottom, 0)
-                        .frame(minWidth: 39.312, maxWidth: 39.312, maxHeight: .infinity, alignment: .topLeading)
+                        .frame(minWidth: 39.312, maxWidth: 39.312, maxHeight: .infinity, alignment: .center)
                     }
                     .padding(0)
                     .frame(maxWidth: .infinity, alignment: .leading)
