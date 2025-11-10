@@ -65,7 +65,7 @@ private struct MainContentView: View {
                             .frame(width: geo.size.width * 0.75, height: geo.size.height)
                     
                     case .keyboard:
-                        KeyboardView()
+                        KeyboardUIView()
                             .frame(width: geo.size.width * 0.75, height: geo.size.height)
                     
                     case .eyeTrackingAccessible, .eyeTrackingSimple:
