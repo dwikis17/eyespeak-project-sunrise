@@ -47,7 +47,7 @@ public final class AACViewModel: ObservableObject {
     public var currentMenu: Tab = .settings
     
     // Edit mode for AAC grid
-    public var isEditMode = true
+    public var isEditMode = false
     
     // Swap mode state
     public var isSwapMode = false
@@ -247,11 +247,13 @@ public final class AACViewModel: ObservableObject {
                 // } else {
                 //     gestureInputManager.setEditLayoutCombo(nil)
                 // }
-                // Set swap combo when in edit mode
+                // Set swap and delete combos when in edit mode
                 if isEditMode {
                     gestureInputManager.setSwapCombo(settings.swapCombo)
+                    gestureInputManager.setDeleteCombo(settings.deleteCombo)
                 } else {
                     gestureInputManager.setSwapCombo(nil)
+                    gestureInputManager.setDeleteCombo(nil)
                 }
                 // Always sanitize conflicts if nav combos are configured (even with 1 page)
                 sanitizeNavigationComboConflicts()
@@ -360,6 +362,27 @@ public final class AACViewModel: ObservableObject {
         print("❌ Swap mode cancelled")
     }
     
+    public func performDeleteAction() {
+        // Delete the selected card
+        print("🗑️ Delete action triggered")
+        if let position = selectedPosition,
+           let card = position.card {
+            // Remove card from position
+            position.card = nil
+            // Delete the card from database
+            deleteCard(card)
+            // Clear selection
+            withAnimation {
+                selectedPosition = nil
+            }
+            print("✅ Card deleted: \(card.title)")
+            self.toggleEditMode()
+            resizeGrid(newTotal: positions.count)
+        } else {
+            print("⚠️ No card selected for deletion")
+        }
+    }
+    
     public func toggleEditMode() {
         withAnimation {
             isEditMode.toggle()
@@ -368,13 +391,15 @@ public final class AACViewModel: ObservableObject {
                 if isEditMode {
                     // When entering edit mode, set editLayoutCombo as priority (to allow exit)
                     gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
-                    // Set swap combo when entering edit mode
+                    // Set swap and delete combos when entering edit mode
                     gestureInputManager.setSwapCombo(settings.swapCombo)
+                    gestureInputManager.setDeleteCombo(settings.deleteCombo)
                 } else {
                     // When exiting edit mode, remove priority so combo can be used normally
                     gestureInputManager.setEditLayoutCombo(nil)
-                    // Remove swap combo when exiting edit mode
+                    // Remove swap and delete combos when exiting edit mode
                     gestureInputManager.setSwapCombo(nil)
+                    gestureInputManager.setDeleteCombo(nil)
                     // Clear selection and swap mode when exiting edit mode
                     selectedPosition = nil
                     cancelSwapMode()
@@ -547,6 +572,14 @@ public final class AACViewModel: ObservableObject {
             }
             return
         }
+        if slotIndex == -6 {
+            // Delete combo - perform delete action in edit mode
+            recordRecentCombo(combo)
+            if isEditMode {
+                performDeleteAction()
+            }
+            return
+        }
 
         let index = currentPage * pageSize + slotIndex
         guard index >= 0, index < positions.count else {
@@ -640,11 +673,13 @@ public final class AACViewModel: ObservableObject {
             } else {
                 gestureInputManager.setEditLayoutCombo(nil)
             }
-            // Set swap combo when in edit mode
+            // Set swap and delete combos when in edit mode
             if isEditMode {
                 gestureInputManager.setSwapCombo(settings.swapCombo)
+                gestureInputManager.setDeleteCombo(settings.deleteCombo)
             } else {
                 gestureInputManager.setSwapCombo(nil)
+                gestureInputManager.setDeleteCombo(nil)
             }
             // Always sanitize conflicts if nav combos are configured (even with 1 page)
             sanitizeNavigationComboConflicts()
@@ -663,8 +698,9 @@ public final class AACViewModel: ObservableObject {
         let settingsCombo = settings.settingsCombo
         let editLayoutCombo = settings.editLayoutCombo
         let swapCombo = settings.swapCombo
+        let deleteCombo = settings.deleteCombo
         // Only sanitize if priority combos are actually configured
-        guard navNext != nil || navPrev != nil || settingsCombo != nil || editLayoutCombo != nil || swapCombo != nil else { return }
+        guard navNext != nil || navPrev != nil || settingsCombo != nil || editLayoutCombo != nil || swapCombo != nil || deleteCombo != nil else { return }
 
         func isNavCombo(_ c: ActionCombo) -> Bool {
             if let n = navNext, c.firstGesture == n.0 && c.secondGesture == n.1 { return true }
@@ -672,6 +708,7 @@ public final class AACViewModel: ObservableObject {
             if let s = settingsCombo, c.firstGesture == s.0 && c.secondGesture == s.1 { return true }
             if let e = editLayoutCombo, c.firstGesture == e.0 && c.secondGesture == e.1 { return true }
             if let sw = swapCombo, c.firstGesture == sw.0 && c.secondGesture == sw.1 { return true }
+            if let d = deleteCombo, c.firstGesture == d.0 && c.secondGesture == d.1 { return true }
             return false
         }
 
@@ -804,11 +841,13 @@ public final class AACViewModel: ObservableObject {
             } else {
                 gestureInputManager.setEditLayoutCombo(nil)
             }
-            // Set swap combo when in edit mode
+            // Set swap and delete combos when in edit mode
             if isEditMode {
                 gestureInputManager.setSwapCombo(settings.swapCombo)
+                gestureInputManager.setDeleteCombo(settings.deleteCombo)
             } else {
                 gestureInputManager.setSwapCombo(nil)
+                gestureInputManager.setDeleteCombo(nil)
             }
             // Use the actual positions from the database - this is a computed property that fetches fresh
             gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)

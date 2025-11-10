@@ -84,7 +84,8 @@ extension ModelContainer {
         let settingsCombo = settings.settingsCombo
         let editLayoutCombo = settings.editLayoutCombo
         let swapCombo = settings.swapCombo
-        guard navNext != nil || navPrev != nil || settingsCombo != nil || editLayoutCombo != nil || swapCombo != nil else { return }
+        let deleteCombo = settings.deleteCombo
+        guard navNext != nil || navPrev != nil || settingsCombo != nil || editLayoutCombo != nil || swapCombo != nil || deleteCombo != nil else { return }
 
         func isNavCombo(_ c: ActionCombo) -> Bool {
             if let n = navNext, c.firstGesture == n.0 && c.secondGesture == n.1 { return true }
@@ -92,6 +93,7 @@ extension ModelContainer {
             if let s = settingsCombo, c.firstGesture == s.0 && c.secondGesture == s.1 { return true }
             if let e = editLayoutCombo, c.firstGesture == e.0 && c.secondGesture == e.1 { return true }
             if let sw = swapCombo, c.firstGesture == sw.0 && c.secondGesture == sw.1 { return true }
+            if let d = deleteCombo, c.firstGesture == d.0 && c.secondGesture == d.1 { return true }
             return false
         }
 

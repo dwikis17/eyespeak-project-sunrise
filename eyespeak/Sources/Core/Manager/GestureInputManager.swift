@@ -35,6 +35,8 @@ import Observation
         private var editLayoutCombo: (GestureType, GestureType)?
         // Swap combo (priority 5)
         private var swapCombo: (GestureType, GestureType)?
+        // Delete combo (priority 6)
+        private var deleteCombo: (GestureType, GestureType)?
         
         // MARK: - Public Methods
         
@@ -91,6 +93,7 @@ import Observation
                     if let s = settingsCombo, combo.firstGesture == s.0 && combo.secondGesture == s.1 { continue }
                     if let e = editLayoutCombo, combo.firstGesture == e.0 && combo.secondGesture == e.1 { continue }
                     if let sw = swapCombo, combo.firstGesture == sw.0 && combo.secondGesture == sw.1 { continue }
+                    if let d = deleteCombo, combo.firstGesture == d.0 && combo.secondGesture == d.1 { continue }
                     availableCombosBySlot[combo] = slotIndex
                 }
             }
@@ -118,6 +121,11 @@ import Observation
             self.swapCombo = combo
         }
         
+        /// Configure delete combo (priority 6, after swap)
+        func setDeleteCombo(_ combo: (GestureType, GestureType)?) {
+            self.deleteCombo = combo
+        }
+        
         /// Load menu-specific combos directly (for Settings/Keyboard menus)
         /// This avoids creating temporary GridPosition objects that might interfere with the database
         func loadMenuCombos(_ menuComboMap: [ActionCombo: Int]) {
@@ -135,6 +143,7 @@ import Observation
                     if let s = settingsCombo, combo.firstGesture == s.0 && combo.secondGesture == s.1 { continue }
                     if let e = editLayoutCombo, combo.firstGesture == e.0 && combo.secondGesture == e.1 { continue }
                     if let sw = swapCombo, combo.firstGesture == sw.0 && combo.secondGesture == sw.1 { continue }
+                    if let d = deleteCombo, combo.firstGesture == d.0 && combo.secondGesture == d.1 { continue }
                     // Use the index as the slot (0-based)
                     availableCombosBySlot[combo] = index
                 }
@@ -202,6 +211,13 @@ import Observation
             if let sw = swapCombo, first == sw.0 && second == sw.1 {
                 let combo = ActionCombo(name: "Swap", firstGesture: sw.0, secondGesture: sw.1)
                 onComboMatchedBySlot?(combo, -5) // special slot index for swap
+                reset()
+                return
+            }
+            // 5) Delete combo (priority 6)
+            if let d = deleteCombo, first == d.0 && second == d.1 {
+                let combo = ActionCombo(name: "Delete", firstGesture: d.0, secondGesture: d.1)
+                onComboMatchedBySlot?(combo, -6) // special slot index for delete
                 reset()
                 return
             }
