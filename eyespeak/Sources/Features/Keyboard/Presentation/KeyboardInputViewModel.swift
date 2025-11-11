@@ -5,6 +5,7 @@ import UIKit
 final class KeyboardInputViewModel: ObservableObject {
     @Published var typedText: String = ""
     @Published private(set) var suggestions: [String]
+    @Published private(set) var inlinePredictionText: String = ""
     @Published var isShiftEnabled: Bool = false
     
     private let speechModel: KeyboardSpeechServiceModel
@@ -103,6 +104,39 @@ final class KeyboardInputViewModel: ObservableObject {
         isShiftEnabled ? letter.uppercased() : letter.lowercased()
     }
     
+    var inlinePredictionDisplayText: String {
+        guard !inlinePredictionText.isEmpty else { return "" }
+        let needsSpace = !(typedText.last?.isWhitespace ?? true)
+        return needsSpace ? " " + inlinePredictionText : inlinePredictionText
+    }
+    
+    func applySentencePrediction() {
+        let rawPrediction = inlinePredictionText
+        let trimmedPrediction = rawPrediction.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedPrediction.isEmpty else { return }
+        
+        let typedEndsWithSpace = typedText.last?.isWhitespace ?? false
+        var insertion = trimmedPrediction
+        if typedText.isEmpty || typedEndsWithSpace {
+            insertion = trimmedPrediction
+        } else if rawPrediction.hasPrefix(" ") {
+            insertion = rawPrediction
+        } else {
+            insertion = " " + trimmedPrediction
+        }
+        
+        typedText.append(insertion)
+        
+        if let last = typedText.last,
+           !last.isWhitespace {
+            typedText.append(" ")
+        }
+        
+        inlinePredictionText = ""
+        soundPlayer.playModifier()
+        refreshSuggestions()
+    }
+    
     private func refreshSuggestions() {
         suggestionTask?.cancel()
         let workingText = typedText
@@ -116,6 +150,7 @@ final class KeyboardInputViewModel: ObservableObject {
             } else {
                 suggestions = Array(completions.prefix(3))
             }
+            inlinePredictionText = ""
             return
         }
         
@@ -123,7 +158,10 @@ final class KeyboardInputViewModel: ObservableObject {
             guard let self else { return }
             
             if trimmedText.isEmpty {
-                suggestions = fallbackSuggestions()
+                await MainActor.run {
+                    self.suggestions = self.fallbackSuggestions()
+                    self.inlinePredictionText = ""
+                }
                 return
             }
             
@@ -133,11 +171,10 @@ final class KeyboardInputViewModel: ObservableObject {
                 await predictionService.generateFallbackPredictions(for: trimmedText)
             }
             
-            let predictions = predictionService.sentencePredictions
-            if predictions.isEmpty {
-                suggestions = fallbackSuggestions()
-            } else {
-                suggestions = Array(predictions.prefix(3))
+            await MainActor.run {
+                self.inlinePredictionText = self.predictionService.inlinePrediction
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                self.suggestions = self.fallbackSuggestions()
             }
         }
     }
@@ -154,17 +191,18 @@ final class KeyboardInputViewModel: ObservableObject {
         }
         
         typedText.append(suggestion)
-        typedText.append(" ")
+        if !typedText.hasSuffix(" ") {
+            typedText.append(" ")
+        }
         soundPlayer.playKey()
         refreshSuggestions()
     }
     
     private func removeCurrentWordIfNeeded() {
-        guard let lastScalar = typedText.unicodeScalars.last else { return }
-        let separators = CharacterSet.whitespacesAndNewlines.union(.punctuationCharacters)
-        guard !separators.contains(lastScalar) else { return }
+        guard isInMiddleOfWord(typedText) else { return }
         
         var scalars = typedText.unicodeScalars
+        let separators = CharacterSet.whitespacesAndNewlines.union(.punctuationCharacters)
         while let currentLast = scalars.last,
               !separators.contains(currentLast) {
             scalars.removeLast()

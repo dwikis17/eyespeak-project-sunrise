@@ -92,18 +92,20 @@ class SentencePredictionService: ObservableObject {
         #if canImport(FoundationModels)
         do {
             let instructions = """
-            Complete text naturally for daily communication. 
+            You complete the user's sentence for assistive communication.
+            Return only the remaining words needed to finish the sentence, include natural punctuation at the end, and avoid repeating the user's text.
             
             Examples:
-            "I need" → "some help"
-            "Can you" → "help me"
-            "I want" → "to go home"
-            "How are" → "you doing"
+            "I need" → " some help please."
+            "Can you" → " help me find my mom?"
+            "I want to" → " go back to my room."
+            "How are" → " you feeling today?"
             
             Rules:
-            - One completion only
-            - Keep it simple and natural
-            - 2–6 words max
+            - Provide one natural sentence ending (3–10 words total)
+            - Include final punctuation (. ? or !)
+            - Do not restate the user's original text
+            - Keep tone conversational and supportive
             """
             
             session = try LanguageModelSession(instructions: instructions)
@@ -148,9 +150,12 @@ class SentencePredictionService: ObservableObject {
             let prompt = "Complete this text: \(trimmed)\nCompletion:"
             let response = try await session.respond(to: prompt)
             let parsed = parseCompletions(from: response.content, originalText: trimmed)
+            let normalized = parsed
+                .map { self.normalizeCompletion($0) }
+                .filter { !$0.isEmpty }
             await MainActor.run {
-                self.sentencePredictions = parsed
-                self.inlinePrediction = parsed.first ?? ""
+                self.sentencePredictions = normalized
+                self.inlinePrediction = normalized.first ?? ""
                 self.debugInfo = parsed.isEmpty ? "AI: empty" : "AI: \(parsed.count) predictions"
             }
         } catch {
@@ -158,6 +163,8 @@ class SentencePredictionService: ObservableObject {
             await logGuardrailFeedback(for: trimmed, error: error)
             // Fall back to basic completions
             let fallback = generateFallbackCompletions(for: trimmed)
+                .map { self.normalizeCompletion($0) }
+                .filter { !$0.isEmpty }
             await MainActor.run {
                 self.sentencePredictions = fallback
                 self.inlinePrediction = fallback.first ?? ""
@@ -186,6 +193,8 @@ class SentencePredictionService: ObservableObject {
         }
         
         let completions = generateFallbackCompletions(for: trimmedText)
+            .map { normalizeCompletion($0) }
+            .filter { !$0.isEmpty }
         await MainActor.run {
             self.sentencePredictions = completions
             self.inlinePrediction = completions.first ?? ""
@@ -287,6 +296,16 @@ class SentencePredictionService: ObservableObject {
         }
         
         return Array(completions.prefix(3))
+    }
+    
+    private func normalizeCompletion(_ text: String) -> String {
+        var completion = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !completion.isEmpty else { return "" }
+        if let last = completion.last,
+           !"?!.".contains(last) {
+            completion.append(".")
+        }
+        return completion
     }
     
     private func sanitizeInput(_ text: String) -> String {

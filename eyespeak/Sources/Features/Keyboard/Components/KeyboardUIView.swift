@@ -6,6 +6,7 @@ private enum KeyboardActionID: Int, CaseIterable {
     case suggestion0 = 10
     case suggestion1 = 11
     case suggestion2 = 12
+    case acceptPrediction = 13
     
     case letterQ = 100
     case letterW = 101
@@ -118,6 +119,7 @@ struct KeyboardUIView: View {
     ]
     
     private let suggestionActions: [KeyboardActionID] = [.suggestion0, .suggestion1, .suggestion2]
+    private let predictionComboAction: KeyboardActionID = .acceptPrediction
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -167,19 +169,34 @@ struct KeyboardUIView: View {
                     (
                         Text(inputViewModel.primaryHeaderText)
                             .foregroundColor(.blueack)
-                        + Text(inputViewModel.secondaryHeaderText)
-                            .foregroundColor(.blueholder)
+                        + Text(
+                            inputViewModel.inlinePredictionText.isEmpty
+                            ? inputViewModel.secondaryHeaderText
+                            : inputViewModel.inlinePredictionDisplayText
+                        )
+                        .foregroundColor(.blueholder)
                     )
                     .font(Font.custom("Montserrat", size: 64))
                     
                     VStack(alignment: .center, spacing: 10) {
-                        OutlineComboPill(
-                            firstGesture: .lookUp,
-                            secondGesture: .lookRight,
-                            strokeColor: .mellowBlue,
-                            background: .boneWhite,
-                            iconColor: .mellowBlue
-                        )
+                        Button {
+                            guard !inputViewModel.inlinePredictionText.isEmpty else { return }
+                            handleAction(predictionComboAction)
+                        } label: {
+                            let combo = assignedCombos[predictionComboAction]
+                            OutlineComboPill(
+                                firstGesture: combo?.firstGesture ?? .lookUp,
+                                secondGesture: combo?.secondGesture ?? .lookRight,
+                                strokeColor: .mellowBlue,
+                                background: .boneWhite,
+                                iconColor: .mellowBlue
+                            )
+                            .opacity(inputViewModel.inlinePredictionText.isEmpty ? 0.35 : 1)
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(inputViewModel.inlinePredictionText.isEmpty)
+                        .accessibilityLabel("Complete sentence")
+                        .accessibilityHint("Applies the inline sentence prediction")
                     }
                     .frame(width: 60, alignment: .center)
                 }
@@ -389,6 +406,8 @@ struct KeyboardUIView: View {
             inputViewModel.addSpace()
         case .trash:
             inputViewModel.clearAll()
+        case .acceptPrediction:
+            inputViewModel.applySentencePrediction()
         default:
             if let letter = action.letter {
                 inputViewModel.insertLetter(letter)
