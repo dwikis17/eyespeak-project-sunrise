@@ -25,6 +25,7 @@ public class UserSettings {
     @AppStorage("navNextCombo") private var navNextRaw: String?
     @AppStorage("navPrevCombo") private var navPrevRaw: String?
     @AppStorage("settingsCombo") private var settingsComboRaw: String?
+    @AppStorage("menuComboAssignments") private var menuComboAssignmentsData: Data?
 
     @AppStorage("comboInputSettings") private var comboInputSettingsData: Data?
 
@@ -66,5 +67,45 @@ public class UserSettings {
         guard let g1 = GestureType(rawValue: a), let g2 = GestureType(rawValue: b) else { return nil }
         return (g1, g2)
     }
+    
+    // MARK: - Menu Combo Persistence
+    
+    struct MenuComboAssignment: Codable, Equatable {
+        let menuName: String
+        let actionId: Int
+        let comboId: UUID
+    }
+    
+    func setMenuComboAssignment(menuName: String, actionId: Int, comboId: UUID) {
+        var assignments = loadMenuComboAssignments()
+        if let index = assignments.firstIndex(where: { $0.menuName == menuName && $0.actionId == actionId }) {
+            assignments[index] = MenuComboAssignment(menuName: menuName, actionId: actionId, comboId: comboId)
+        } else {
+            assignments.append(MenuComboAssignment(menuName: menuName, actionId: actionId, comboId: comboId))
+        }
+        persistMenuComboAssignments(assignments)
+    }
+    
+    func removeMenuComboAssignment(menuName: String, actionId: Int) {
+        var assignments = loadMenuComboAssignments()
+        assignments.removeAll { $0.menuName == menuName && $0.actionId == actionId }
+        persistMenuComboAssignments(assignments)
+    }
+    
+    func comboAssignment(menuName: String, actionId: Int) -> MenuComboAssignment? {
+        loadMenuComboAssignments().first { $0.menuName == menuName && $0.actionId == actionId }
+    }
+    
+    func allMenuComboAssignments() -> [MenuComboAssignment] {
+        loadMenuComboAssignments()
+    }
+    
+    private func loadMenuComboAssignments() -> [MenuComboAssignment] {
+        guard let data = menuComboAssignmentsData else { return [] }
+        return (try? JSONDecoder().decode([MenuComboAssignment].self, from: data)) ?? []
+    }
+    
+    private func persistMenuComboAssignments(_ assignments: [MenuComboAssignment]) {
+        menuComboAssignmentsData = try? JSONEncoder().encode(assignments)
+    }
 }
-

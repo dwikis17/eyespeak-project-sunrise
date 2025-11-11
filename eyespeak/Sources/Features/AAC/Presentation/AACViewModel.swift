@@ -100,6 +100,7 @@ public final class AACViewModel: ObservableObject {
         self.gestureInputManager = gestureInputManager
         self.speechService = speechService
         setupGestureManager()
+        restoreMenuCombosFromStorage()
     }
     
     // MARK: - Convenience Initializer for Backward Compatibility
@@ -109,6 +110,7 @@ public final class AACViewModel: ObservableObject {
         self.gestureInputManager = GestureInputManager()
         self.speechService = SpeechService.shared
         setupGestureManager()
+        restoreMenuCombosFromStorage()
     }
     
     // MARK: - Setup Methods
@@ -633,25 +635,14 @@ public final class AACViewModel: ObservableObject {
     
     /// Assign a combo to a menu-specific action (Settings, Keyboard)
     public func assignComboToMenu(_ combo: ActionCombo, menu: Tab, actionId: Int) {
-        let menuName: String
-        switch menu {
-        case .settings:
-            menuName = "settings"
-        case .keyboard:
-            menuName = "keyboard"
-        default:
+        guard let menuName = menuName(for: menu) else {
             print("⚠️ Cannot assign combo to menu \(menu). Only .settings and .keyboard are supported.")
             return
         }
         
-        if menuCombos[menuName] == nil {
-            menuCombos[menuName] = [:]
-        }
-        
-        menuCombos[menuName]?[combo] = actionId
+        storeMenuCombo(combo, menuName: menuName, actionId: actionId, persist: true)
         print("✅ Assigned combo \(combo.name) to \(menuName) menu action \(actionId)")
         
-        // Reload combos if this is the current menu
         if currentMenu == menu {
             reloadCombosForCurrentMenu()
         }
@@ -659,16 +650,74 @@ public final class AACViewModel: ObservableObject {
     
     /// Get combos for a specific menu
     public func getCombosForMenu(_ menu: Tab) -> [ActionCombo: Int] {
-        let menuName: String
-        switch menu {
-        case .settings:
-            menuName = "settings"
-        case .keyboard:
-            menuName = "keyboard"
-        default:
+        guard let menuName = menuName(for: menu) else {
             return [:]
         }
         
         return menuCombos[menuName] ?? [:]
+    }
+    
+    // MARK: - Menu Combo Persistence Helpers
+    
+    private func restoreMenuCombosFromStorage() {
+        let assignments = settings.allMenuComboAssignments()
+        guard !assignments.isEmpty else { return }
+        
+        for assignment in assignments {
+            guard let _ = tab(for: assignment.menuName),
+                  let combo = dataManager.fetchActionCombo(id: assignment.comboId) else {
+                continue
+            }
+            storeMenuCombo(
+                combo,
+                menuName: assignment.menuName,
+                actionId: assignment.actionId,
+                persist: false
+            )
+        }
+    }
+    
+    private func storeMenuCombo(
+        _ combo: ActionCombo,
+        menuName: String,
+        actionId: Int,
+        persist: Bool
+    ) {
+        var mapping = menuCombos[menuName] ?? [:]
+        for (existingCombo, id) in mapping where id == actionId {
+            mapping.removeValue(forKey: existingCombo)
+        }
+        mapping[combo] = actionId
+        menuCombos[menuName] = mapping
+        
+        if persist {
+            settings.setMenuComboAssignment(
+                menuName: menuName,
+                actionId: actionId,
+                comboId: combo.id
+            )
+        }
+    }
+    
+    private func menuName(for menu: Tab) -> String? {
+        switch menu {
+        case .settings:
+            return "settings"
+        case .keyboard:
+            return "keyboard"
+        default:
+            return nil
+        }
+    }
+    
+    private func tab(for menuName: String) -> Tab? {
+        switch menuName {
+        case "settings":
+            return .settings
+        case "keyboard":
+            return .keyboard
+        default:
+            return nil
+        }
     }
 }
