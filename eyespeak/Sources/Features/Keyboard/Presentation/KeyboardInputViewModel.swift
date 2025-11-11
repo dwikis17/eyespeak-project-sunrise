@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 @MainActor
 final class KeyboardInputViewModel: ObservableObject {
@@ -9,6 +10,7 @@ final class KeyboardInputViewModel: ObservableObject {
     private let speechModel: KeyboardSpeechServiceModel
     private let predictionService: SentencePredictionService
     private let soundPlayer: KeyboardSoundPlayer
+    private let textChecker = UITextChecker()
     private var userSuggestionPool: [String]
     private var suggestionTask: Task<Void, Never>?
     
@@ -109,28 +111,70 @@ final class KeyboardInputViewModel: ObservableObject {
     
     private func refreshSuggestions() {
         suggestionTask?.cancel()
-        let currentText = typedText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let workingText = typedText
+        let trimmedText = workingText.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        if isInMiddleOfWord(workingText) {
+            let currentWord = currentWord(from: workingText)
+            let completions = wordCompletions(for: currentWord)
+            if completions.isEmpty {
+                suggestions = fallbackSuggestions()
+            } else {
+                suggestions = Array(completions.prefix(3))
+            }
+            return
+        }
         
         suggestionTask = Task { [weak self] in
             guard let self else { return }
             
-            if currentText.isEmpty {
-                suggestions = Array(userSuggestionPool.prefix(3))
+            if trimmedText.isEmpty {
+                suggestions = fallbackSuggestions()
                 return
             }
             
             if predictionService.isModelAvailable {
-                await predictionService.generateSentencePredictions(for: currentText)
+                await predictionService.generateSentencePredictions(for: trimmedText)
             } else {
-                await predictionService.generateFallbackPredictions(for: currentText)
+                await predictionService.generateFallbackPredictions(for: trimmedText)
             }
             
             let predictions = predictionService.sentencePredictions
             if predictions.isEmpty {
-                suggestions = Array(userSuggestionPool.prefix(3))
+                suggestions = fallbackSuggestions()
             } else {
                 suggestions = Array(predictions.prefix(3))
             }
         }
+    }
+    
+    private func fallbackSuggestions() -> [String] {
+        Array(userSuggestionPool.prefix(3))
+    }
+    
+    private func isInMiddleOfWord(_ text: String) -> Bool {
+        guard let lastScalar = text.unicodeScalars.last else { return false }
+        return !CharacterSet.whitespacesAndNewlines.contains(lastScalar) &&
+            !CharacterSet.punctuationCharacters.contains(lastScalar)
+    }
+    
+    private func currentWord(from text: String) -> String {
+        guard !text.isEmpty else { return "" }
+        let separators = CharacterSet.whitespacesAndNewlines.union(.punctuationCharacters)
+        let components = text.components(separatedBy: separators)
+        return components.last ?? ""
+    }
+    
+    private func wordCompletions(for word: String) -> [String] {
+        guard !word.isEmpty else { return [] }
+        let range = NSRange(location: 0, length: word.utf16.count)
+        if let completions = textChecker.completions(
+            forPartialWordRange: range,
+            in: word,
+            language: Locale.preferredLanguages.first ?? "en_US"
+        ) {
+            return completions
+        }
+        return []
     }
 }
