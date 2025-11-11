@@ -52,13 +52,7 @@ final class KeyboardInputViewModel: ObservableObject {
     
     func insertSuggestion(at index: Int) {
         guard suggestions.indices.contains(index) else { return }
-        if !typedText.isEmpty && !typedText.hasSuffix(" ") {
-            typedText.append(" ")
-        }
-        typedText.append(suggestions[index])
-        typedText.append(" ")
-        soundPlayer.playKey()
-        refreshSuggestions()
+        applySuggestion(suggestions[index])
     }
     
     func addSpace() {
@@ -150,6 +144,33 @@ final class KeyboardInputViewModel: ObservableObject {
     
     private func fallbackSuggestions() -> [String] {
         Array(userSuggestionPool.prefix(3))
+    }
+    
+    private func applySuggestion(_ suggestion: String) {
+        removeCurrentWordIfNeeded()
+        
+        if !typedText.isEmpty && !typedText.hasSuffix(" ") {
+            typedText.append(" ")
+        }
+        
+        typedText.append(suggestion)
+        typedText.append(" ")
+        soundPlayer.playKey()
+        refreshSuggestions()
+    }
+    
+    private func removeCurrentWordIfNeeded() {
+        guard let lastScalar = typedText.unicodeScalars.last else { return }
+        let separators = CharacterSet.whitespacesAndNewlines.union(.punctuationCharacters)
+        guard !separators.contains(lastScalar) else { return }
+        
+        var scalars = typedText.unicodeScalars
+        while let currentLast = scalars.last,
+              !separators.contains(currentLast) {
+            scalars.removeLast()
+        }
+        
+        typedText = String(String.UnicodeScalarView(scalars))
     }
     
     private func isInMiddleOfWord(_ text: String) -> Bool {
