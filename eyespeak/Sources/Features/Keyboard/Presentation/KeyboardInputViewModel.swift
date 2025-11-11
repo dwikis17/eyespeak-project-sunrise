@@ -12,6 +12,7 @@ final class KeyboardInputViewModel: ObservableObject {
     private let predictionService: SentencePredictionService
     private let soundPlayer: KeyboardSoundPlayer
     private let textChecker = UITextChecker()
+    private let defaultPredictiveWords = ["I", "You", "We"]
     private var userSuggestionPool: [String]
     private var suggestionTask: Task<Void, Never>?
     
@@ -185,6 +186,9 @@ final class KeyboardInputViewModel: ObservableObject {
         let fromPrediction = nextWordSuggestions(from: inlinePredictionText)
         if !fromPrediction.isEmpty {
             return fromPrediction
+        }
+        if typedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return defaultPredictiveWords
         }
         return Array(userSuggestionPool.prefix(3))
     }
