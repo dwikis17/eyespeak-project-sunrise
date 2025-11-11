@@ -112,6 +112,8 @@ struct ContentView_Previews: PreviewProvider {
         let defaultAppState = AppStateManager()
         let keyboardAppState = AppStateManager()
         keyboardAppState.currentTab = .keyboard
+        let settingsAppState = AppStateManager()
+        settingsAppState.currentTab = .settings
 
         return Group {
             ContentView(container: di)
@@ -123,6 +125,11 @@ struct ContentView_Previews: PreviewProvider {
                 .environment(keyboardAppState)
                 .modelContainer(modelContainer)
                 .previewDisplayName("Keyboard")
+            
+            ContentView(container: di)
+                .environment(settingsAppState)
+                .modelContainer(modelContainer)
+                .previewDisplayName("Settings")
         }
     }
 }
