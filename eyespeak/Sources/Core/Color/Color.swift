@@ -36,6 +36,9 @@ extension Color {
     /// Placeholder - #ACACAC
     static let placeholder = Color(hex: "#ACACAC")!
 
+    /// Blueholder - #DDE1EC
+    static let blueholder = Color(hex: "#DDE1EC")!
+
     /// Blueack - #363636
     static let blueack = Color(hex: "#363636")!
     
@@ -72,6 +75,7 @@ public enum CustomColor: String {
     case whiteWhite = "#FFFFFF"
     case boneWhite = "#F2F2F2"
     case placeholder = "#ACACAC"
+    case blueholder = "#DDE1EC"
     case blueack = "#363636"
   
 
