@@ -18,7 +18,6 @@ class SentencePredictionService: ObservableObject {
     private var systemModel: SystemLanguageModel?
     private var session: LanguageModelSession?
     #endif
-    
     private var lastErrorTime: Date?
     private var errorCount = 0
     
@@ -307,7 +306,6 @@ class SentencePredictionService: ObservableObject {
         }
         return completion
     }
-    
     private func sanitizeInput(_ text: String) -> String {
         var sanitized = text
         sanitized = sanitized.replacingOccurrences(of: "(.{1,3})\\1{3,}", with: "$1$1", options: .regularExpression)

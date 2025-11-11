@@ -166,17 +166,20 @@ struct KeyboardUIView: View {
         HStack(alignment: .center, spacing: 10) {
             HStack(alignment: .center) {
                 HStack(alignment: .center, spacing: 10) {
-                    (
-                        Text(inputViewModel.primaryHeaderText)
-                            .foregroundColor(.blueack)
-                        + Text(
-                            inputViewModel.inlinePredictionText.isEmpty
-                            ? inputViewModel.secondaryHeaderText
-                            : inputViewModel.inlinePredictionDisplayText
-                        )
-                        .foregroundColor(.blueholder)
-                    )
-                    .font(Font.custom("Montserrat", size: 64))
+                    let headerText: Text = {
+                        if inputViewModel.primaryHeaderText.isEmpty {
+                            return Text("Type Something")
+                                .foregroundColor(.blueholder)
+                        } else {
+                            return Text(inputViewModel.primaryHeaderText)
+                                .foregroundColor(.blueack)
+                            + Text(inputViewModel.inlinePredictionDisplayText)
+                                .foregroundColor(.blueholder)
+                        }
+                    }()
+                    
+                    headerText
+                        .font(Font.custom("Montserrat", size: 64))
                     
                     VStack(alignment: .center, spacing: 10) {
                         Button {

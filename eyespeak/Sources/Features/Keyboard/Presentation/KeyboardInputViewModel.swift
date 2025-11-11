@@ -34,11 +34,11 @@ final class KeyboardInputViewModel: ObservableObject {
     }
     
     var primaryHeaderText: String {
-        typedText.isEmpty ? "Can I " : typedText
+        typedText
     }
     
     var secondaryHeaderText: String {
-        typedText.isEmpty ? "eat a dozen of donut" : ""
+        ""
     }
     
     func insertLetter(_ letter: String) {
@@ -159,8 +159,8 @@ final class KeyboardInputViewModel: ObservableObject {
             
             if trimmedText.isEmpty {
                 await MainActor.run {
-                    self.suggestions = self.fallbackSuggestions()
                     self.inlinePredictionText = ""
+                    self.suggestions = self.fallbackSuggestions()
                 }
                 return
             }
@@ -172,15 +172,21 @@ final class KeyboardInputViewModel: ObservableObject {
             }
             
             await MainActor.run {
-                self.inlinePredictionText = self.predictionService.inlinePrediction
+                let prediction = self.predictionService.inlinePrediction
                     .trimmingCharacters(in: .whitespacesAndNewlines)
-                self.suggestions = self.fallbackSuggestions()
+                self.inlinePredictionText = prediction
+                let nextWords = self.nextWordSuggestions(from: prediction)
+                self.suggestions = nextWords.isEmpty ? self.fallbackSuggestions() : nextWords
             }
         }
     }
     
     private func fallbackSuggestions() -> [String] {
-        Array(userSuggestionPool.prefix(3))
+        let fromPrediction = nextWordSuggestions(from: inlinePredictionText)
+        if !fromPrediction.isEmpty {
+            return fromPrediction
+        }
+        return Array(userSuggestionPool.prefix(3))
     }
     
     private func applySuggestion(_ suggestion: String) {
@@ -235,5 +241,28 @@ final class KeyboardInputViewModel: ObservableObject {
             return completions
         }
         return []
+    }
+
+    private func nextWordSuggestions(from prediction: String) -> [String] {
+        let trimmed = prediction.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
+        
+        let tokens = trimmed
+            .split(whereSeparator: { $0.isWhitespace })
+            .map { substring -> String in
+                substring
+                    .trimmingCharacters(in: .punctuationCharacters)
+            }
+            .filter { !$0.isEmpty }
+        
+        var uniqueWords: [String] = []
+        for token in tokens {
+            let lower = token.lowercased()
+            if !uniqueWords.contains(where: { $0.lowercased() == lower }) {
+                uniqueWords.append(token)
+            }
+            if uniqueWords.count == 3 { break }
+        }
+        return uniqueWords
     }
 }
