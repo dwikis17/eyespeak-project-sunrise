@@ -17,9 +17,10 @@ struct AACFaceTrackingView: UIViewRepresentable {
     @Binding var status: FaceStatus
     var onGesture: ((GestureType) -> Void)?
     var onEyesClosed: (() -> Void)? = nil
+    var eyesClosedDuration: CFTimeInterval = 3.0
 
     func makeCoordinator() -> Coordinator {
-        let coordinator = Coordinator(status: $status)
+        let coordinator = Coordinator(status: $status, eyesClosedDuration: eyesClosedDuration)
         coordinator.onGesture = onGesture
         coordinator.onEyesClosed = onEyesClosed
         return coordinator
@@ -28,6 +29,7 @@ struct AACFaceTrackingView: UIViewRepresentable {
     func makeUIView(context: Context) -> ARSCNView {
         let view = ARSCNView(frame: .zero)
         view.automaticallyUpdatesLighting = true
+        view.contentMode = .scaleAspectFill
         view.session.delegate = context.coordinator
         view.delegate = context.coordinator
         view.scene = SCNScene()
@@ -70,11 +72,12 @@ struct AACFaceTrackingView: UIViewRepresentable {
         private var directionLatch: FaceStatus.Direction = .center
         private var eyesClosedStartTime: CFAbsoluteTime?
         private var eyesClosedTriggered = false
-        private let eyesClosedDuration: CFTimeInterval = 2.0
+        private let eyesClosedDuration: CFTimeInterval
         var onEyesClosed: (() -> Void)?
 
-        init(status: Binding<FaceStatus>) {
+        init(status: Binding<FaceStatus>, eyesClosedDuration: CFTimeInterval) {
             self._status = status
+            self.eyesClosedDuration = eyesClosedDuration
         }
 
         private func playSound(for direction: FaceStatus.Direction) {

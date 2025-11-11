@@ -31,7 +31,7 @@ struct AACView: View {
             .padding(.horizontal)
         }
     
-        // 👇 inject into environment so child views can use @EnvironmentObject
+        // inject into environment so child views can use @EnvironmentObject
         .environmentObject(viewModel)
         .onAppear {
             // Wire up settings navigation callback
