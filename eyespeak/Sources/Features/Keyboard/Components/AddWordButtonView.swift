@@ -2,32 +2,24 @@ import SwiftUI
 
 struct AddWordButtonView: View {
     var body: some View {
-        let brandBlue = Color(red: 0.35, green: 0.42, blue: 0.62)
+        let buttonColor = Color.mellowBlue
 
         return VStack {
             HStack {
                 Spacer()
-                Capsule()
-                    .fill(Color.white)
-                    .frame(width: 58, height: 28)
-                    .overlay(
-                        HStack(spacing: 6) {
-                            Image(systemName: "arrow.up")
-                            Image(systemName: "arrow.right")
-                        }
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(brandBlue)
-                    )
+                ComboPill(
+                    firstGesture: .lookUp,
+                    secondGesture: .lookRight,
+                    foreground: buttonColor,
+                    background: .whiteWhite
+                )
             }
 
             Spacer()
 
             Text("ADD WORD TO\nBOARD")
-              .font(
-                Font.custom("Montserrat", size: 14)
-                  .weight(.bold)
-              )
-              .foregroundColor(.white)
+              .font(Typography.boldTitle)
+              .foregroundColor(.whiteWhite)
               .multilineTextAlignment(.leading)
               .lineLimit(nil)
               .fixedSize(horizontal: false, vertical: true)
@@ -35,7 +27,7 @@ struct AddWordButtonView: View {
         }
         .padding(16.67893)
         .frame(width: 203, height: 102, alignment: .center)
-        .background(brandBlue)
+        .background(buttonColor)
         .cornerRadius(22.23858)
     }
 }
@@ -45,4 +37,3 @@ struct AddWordButtonView: View {
         .padding()
         .previewLayout(.sizeThatFits)
 }
-

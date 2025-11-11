@@ -34,4 +34,7 @@ enum Typography {
     // Body (9pt)
     static let boldBody = AppFont.Montserrat.bold(9, relativeTo: .caption2)
     static let regularBody = AppFont.Montserrat.regular(9, relativeTo: .caption2)
+
+    // Keyboard
+    static let keyboardMedium = AppFont.Montserrat.medium(28, relativeTo: .title)
 }
