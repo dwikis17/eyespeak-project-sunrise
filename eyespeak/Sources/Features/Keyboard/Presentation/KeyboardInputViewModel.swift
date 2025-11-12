@@ -13,7 +13,6 @@ final class KeyboardInputViewModel: ObservableObject {
     private let quickTypeService = QuickTypePredictionService()
     private let soundPlayer: KeyboardSoundPlayer
     private let textChecker = UITextChecker()
-    private let defaultPredictiveWords = ["I", "You", "We"]
     private var userSuggestionPool: [String]
     private var quickTypeTask: Task<Void, Never>?
     private var sentenceTask: Task<Void, Never>?
@@ -139,7 +138,6 @@ final class KeyboardInputViewModel: ObservableObject {
         inlinePredictionText = ""
         soundPlayer.playModifier()
         refreshSuggestions()
-        learnFromCurrentText()
     }
     
     private func refreshSuggestions() {
@@ -152,8 +150,7 @@ final class KeyboardInputViewModel: ObservableObject {
         if isInMiddleOfWord(workingText) {
             let current = currentWord(from: workingText)
             let completions = wordCompletions(for: current)
-            let resolved = completions.isEmpty ? predictionFallbacks() : Array(completions.prefix(3))
-            suggestions = resolved
+            suggestions = Array(completions.prefix(3))
             inlinePredictionText = ""
             return
         }
@@ -163,15 +160,14 @@ final class KeyboardInputViewModel: ObservableObject {
             try? await Task.sleep(nanoseconds: 75_000_000) // ~75 ms debounce
             if Task.isCancelled { return }
             let predictions = await self.quickTypeService.predictions(for: workingText)
-            let fallback = self.predictionFallbacks()
-            let resolved = predictions.isEmpty ? fallback : Array(predictions.prefix(3))
             await MainActor.run {
-                self.suggestions = resolved
+                self.suggestions = Array(predictions.prefix(3))
             }
         }
         
         guard !trimmedText.isEmpty else {
             inlinePredictionText = ""
+            suggestions = []
             return
         }
         
@@ -180,7 +176,10 @@ final class KeyboardInputViewModel: ObservableObject {
             if self.predictionService.isModelAvailable {
                 await self.predictionService.generateSentencePredictions(for: workingText)
             } else {
-                await self.predictionService.generateFallbackPredictions(for: workingText)
+                await MainActor.run {
+                    self.inlinePredictionText = ""
+                }
+                return
             }
             if Task.isCancelled { return }
             await MainActor.run {
@@ -204,22 +203,6 @@ final class KeyboardInputViewModel: ObservableObject {
         }
         soundPlayer.playKey()
         refreshSuggestions()
-        learnFromCurrentText()
-    }
-    
-    private func learnFromCurrentText() {
-        let snapshot = typedText
-        guard !snapshot.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-        Task {
-            await quickTypeService.learn(from: snapshot)
-        }
-    }
-    
-    private func predictionFallbacks() -> [String] {
-        if userSuggestionPool.isEmpty {
-            return Array(defaultPredictiveWords.prefix(3))
-        }
-        return Array(userSuggestionPool.prefix(3))
     }
     
     private func removeCurrentWordIfNeeded() {

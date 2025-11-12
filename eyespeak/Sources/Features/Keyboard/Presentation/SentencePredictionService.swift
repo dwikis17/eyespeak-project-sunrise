@@ -154,16 +154,10 @@ class SentencePredictionService: ObservableObject {
         } catch {
             recordError()
             await logGuardrailFeedback(for: trimmed, error: error)
-            // Fall back to basic completions
-            let fallback = generateFallbackCompletions(for: trimmed)
-                .map { self.normalizeCompletion($0) }
-                .filter { !$0.isEmpty }
-            let primary = fallback.first ?? ""
-            let single = primary.isEmpty ? [] : [primary]
             await MainActor.run {
-                self.sentencePredictions = single
-                self.inlinePrediction = primary
-                self.debugInfo = "Fallback after error"
+                self.sentencePredictions = []
+                self.inlinePrediction = ""
+                self.debugInfo = "AI error"
             }
         }
         #else
@@ -172,129 +166,6 @@ class SentencePredictionService: ObservableObject {
             self.inlinePrediction = ""
         }
         #endif
-    }
-    
-    func generateFallbackPredictions(for text: String) async {
-        let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        let wordCount = trimmedText.components(separatedBy: .whitespacesAndNewlines)
-            .filter { !$0.isEmpty }.count
-        
-        // Show basic completions even for a single word to keep feedback visible
-        guard wordCount >= 1 else {
-            await MainActor.run {
-                self.sentencePredictions = []
-            }
-            return
-        }
-        
-        let completions = generateFallbackCompletions(for: trimmedText)
-            .map { normalizeCompletion($0) }
-            .filter { !$0.isEmpty }
-        let primary = completions.first ?? ""
-        let single = primary.isEmpty ? [] : [primary]
-        await MainActor.run {
-            self.sentencePredictions = single
-            self.inlinePrediction = primary
-        }
-    }
-    
-    private func generateFallbackCompletions(for text: String) -> [String] {
-        let lowercaseText = text.lowercased()
-        var completions: [String] = []
-        
-        if lowercaseText.contains("i love") {
-            completions = ["spending time with you", "hearing your stories", "sharing quiet evenings together"]
-        } else if lowercaseText.contains("i need to") {
-            completions = ["go home", "rest now", "call someone"]
-        } else if lowercaseText.contains("i want to") {
-            completions = ["eat something", "go outside", "sleep"]
-        } else if lowercaseText.contains("can you help") {
-            completions = ["me please", "me now", "me with this"]
-        } else if lowercaseText.contains("how are you") {
-            completions = ["feeling", "doing", "today"]
-        } else if lowercaseText.contains("what time") {
-            completions = ["is it", "should we go", "do we leave"]
-        } else if lowercaseText.contains("where are") {
-            completions = ["you going", "we meeting", "you now"]
-        } else if lowercaseText.contains("when will") {
-            completions = ["you be back", "this end", "we leave"]
-        } else if lowercaseText.contains("i feel") {
-            completions = ["better today", "very tired", "much better"]
-        } else if lowercaseText.contains("thank you") {
-            completions = ["so much", "very much", "for helping"]
-        } else if lowercaseText.contains("good morning") {
-            completions = ["everyone", "doctor", "to you"]
-        } else if lowercaseText.contains("see you") {
-            completions = ["later", "tomorrow", "soon"]
-        } else if lowercaseText.contains("have a") {
-            completions = ["good day", "nice time", "safe trip"]
-        } else if lowercaseText.contains("please help") {
-            completions = ["me", "me now", "me understand"]
-        } else if lowercaseText.contains("i would like") {
-            completions = ["some water", "to rest", "to go home"]
-        } else if lowercaseText.contains("could you") {
-            completions = ["help me", "come here", "call someone"]
-        } else if lowercaseText.contains("i am feeling") {
-            completions = ["better today", "very tired", "much better"]
-        } else if lowercaseText.contains("let me know") {
-            completions = ["when ready", "if possible", "the time"]
-        } else if lowercaseText.contains("the doctor") {
-            completions = ["said to rest", "will see me", "gave me medicine"]
-        } else if lowercaseText.contains("my medication") {
-            completions = ["helps me", "is working", "needs food"]
-        } else if lowercaseText.contains("i am going") {
-            completions = ["home now", "to rest", "to the doctor"]
-        } else if lowercaseText.contains("it is time") {
-            completions = ["to go", "to eat", "for medicine"]
-        } else if lowercaseText.hasSuffix("i need") {
-            completions = ["help", "water", "to rest"]
-        } else if lowercaseText.hasSuffix("i want") {
-            completions = ["some food", "to go home", "to rest"]
-        } else if lowercaseText.hasSuffix("i am") || lowercaseText.hasSuffix("i'm") {
-            completions = ["tired", "ready", "feeling better"]
-        } else if lowercaseText.hasSuffix("can you") {
-            completions = ["help me", "come here", "call"]
-        } else if lowercaseText.hasSuffix("how are") {
-            completions = ["you", "you feeling", "things"]
-        } else if lowercaseText.hasSuffix("thank") {
-            completions = ["you", "you so much", "you very much"]
-        } else if lowercaseText.hasSuffix("see you") {
-            completions = ["later", "soon", "tomorrow"]
-        } else if lowercaseText.hasSuffix("good") {
-            completions = ["morning", "afternoon", "evening"]
-        } else if lowercaseText.hasSuffix("have a") {
-            completions = ["good day", "nice time", "safe trip"]
-        } else if lowercaseText.hasSuffix("what") {
-            completions = ["time is it", "are you doing", "happened"]
-        } else if lowercaseText.hasSuffix("where") {
-            completions = ["are you", "is it", "should I go"]
-        } else if lowercaseText.hasSuffix("when") {
-            completions = ["will you return", "should we leave", "is dinner"]
-        } else if lowercaseText.hasSuffix("please") {
-            completions = ["help me", "come here", "wait"]
-        } else if lowercaseText.contains("feel") {
-            completions = ["better", "tired", "good"]
-        } else if lowercaseText.contains("time") {
-            completions = ["to go", "for food", "to rest"]
-        } else if lowercaseText.contains("help") {
-            completions = ["me please", "is needed", "would be nice"]
-        } else if lowercaseText.contains("water") {
-            completions = ["please", "and food", "is needed"]
-        } else if lowercaseText.contains("food") {
-            completions = ["please", "and water", "would be good"]
-        } else {
-            if lowercaseText.contains("i") {
-                completions = ["need help", "am tired", "feel better"]
-            } else if lowercaseText.contains("you") {
-                completions = ["can help", "are kind", "should know"]
-            } else if lowercaseText.contains("we") {
-                completions = ["should go", "can do this", "are ready"]
-            } else {
-                completions = ["please", "thank you", "yes"]
-            }
-        }
-        
-        return Array(completions.prefix(3))
     }
     
     private func normalizeCompletion(_ text: String) -> String {
