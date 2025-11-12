@@ -65,7 +65,7 @@ private struct MainContentView: View {
                     case .aac:
                         CardGridView()
                             .frame(
-                                width: geo.size.width * 0.75,
+                                width: geo.size.width * 0.73,
                                 height: geo.size.height
                             )
 
