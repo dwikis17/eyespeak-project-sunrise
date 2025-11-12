@@ -82,12 +82,22 @@ extension ModelContainer {
         let navNext = settings.navNextCombo
         let navPrev = settings.navPrevCombo
         let settingsCombo = settings.settingsCombo
-        guard navNext != nil || navPrev != nil || settingsCombo != nil else { return }
+        let editLayoutCombo = settings.editLayoutCombo
+        let swapCombo = settings.swapCombo
+        let deleteCombo = settings.deleteCombo
+        let decrementTimerCombo = settings.decrementTimerCombo
+        let incrementTimerCombo = settings.incrementTimerCombo
+        guard navNext != nil || navPrev != nil || settingsCombo != nil || editLayoutCombo != nil || swapCombo != nil || deleteCombo != nil || decrementTimerCombo != nil || incrementTimerCombo != nil else { return }
 
         func isNavCombo(_ c: ActionCombo) -> Bool {
             if let n = navNext, c.firstGesture == n.0 && c.secondGesture == n.1 { return true }
             if let p = navPrev, c.firstGesture == p.0 && c.secondGesture == p.1 { return true }
             if let s = settingsCombo, c.firstGesture == s.0 && c.secondGesture == s.1 { return true }
+            if let e = editLayoutCombo, c.firstGesture == e.0 && c.secondGesture == e.1 { return true }
+            if let sw = swapCombo, c.firstGesture == sw.0 && c.secondGesture == sw.1 { return true }
+            if let d = deleteCombo, c.firstGesture == d.0 && c.secondGesture == d.1 { return true }
+            if let dt = decrementTimerCombo, c.firstGesture == dt.0 && c.secondGesture == dt.1 { return true }
+            if let it = incrementTimerCombo, c.firstGesture == it.0 && c.secondGesture == it.1 { return true }
             return false
         }
 

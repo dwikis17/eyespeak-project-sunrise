@@ -41,6 +41,8 @@ extension Color {
 
     /// Blueack - #363636
     static let blueack = Color(hex: "#363636")!
+    
+    static let customGray = Color(hex:"#EBEBEB" )!
 
     // MARK: - Legacy Support
 
@@ -75,6 +77,7 @@ public enum CustomColor: String {
     case placeholder = "#ACACAC"
     case blueholder = "#DDE1EC"
     case blueack = "#363636"
+  
 
     var color: Color {
         Color(hex: rawValue) ?? .clear

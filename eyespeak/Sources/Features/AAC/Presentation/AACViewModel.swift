@@ -44,7 +44,14 @@ public final class AACViewModel: ObservableObject {
     public var recentCombos: [(GestureType, GestureType)] = []
     
     // Current active menu/tab
-    public var currentMenu: Tab = .aac
+    public var currentMenu: Tab = .settings
+    
+    // Edit mode for AAC grid
+    public var isEditMode = false
+    
+    // Swap mode state
+    public var isSwapMode = false
+    public var firstSwapPosition: GridPosition?
     
     // Menu-specific combo storage (for Settings and Keyboard menus)
     // Key: menu name ("settings", "keyboard"), Value: Dictionary of combo -> action ID
@@ -55,6 +62,7 @@ public final class AACViewModel: ObservableObject {
     
     // Callback to navigate to AAC (needs to be set by parent view)
     public var onNavigateToAAC: (() -> Void)?
+
     
     // Callback for menu-specific combo matches (Settings, Keyboard)
     public var onMenuComboMatched: ((String, ActionCombo, Int) -> Void)?
@@ -133,6 +141,29 @@ public final class AACViewModel: ObservableObject {
                     }
                     return
                 }
+
+                if let decrementTimerCombo = self.settings.decrementTimerCombo,
+                   combo.firstGesture == decrementTimerCombo.0 && combo.secondGesture == decrementTimerCombo.1 {
+                    print("✨ Decrement Timer combo matched in \(menuName) menu")
+                    self.settings.timerSpeed = max(0.5, self.settings.timerSpeed - 1.0)
+                    return
+                }
+
+                if let incrementTimerCombo = self.settings.incrementTimerCombo,
+                   combo.firstGesture == incrementTimerCombo.0 && combo.secondGesture == incrementTimerCombo.1 {
+                    print("✨ Increment Timer combo matched in \(menuName) menu")
+                    self.settings.timerSpeed = min(5.0, self.settings.timerSpeed + 1.0)
+                    return
+                }
+
+                if let editLayoutCombo = self.settings.editLayoutCombo,
+                   combo.firstGesture == editLayoutCombo.0 && combo.secondGesture == editLayoutCombo.1 {
+                    print("✨ Edit Layout combo matched in \(menuName) menu")
+                    self.toggleEditMode()
+                    onNavigateToAAC?()
+                    
+                    return
+                }
                 
                 // Find the combo in menuCombos by matching the gesture pattern
                 if let menuComboMap = self.menuCombos[menuName] {
@@ -187,6 +218,27 @@ public final class AACViewModel: ObservableObject {
             }
             // Always set settings combo regardless of page count
             gestureInputManager.setSettingsCombo(settings.settingsCombo)
+            // Set timing window from settings
+            gestureInputManager.setTimingWindow(settings.timerSpeed)
+            // Set timer combos (always available)
+            gestureInputManager.setDecrementTimerCombo(settings.decrementTimerCombo)
+            gestureInputManager.setIncrementTimerCombo(settings.incrementTimerCombo)
+            print("settings.editLayoutCombo: \(settings.editLayoutCombo)")
+            // Only set edit layout combo as priority when in edit mode or Settings menu
+            // Otherwise, let it be used normally for card activation
+            // if isEditMode || currentMenu == .settings {
+            //     gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
+            // } else {
+            //     gestureInputManager.setEditLayoutCombo(nil)
+            // }
+            // Set swap combo when in edit mode
+            if isEditMode {
+                gestureInputManager.setSwapCombo(settings.swapCombo)
+                gestureInputManager.setChangeColorCombo(settings.changeColorCombo)
+            } else {
+                gestureInputManager.setChangeColorCombo(nil)
+                gestureInputManager.setSwapCombo(nil)
+            }
             // Always sanitize conflicts if nav combos are configured (even with 1 page)
             sanitizeNavigationComboConflicts()
             gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
@@ -210,6 +262,24 @@ public final class AACViewModel: ObservableObject {
                 }
                 // Always set settings combo regardless of page count
                 gestureInputManager.setSettingsCombo(settings.settingsCombo)
+                // Set timing window from settings
+                gestureInputManager.setTimingWindow(settings.timerSpeed)
+                // Only set edit layout combo as priority when in edit mode or Settings menu
+                // if isEditMode || currentMenu == .settings {
+                //     gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
+                // } else {
+                //     gestureInputManager.setEditLayoutCombo(nil)
+                // }
+                // Set swap and delete combos when in edit mode
+                if isEditMode {
+                    gestureInputManager.setSwapCombo(settings.swapCombo)
+                    gestureInputManager.setDeleteCombo(settings.deleteCombo)
+                    gestureInputManager.setChangeColorCombo(settings.changeColorCombo)
+                } else {
+                    gestureInputManager.setSwapCombo(nil)
+                    gestureInputManager.setDeleteCombo(nil)
+                    gestureInputManager.setChangeColorCombo(nil)
+                }
                 // Always sanitize conflicts if nav combos are configured (even with 1 page)
                 sanitizeNavigationComboConflicts()
                 gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
@@ -259,6 +329,139 @@ public final class AACViewModel: ObservableObject {
             endCalibration()
         } else {
             beginCalibration()
+        }
+    }
+    
+    // MARK: - Edit Mode Methods
+    
+    public func performSwapAction() {
+        // Enter swap mode: lock AAC and wait for second selection
+        print("🔄 Swap mode activated - waiting for second card selection")
+        if let selectedPosition = selectedPosition {
+            withAnimation {
+                isSwapMode = true
+                firstSwapPosition = selectedPosition
+            }
+            print("First position selected: \(selectedPosition.order)")
+        } else {
+            print("⚠️ No position selected for swap")
+        }
+    }
+    
+    private func performSwap(first: GridPosition, second: GridPosition) {
+        print("🔄 Swapping cards between positions \(first.order) and \(second.order)")
+        
+        // Swap the cards
+        let firstCard = first.card
+        let secondCard = second.card
+        
+        first.card = secondCard
+        second.card = firstCard
+        
+        // Save changes
+        try? modelContext.save()
+        
+        // Exit swap mode
+        withAnimation {
+            isSwapMode = false
+            firstSwapPosition = nil
+            selectedPosition = second // Highlight the second position after swap
+        }
+        
+        print("✅ Swap completed")
+        toggleEditMode()
+        
+        // Reset selection after a delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            withAnimation {
+                self?.selectedPosition = nil
+            }
+        }
+    }
+    
+    public func cancelSwapMode() {
+        withAnimation {
+            isSwapMode = false
+            firstSwapPosition = nil
+        }
+        print("❌ Swap mode cancelled")
+    }
+    
+    public func performDeleteAction() {
+        // Delete the selected card
+        print("🗑️ Delete action triggered")
+        if let position = selectedPosition,
+           let card = position.card {
+            // Remove card from position
+            position.card = nil
+            // Delete the card from database
+            deleteCard(card)
+            // Clear selection
+            withAnimation {
+                selectedPosition = nil
+            }
+            print("✅ Card deleted: \(card.title)")
+            self.toggleEditMode()
+            resizeGrid(newTotal: positions.count)
+        } else {
+            print("⚠️ No card selected for deletion")
+        }
+    }
+
+    public func performChangeColorAction() {
+        // Change the color of the selected card
+        print("🎨 Change color action triggered")
+        let colors: [Color] = [.energeticOrange, .oldHulkGreen, .mellowBlue, .widowPurple, .charmingYellow]
+        let colorHexes: [String] = ["#FE773C", "#2FA553", "#586C9D", "#AD6AE3", "#F6CA33"]
+
+        if let position = selectedPosition,
+           let card = position.card {
+            let currentColor = card.color
+            var currentIndex = colors.firstIndex(of: currentColor)
+            if currentIndex == nil {
+                currentIndex = 0
+            }
+            let nextIndex = (currentIndex! + 1) % colors.count
+            let nextColorHex = colorHexes[nextIndex]
+            card.colorHex = nextColorHex
+            // Save the changes
+            try? modelContext.save()
+            
+            withAnimation {
+                selectedPosition = nil
+            }
+            self.toggleEditMode()
+        }
+    }
+    
+    public func toggleEditMode() {
+        withAnimation {
+            isEditMode.toggle()
+            // Update editLayoutCombo priority when edit mode changes
+            if isGestureMode {
+                if isEditMode {
+                    // When entering edit mode, set editLayoutCombo as priority (to allow exit)
+                    gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
+                    // Set swap and delete combos when entering edit mode
+                    gestureInputManager.setSwapCombo(settings.swapCombo)
+                    gestureInputManager.setDeleteCombo(settings.deleteCombo)
+                    gestureInputManager.setChangeColorCombo(settings.changeColorCombo)
+                } else {
+                    // When exiting edit mode, remove priority so combo can be used normally
+                    gestureInputManager.setEditLayoutCombo(nil)
+                    // Remove swap and delete combos when exiting edit mode
+                    gestureInputManager.setSwapCombo(nil)
+                    gestureInputManager.setDeleteCombo(nil)
+                    gestureInputManager.setChangeColorCombo(nil)
+                    // Clear selection and swap mode when exiting edit mode
+                    selectedPosition = nil
+                    cancelSwapMode()
+                }
+                // Reload combos to reflect the change
+                if currentMenu == .aac {
+                    gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
+                }
+            }
         }
     }
     
@@ -339,21 +542,51 @@ public final class AACViewModel: ObservableObject {
         print("🎯 Combo matched: \(combo.name) at position \(position.order)")
         recordRecentCombo(combo)
         
+        // Check if we're in swap mode
+        if isSwapMode, let firstPosition = firstSwapPosition {
+            // This is the second selection for swap
+            if firstPosition.id == position.id {
+                // Same position selected - cancel swap mode
+                cancelSwapMode()
+                return
+            }
+            
+            // Perform the swap
+            performSwap(first: firstPosition, second: position)
+            return
+        }
+        
         // Highlight the matched position
         withAnimation {
             selectedPosition = position
         }
         
-        // Trigger card action
-        if let card = position.card {
-            incrementCardUsage(card)
-            speak(text: card.title)
+        // In edit mode, don't trigger card action and keep selection persistent
+        // But allow swap mode to work
+        if isEditMode && !isSwapMode {
+            // Selection persists in edit mode for editing actions
+            return
         }
         
-        // Reset highlight after delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            withAnimation {
-                self?.selectedPosition = nil
+        // If in swap mode but no first position, enter swap mode with this position
+        if isSwapMode && firstSwapPosition == nil {
+            firstSwapPosition = position
+            return
+        }
+        
+        // Trigger card action (only when not in edit mode or swap mode)
+        if !isEditMode && !isSwapMode {
+            if let card = position.card {
+                incrementCardUsage(card)
+                speak(text: card.title)
+            }
+            
+            // Reset highlight after delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                guard let self = self else { return }
+                withAnimation {
+                    self.selectedPosition = nil
+                }
             }
         }
     }
@@ -373,6 +606,40 @@ public final class AACViewModel: ObservableObject {
                 onNavigateToAAC?()
             }
             return 
+        }
+        if slotIndex == -4 {
+            // Edit Layout combo - toggle edit mode
+            // This only triggers when priority is set (Settings menu or when already in edit mode)
+            recordRecentCombo(combo)
+            if currentMenu == .settings {
+                print("toggleEditMode")
+                toggleEditMode()
+            }
+            return
+        }
+        if slotIndex == -5 {
+            // Swap combo - perform swap action in edit mode
+            recordRecentCombo(combo)
+            if isEditMode {
+                performSwapAction()
+            }
+            return
+        }
+        if slotIndex == -6 {
+            // Delete combo - perform delete action in edit mode
+            recordRecentCombo(combo)
+            if isEditMode {
+                performDeleteAction()
+            }
+            return
+        }
+        
+        if slotIndex == -9 {
+            if isEditMode {
+               performChangeColorAction()
+            }
+            
+            return
         }
 
         let index = currentPage * pageSize + slotIndex
@@ -459,8 +726,29 @@ public final class AACViewModel: ObservableObject {
             } else {
                 gestureInputManager.setNavigationCombos(prev: nil, next: nil)
             }
-            // Always set settings combo regardless of page count
-            gestureInputManager.setSettingsCombo(settings.settingsCombo)
+                // Always set settings combo regardless of page count
+                gestureInputManager.setSettingsCombo(settings.settingsCombo)
+                // Set timing window from settings
+                gestureInputManager.setTimingWindow(settings.timerSpeed)
+                // Set timer combos (always available)
+                gestureInputManager.setDecrementTimerCombo(settings.decrementTimerCombo)
+                gestureInputManager.setIncrementTimerCombo(settings.incrementTimerCombo)
+                // Only set edit layout combo as priority when in edit mode or Settings menu
+            if isEditMode || currentMenu == .settings {
+                gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
+            } else {
+                gestureInputManager.setEditLayoutCombo(nil)
+            }
+            // Set swap and delete combos when in edit mode
+            if isEditMode {
+                gestureInputManager.setSwapCombo(settings.swapCombo)
+                gestureInputManager.setDeleteCombo(settings.deleteCombo)
+                gestureInputManager.setChangeColorCombo(settings.changeColorCombo)
+            } else {
+                gestureInputManager.setSwapCombo(nil)
+                gestureInputManager.setDeleteCombo(nil)
+                gestureInputManager.setChangeColorCombo(nil)
+            }
             // Always sanitize conflicts if nav combos are configured (even with 1 page)
             sanitizeNavigationComboConflicts()
             gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
@@ -476,13 +764,25 @@ public final class AACViewModel: ObservableObject {
         let navNext = settings.navNextCombo
         let navPrev = settings.navPrevCombo
         let settingsCombo = settings.settingsCombo
+        let editLayoutCombo = settings.editLayoutCombo
+        let swapCombo = settings.swapCombo
+        let changeColorCombo = settings.changeColorCombo
+        let deleteCombo = settings.deleteCombo
+        let decrementTimerCombo = settings.decrementTimerCombo
+        let incrementTimerCombo = settings.incrementTimerCombo
         // Only sanitize if priority combos are actually configured
-        guard navNext != nil || navPrev != nil || settingsCombo != nil else { return }
+        guard navNext != nil || navPrev != nil || settingsCombo != nil || editLayoutCombo != nil || swapCombo != nil || deleteCombo != nil || decrementTimerCombo != nil || incrementTimerCombo != nil || changeColorCombo != nil else { return }
 
         func isNavCombo(_ c: ActionCombo) -> Bool {
             if let n = navNext, c.firstGesture == n.0 && c.secondGesture == n.1 { return true }
             if let p = navPrev, c.firstGesture == p.0 && c.secondGesture == p.1 { return true }
             if let s = settingsCombo, c.firstGesture == s.0 && c.secondGesture == s.1 { return true }
+            if let e = editLayoutCombo, c.firstGesture == e.0 && c.secondGesture == e.1 { return true }
+            if let sw = swapCombo, c.firstGesture == sw.0 && c.secondGesture == sw.1 { return true }
+            if let d = deleteCombo, c.firstGesture == d.0 && c.secondGesture == d.1 { return true }
+            if let dt = decrementTimerCombo, c.firstGesture == dt.0 && c.secondGesture == dt.1 { return true }  
+            if let it = incrementTimerCombo, c.firstGesture == it.0 && c.secondGesture == it.1 { return true }
+            if let cc = changeColorCombo, c.firstGesture == cc.0 && c.secondGesture == cc.1 { return true }
             return false
         }
 
@@ -608,6 +908,28 @@ public final class AACViewModel: ObservableObject {
                 gestureInputManager.setNavigationCombos(prev: nil, next: nil)
             }
             gestureInputManager.setSettingsCombo(settings.settingsCombo)
+            // Set timing window from settings
+            gestureInputManager.setTimingWindow(settings.timerSpeed)
+            // Set timer combos (always available)
+            gestureInputManager.setDecrementTimerCombo(settings.decrementTimerCombo)
+            gestureInputManager.setIncrementTimerCombo(settings.incrementTimerCombo)
+            // Only set editLayoutCombo as priority when in edit mode (to allow exit)
+            // Otherwise, let it be used normally for card activation
+            if isEditMode {
+                gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
+            } else {
+                gestureInputManager.setEditLayoutCombo(nil)
+            }
+            // Set swap and delete combos when in edit mode
+            if isEditMode {
+                gestureInputManager.setSwapCombo(settings.swapCombo)
+                gestureInputManager.setDeleteCombo(settings.deleteCombo)
+                gestureInputManager.setChangeColorCombo(settings.changeColorCombo)
+            } else {
+                gestureInputManager.setSwapCombo(nil)
+                gestureInputManager.setDeleteCombo(nil)
+                gestureInputManager.setChangeColorCombo(nil)
+            }
             // Use the actual positions from the database - this is a computed property that fetches fresh
             gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
             
@@ -621,6 +943,13 @@ public final class AACViewModel: ObservableObject {
             // that might interfere with the database
             gestureInputManager.setNavigationCombos(prev: nil, next: nil)
             gestureInputManager.setSettingsCombo(settings.settingsCombo)
+            // Set timing window from settings
+            gestureInputManager.setTimingWindow(settings.timerSpeed)
+            // Set timer combos (always available)
+            gestureInputManager.setDecrementTimerCombo(settings.decrementTimerCombo)
+            gestureInputManager.setIncrementTimerCombo(settings.incrementTimerCombo)
+            // In Settings menu, always allow editLayoutCombo to work
+            gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
             
             // Load menu combos directly without creating temporary positions
             gestureInputManager.loadMenuCombos(menuComboMap)

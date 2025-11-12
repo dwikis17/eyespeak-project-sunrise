@@ -25,6 +25,12 @@ public class UserSettings {
     @AppStorage("navNextCombo") private var navNextRaw: String?
     @AppStorage("navPrevCombo") private var navPrevRaw: String?
     @AppStorage("settingsCombo") private var settingsComboRaw: String?
+    @AppStorage("editLayoutCombo") private var editLayoutComboRaw: String?
+    @AppStorage("swapCombo") private var swapComboRaw: String?
+    @AppStorage("changeColorCombo") private var changeColorComboRaw: String?
+    @AppStorage("deleteCombo") private var deleteComboRaw: String?
+    @AppStorage("decrementTimerCombo") private var decrementTimerComboRaw: String?
+    @AppStorage("incrementTimerCombo") private var incrementTimerComboRaw: String?
 
     @AppStorage("comboInputSettings") private var comboInputSettingsData: Data?
 
@@ -53,6 +59,30 @@ public class UserSettings {
         get { decodePair(settingsComboRaw) }
         set { settingsComboRaw = encodePair(newValue) }
     }
+    var editLayoutCombo: (GestureType, GestureType)? {
+        get { decodePair(editLayoutComboRaw) }
+        set { editLayoutComboRaw = encodePair(newValue) }
+    }
+    var swapCombo: (GestureType, GestureType)? {
+        get { decodePair(swapComboRaw) }
+        set { swapComboRaw = encodePair(newValue) }
+    }
+    var changeColorCombo: (GestureType, GestureType)? {
+        get { decodePair(changeColorComboRaw) }
+        set { changeColorComboRaw = encodePair(newValue) }
+    }
+    var deleteCombo: (GestureType, GestureType)? {
+        get { decodePair(deleteComboRaw) }
+        set { deleteComboRaw = encodePair(newValue) }
+    }
+    var decrementTimerCombo: (GestureType, GestureType)? {
+        get { decodePair(decrementTimerComboRaw) }
+        set { decrementTimerComboRaw = encodePair(newValue) }
+    }
+    var incrementTimerCombo: (GestureType, GestureType)? {
+        get { decodePair(incrementTimerComboRaw) }
+        set { incrementTimerComboRaw = encodePair(newValue) }
+    }
 
     private func encodePair(_ pair: (GestureType, GestureType)?) -> String? {
         guard let pair else { return nil }
@@ -67,4 +97,3 @@ public class UserSettings {
         return (g1, g2)
     }
 }
-

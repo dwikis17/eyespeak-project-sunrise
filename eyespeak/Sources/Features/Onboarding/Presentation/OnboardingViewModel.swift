@@ -128,7 +128,6 @@ public final class OnboardingViewModel {
         let selected = Set(enabled.map { $0.gestureType })
         let supportedSelected: [GestureType] = Array(selected)
         
-        print(supportedSelected, "SUPPORTED_SELECTED")
 
         guard !supportedSelected.isEmpty else { return }
 
@@ -211,12 +210,184 @@ public final class OnboardingViewModel {
         }
         settings.settingsCombo = settingsCombo
 
-        // Build assignment order, excluding priority combos (nav and settings)
+        // Assign edit layout combo (priority 4) - use next available combo that's not nav or settings
+        var editLayoutCombo: (GestureType, GestureType)?
+        for combo in combos {
+            let isNavNext = navNext != nil && combo.firstGesture == navNext!.0 && combo.secondGesture == navNext!.1
+            let isNavPrev = navPrev != nil && combo.firstGesture == navPrev!.0 && combo.secondGesture == navPrev!.1
+            let isSettings = settingsCombo != nil && combo.firstGesture == settingsCombo!.0 && combo.secondGesture == settingsCombo!.1
+            if !isNavNext && !isNavPrev && !isSettings {
+                editLayoutCombo = (combo.firstGesture, combo.secondGesture)
+                break
+            }
+        }
+        // Fallback: if no combo found, use first combo that's not nav or settings
+        if editLayoutCombo == nil {
+            if let firstNonPriority = combos.first(where: { c in
+                let isNavNext = navNext != nil && c.firstGesture == navNext!.0 && c.secondGesture == navNext!.1
+                let isNavPrev = navPrev != nil && c.firstGesture == navPrev!.0 && c.secondGesture == navPrev!.1
+                let isSettings = settingsCombo != nil && c.firstGesture == settingsCombo!.0 && c.secondGesture == settingsCombo!.1
+                return !isNavNext && !isNavPrev && !isSettings
+            }) {
+                editLayoutCombo = (firstNonPriority.firstGesture, firstNonPriority.secondGesture)
+            }
+        }
+        settings.editLayoutCombo = editLayoutCombo
+
+        // Assign swap combo (priority 5) - use next available combo that's not nav, settings, or edit layout
+        var swapCombo: (GestureType, GestureType)?
+        for combo in combos {
+            let isNavNext = navNext != nil && combo.firstGesture == navNext!.0 && combo.secondGesture == navNext!.1
+            let isNavPrev = navPrev != nil && combo.firstGesture == navPrev!.0 && combo.secondGesture == navPrev!.1
+            let isSettings = settingsCombo != nil && combo.firstGesture == settingsCombo!.0 && combo.secondGesture == settingsCombo!.1
+            let isEditLayout = editLayoutCombo != nil && combo.firstGesture == editLayoutCombo!.0 && combo.secondGesture == editLayoutCombo!.1
+            if !isNavNext && !isNavPrev && !isSettings && !isEditLayout {
+                swapCombo = (combo.firstGesture, combo.secondGesture)
+                break
+            }
+        }
+        // Fallback: if no combo found, use first combo that's not nav, settings, or edit layout
+        if swapCombo == nil {
+            if let firstNonPriority = combos.first(where: { c in
+                let isNavNext = navNext != nil && c.firstGesture == navNext!.0 && c.secondGesture == navNext!.1
+                let isNavPrev = navPrev != nil && c.firstGesture == navPrev!.0 && c.secondGesture == navPrev!.1
+                let isSettings = settingsCombo != nil && c.firstGesture == settingsCombo!.0 && c.secondGesture == settingsCombo!.1
+                let isEditLayout = editLayoutCombo != nil && c.firstGesture == editLayoutCombo!.0 && c.secondGesture == editLayoutCombo!.1
+                return !isNavNext && !isNavPrev && !isSettings && !isEditLayout
+            }) {
+                swapCombo = (firstNonPriority.firstGesture, firstNonPriority.secondGesture)
+            }
+        }
+        settings.swapCombo = swapCombo
+
+        // Assign delete combo (priority 6) - use next available combo that's not nav, settings, edit layout, or swap
+        var deleteCombo: (GestureType, GestureType)?
+        for combo in combos {
+            let isNavNext = navNext != nil && combo.firstGesture == navNext!.0 && combo.secondGesture == navNext!.1
+            let isNavPrev = navPrev != nil && combo.firstGesture == navPrev!.0 && combo.secondGesture == navPrev!.1
+            let isSettings = settingsCombo != nil && combo.firstGesture == settingsCombo!.0 && combo.secondGesture == settingsCombo!.1
+            let isEditLayout = editLayoutCombo != nil && combo.firstGesture == editLayoutCombo!.0 && combo.secondGesture == editLayoutCombo!.1
+            let isSwap = swapCombo != nil && combo.firstGesture == swapCombo!.0 && combo.secondGesture == swapCombo!.1
+            if !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap {
+                deleteCombo = (combo.firstGesture, combo.secondGesture)
+                break
+            }
+        }
+        // Fallback: if no combo found, use first combo that's not nav, settings, edit layout, or swap
+        if deleteCombo == nil {
+            if let firstNonPriority = combos.first(where: { c in
+                let isNavNext = navNext != nil && c.firstGesture == navNext!.0 && c.secondGesture == navNext!.1
+                let isNavPrev = navPrev != nil && c.firstGesture == navPrev!.0 && c.secondGesture == navPrev!.1
+                let isSettings = settingsCombo != nil && c.firstGesture == settingsCombo!.0 && c.secondGesture == settingsCombo!.1
+                let isEditLayout = editLayoutCombo != nil && c.firstGesture == editLayoutCombo!.0 && c.secondGesture == editLayoutCombo!.1
+                let isSwap = swapCombo != nil && c.firstGesture == swapCombo!.0 && c.secondGesture == swapCombo!.1
+                return !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap
+            }) {
+                deleteCombo = (firstNonPriority.firstGesture, firstNonPriority.secondGesture)
+            }
+        }
+        settings.deleteCombo = deleteCombo
+
+        // Assign decrement timer combo (priority 7) - use next available combo that's not nav, settings, edit layout, swap, or delete
+        var decrementTimerCombo: (GestureType, GestureType)?
+        for combo in combos {
+            let isNavNext = navNext != nil && combo.firstGesture == navNext!.0 && combo.secondGesture == navNext!.1
+            let isNavPrev = navPrev != nil && combo.firstGesture == navPrev!.0 && combo.secondGesture == navPrev!.1
+            let isSettings = settingsCombo != nil && combo.firstGesture == settingsCombo!.0 && combo.secondGesture == settingsCombo!.1
+            let isEditLayout = editLayoutCombo != nil && combo.firstGesture == editLayoutCombo!.0 && combo.secondGesture == editLayoutCombo!.1
+            let isSwap = swapCombo != nil && combo.firstGesture == swapCombo!.0 && combo.secondGesture == swapCombo!.1
+            let isDelete = deleteCombo != nil && combo.firstGesture == deleteCombo!.0 && combo.secondGesture == deleteCombo!.1
+            if !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete {
+                decrementTimerCombo = (combo.firstGesture, combo.secondGesture)
+                break
+            }
+        }
+        // Fallback: if no combo found, use first combo that's not nav, settings, edit layout, swap, or delete
+        if decrementTimerCombo == nil {
+            if let firstNonPriority = combos.first(where: { c in
+                let isNavNext = navNext != nil && c.firstGesture == navNext!.0 && c.secondGesture == navNext!.1
+                let isNavPrev = navPrev != nil && c.firstGesture == navPrev!.0 && c.secondGesture == navPrev!.1
+                let isSettings = settingsCombo != nil && c.firstGesture == settingsCombo!.0 && c.secondGesture == settingsCombo!.1
+                let isEditLayout = editLayoutCombo != nil && c.firstGesture == editLayoutCombo!.0 && c.secondGesture == editLayoutCombo!.1
+                let isSwap = swapCombo != nil && c.firstGesture == swapCombo!.0 && c.secondGesture == swapCombo!.1
+                let isDelete = deleteCombo != nil && c.firstGesture == deleteCombo!.0 && c.secondGesture == deleteCombo!.1
+                return !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete
+            }) {
+                decrementTimerCombo = (firstNonPriority.firstGesture, firstNonPriority.secondGesture)
+            }
+        }
+        settings.decrementTimerCombo = decrementTimerCombo
+
+        // Assign increment timer combo (priority 8) - use next available combo that's not nav, settings, edit layout, swap, delete, or decrement timer
+        var incrementTimerCombo: (GestureType, GestureType)?
+        for combo in combos {
+            let isNavNext = navNext != nil && combo.firstGesture == navNext!.0 && combo.secondGesture == navNext!.1
+            let isNavPrev = navPrev != nil && combo.firstGesture == navPrev!.0 && combo.secondGesture == navPrev!.1
+            let isSettings = settingsCombo != nil && combo.firstGesture == settingsCombo!.0 && combo.secondGesture == settingsCombo!.1
+            let isEditLayout = editLayoutCombo != nil && combo.firstGesture == editLayoutCombo!.0 && combo.secondGesture == editLayoutCombo!.1
+            let isSwap = swapCombo != nil && combo.firstGesture == swapCombo!.0 && combo.secondGesture == swapCombo!.1
+            let isDelete = deleteCombo != nil && combo.firstGesture == deleteCombo!.0 && combo.secondGesture == deleteCombo!.1
+            let isDecrementTimer = decrementTimerCombo != nil && combo.firstGesture == decrementTimerCombo!.0 && combo.secondGesture == decrementTimerCombo!.1
+            if !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isDecrementTimer {
+                incrementTimerCombo = (combo.firstGesture, combo.secondGesture)
+                break
+            }
+        }
+        // Fallback: if no combo found, use first combo that's not nav, settings, edit layout, swap, delete, or decrement timer
+        if incrementTimerCombo == nil {
+            if let firstNonPriority = combos.first(where: { c in
+                let isNavNext = navNext != nil && c.firstGesture == navNext!.0 && c.secondGesture == navNext!.1
+                let isNavPrev = navPrev != nil && c.firstGesture == navPrev!.0 && c.secondGesture == navPrev!.1
+                let isSettings = settingsCombo != nil && c.firstGesture == settingsCombo!.0 && c.secondGesture == settingsCombo!.1
+                let isEditLayout = editLayoutCombo != nil && c.firstGesture == editLayoutCombo!.0 && c.secondGesture == editLayoutCombo!.1
+                let isSwap = swapCombo != nil && c.firstGesture == swapCombo!.0 && c.secondGesture == swapCombo!.1
+                let isDelete = deleteCombo != nil && c.firstGesture == deleteCombo!.0 && c.secondGesture == deleteCombo!.1
+                let isDecrementTimer = decrementTimerCombo != nil && c.firstGesture == decrementTimerCombo!.0 && c.secondGesture == decrementTimerCombo!.1
+                return !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isDecrementTimer
+            }) {
+                incrementTimerCombo = (firstNonPriority.firstGesture, firstNonPriority.secondGesture)
+            }
+        }
+        settings.incrementTimerCombo = incrementTimerCombo
+
+        // Assign change color combo (priority 9) - use next available combo that's not nav, settings, edit layout, swap, delete, decrement timer, increment timer
+        var changeColorCombo: (GestureType, GestureType)?
+        for combo in combos {
+            let isNavNext = navNext != nil && combo.firstGesture == navNext!.0 && combo.secondGesture == navNext!.1
+            let isNavPrev = navPrev != nil && combo.firstGesture == navPrev!.0 && combo.secondGesture == navPrev!.1
+            let isSettings = settingsCombo != nil && combo.firstGesture == settingsCombo!.0 && combo.secondGesture == settingsCombo!.1
+            let isEditLayout = editLayoutCombo != nil && combo.firstGesture == editLayoutCombo!.0 && combo.secondGesture == editLayoutCombo!.1
+        }
+        // Fallback: if no combo found, use first combo that's not nav, settings, edit layout, swap, delete, decrement timer, increment timer
+        if changeColorCombo == nil {
+            if let firstNonPriority = combos.first(where: { c in
+                let isNavNext = navNext != nil && c.firstGesture == navNext!.0 && c.secondGesture == navNext!.1
+                let isNavPrev = navPrev != nil && c.firstGesture == navPrev!.0 && c.secondGesture == navPrev!.1
+                let isSettings = settingsCombo != nil && c.firstGesture == settingsCombo!.0 && c.secondGesture == settingsCombo!.1
+                let isEditLayout = editLayoutCombo != nil && c.firstGesture == editLayoutCombo!.0 && c.secondGesture == editLayoutCombo!.1
+                let isSwap = swapCombo != nil && c.firstGesture == swapCombo!.0 && c.secondGesture == swapCombo!.1
+                let isDelete = deleteCombo != nil && c.firstGesture == deleteCombo!.0 && c.secondGesture == deleteCombo!.1
+                let isDecrementTimer = decrementTimerCombo != nil && c.firstGesture == decrementTimerCombo!.0 && c.secondGesture == decrementTimerCombo!.1
+                let isIncrementTimer = incrementTimerCombo != nil && c.firstGesture == incrementTimerCombo!.0 && c.secondGesture == incrementTimerCombo!.1
+                return !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isDecrementTimer && !isIncrementTimer
+            }) {
+                changeColorCombo = (firstNonPriority.firstGesture, firstNonPriority.secondGesture)
+            }
+        }
+        settings.changeColorCombo = changeColorCombo
+
+        // Build assignment order, excluding priority combos (nav, settings, edit layout, swap, delete, decrement timer, increment timer)
         var assignmentOrder = combos.filter { combo in
             let isNavNext = navNext != nil && combo.firstGesture == navNext!.0 && combo.secondGesture == navNext!.1
             let isNavPrev = navPrev != nil && combo.firstGesture == navPrev!.0 && combo.secondGesture == navPrev!.1
             let isSettings = settingsCombo != nil && combo.firstGesture == settingsCombo!.0 && combo.secondGesture == settingsCombo!.1
-            return !isNavNext && !isNavPrev && !isSettings
+            let isEditLayout = editLayoutCombo != nil && combo.firstGesture == editLayoutCombo!.0 && combo.secondGesture == editLayoutCombo!.1
+            let isSwap = swapCombo != nil && combo.firstGesture == swapCombo!.0 && combo.secondGesture == swapCombo!.1
+            let isDelete = deleteCombo != nil && combo.firstGesture == deleteCombo!.0 && combo.secondGesture == deleteCombo!.1
+            let isDecrementTimer = decrementTimerCombo != nil && combo.firstGesture == decrementTimerCombo!.0 && combo.secondGesture == decrementTimerCombo!.1
+            let isIncrementTimer = incrementTimerCombo != nil && combo.firstGesture == incrementTimerCombo!.0 && combo.secondGesture == incrementTimerCombo!.1
+            let isChangeColor = changeColorCombo != nil && combo.firstGesture == changeColorCombo!.0 && combo.secondGesture == changeColorCombo!.1
+            return !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isDecrementTimer && !isIncrementTimer && !isChangeColor
         }
 
         for (index, position) in updatedPositions.enumerated() {
