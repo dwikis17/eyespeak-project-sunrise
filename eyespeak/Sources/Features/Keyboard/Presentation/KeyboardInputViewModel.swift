@@ -10,11 +10,13 @@ final class KeyboardInputViewModel: ObservableObject {
     
     private let speechModel: KeyboardSpeechServiceModel
     private let predictionService: SentencePredictionService
+    private let quickTypeService = QuickTypePredictionService()
     private let soundPlayer: KeyboardSoundPlayer
     private let textChecker = UITextChecker()
     private let defaultPredictiveWords = ["I", "You", "We"]
     private var userSuggestionPool: [String]
-    private var suggestionTask: Task<Void, Never>?
+    private var quickTypeTask: Task<Void, Never>?
+    private var sentenceTask: Task<Void, Never>?
     
     init(
         suggestions: [String] = ["drink", "eat", "drive"],
@@ -31,7 +33,8 @@ final class KeyboardInputViewModel: ObservableObject {
     }
     
     deinit {
-        suggestionTask?.cancel()
+        quickTypeTask?.cancel()
+        sentenceTask?.cancel()
     }
     
     var primaryHeaderText: String {
@@ -136,61 +139,56 @@ final class KeyboardInputViewModel: ObservableObject {
         inlinePredictionText = ""
         soundPlayer.playModifier()
         refreshSuggestions()
+        learnFromCurrentText()
     }
     
     private func refreshSuggestions() {
-        suggestionTask?.cancel()
+        quickTypeTask?.cancel()
+        sentenceTask?.cancel()
+        
         let workingText = typedText
         let trimmedText = workingText.trimmingCharacters(in: .whitespacesAndNewlines)
         
         if isInMiddleOfWord(workingText) {
-            let currentWord = currentWord(from: workingText)
-            let completions = wordCompletions(for: currentWord)
-            if completions.isEmpty {
-                suggestions = fallbackSuggestions()
-            } else {
-                suggestions = Array(completions.prefix(3))
-            }
+            let current = currentWord(from: workingText)
+            let completions = wordCompletions(for: current)
+            let resolved = completions.isEmpty ? predictionFallbacks() : Array(completions.prefix(3))
+            suggestions = resolved
             inlinePredictionText = ""
             return
         }
         
-        suggestionTask = Task { [weak self] in
+        quickTypeTask = Task { [weak self] in
             guard let self else { return }
-            
-            if trimmedText.isEmpty {
-                await MainActor.run {
-                    self.inlinePredictionText = ""
-                    self.suggestions = self.fallbackSuggestions()
-                }
-                return
+            try? await Task.sleep(nanoseconds: 75_000_000) // ~75 ms debounce
+            if Task.isCancelled { return }
+            let predictions = await self.quickTypeService.predictions(for: workingText)
+            let fallback = self.predictionFallbacks()
+            let resolved = predictions.isEmpty ? fallback : Array(predictions.prefix(3))
+            await MainActor.run {
+                self.suggestions = resolved
             }
-            
-            if predictionService.isModelAvailable {
-                await predictionService.generateSentencePredictions(for: trimmedText)
+        }
+        
+        guard !trimmedText.isEmpty else {
+            inlinePredictionText = ""
+            return
+        }
+        
+        sentenceTask = Task { [weak self] in
+            guard let self else { return }
+            if self.predictionService.isModelAvailable {
+                await self.predictionService.generateSentencePredictions(for: workingText)
             } else {
-                await predictionService.generateFallbackPredictions(for: trimmedText)
+                await self.predictionService.generateFallbackPredictions(for: workingText)
             }
-            
+            if Task.isCancelled { return }
             await MainActor.run {
                 let prediction = self.predictionService.inlinePrediction
                     .trimmingCharacters(in: .whitespacesAndNewlines)
                 self.inlinePredictionText = prediction
-                let nextWords = self.nextWordSuggestions(from: prediction)
-                self.suggestions = nextWords.isEmpty ? self.fallbackSuggestions() : nextWords
             }
         }
-    }
-    
-    private func fallbackSuggestions() -> [String] {
-        let fromPrediction = nextWordSuggestions(from: inlinePredictionText)
-        if !fromPrediction.isEmpty {
-            return fromPrediction
-        }
-        if typedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return defaultPredictiveWords
-        }
-        return Array(userSuggestionPool.prefix(3))
     }
     
     private func applySuggestion(_ suggestion: String) {
@@ -206,6 +204,22 @@ final class KeyboardInputViewModel: ObservableObject {
         }
         soundPlayer.playKey()
         refreshSuggestions()
+        learnFromCurrentText()
+    }
+    
+    private func learnFromCurrentText() {
+        let snapshot = typedText
+        guard !snapshot.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        Task {
+            await quickTypeService.learn(from: snapshot)
+        }
+    }
+    
+    private func predictionFallbacks() -> [String] {
+        if userSuggestionPool.isEmpty {
+            return Array(defaultPredictiveWords.prefix(3))
+        }
+        return Array(userSuggestionPool.prefix(3))
     }
     
     private func removeCurrentWordIfNeeded() {
@@ -224,7 +238,7 @@ final class KeyboardInputViewModel: ObservableObject {
     private func isInMiddleOfWord(_ text: String) -> Bool {
         guard let lastScalar = text.unicodeScalars.last else { return false }
         return !CharacterSet.whitespacesAndNewlines.contains(lastScalar) &&
-            !CharacterSet.punctuationCharacters.contains(lastScalar)
+        !CharacterSet.punctuationCharacters.contains(lastScalar)
     }
     
     private func currentWord(from text: String) -> String {
@@ -236,37 +250,16 @@ final class KeyboardInputViewModel: ObservableObject {
     
     private func wordCompletions(for word: String) -> [String] {
         guard !word.isEmpty else { return [] }
-        let range = NSRange(location: 0, length: word.utf16.count)
-        if let completions = textChecker.completions(
+        let nsWord = word as NSString
+        let range = NSRange(location: 0, length: nsWord.length)
+        let language = Locale.preferredLanguages.first ?? "en_US"
+        guard let completions = textChecker.completions(
             forPartialWordRange: range,
             in: word,
-            language: Locale.preferredLanguages.first ?? "en_US"
-        ) {
-            return completions
+            language: language
+        ) else {
+            return []
         }
-        return []
-    }
-
-    private func nextWordSuggestions(from prediction: String) -> [String] {
-        let trimmed = prediction.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return [] }
-        
-        let tokens = trimmed
-            .split(whereSeparator: { $0.isWhitespace })
-            .map { substring -> String in
-                substring
-                    .trimmingCharacters(in: .punctuationCharacters)
-            }
-            .filter { !$0.isEmpty }
-        
-        var uniqueWords: [String] = []
-        for token in tokens {
-            let lower = token.lowercased()
-            if !uniqueWords.contains(where: { $0.lowercased() == lower }) {
-                uniqueWords.append(token)
-            }
-            if uniqueWords.count == 3 { break }
-        }
-        return uniqueWords
+        return completions
     }
 }

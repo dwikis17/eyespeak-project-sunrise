@@ -91,20 +91,8 @@ class SentencePredictionService: ObservableObject {
         #if canImport(FoundationModels)
         do {
             let instructions = """
-            You complete the user's sentence for assistive communication.
-            Return only the remaining words needed to finish the sentence, include natural punctuation at the end, and avoid repeating the user's text.
-            
-            Examples:
-            "I need" → " some help please."
-            "Can you" → " help me find my mom?"
-            "I want to" → " go back to my room."
-            "How are" → " you feeling today?"
-            
-            Rules:
-            - Provide one natural sentence ending (3–10 words total)
-            - Include final punctuation (. ? or !)
-            - Do not restate the user's original text
-            - Keep tone conversational and supportive
+            You are an assistive sentence completion partner running entirely on-device.
+            Deliver one natural continuation that preserves the user's tense, voice, and tone without repeating their input.
             """
             
             session = try LanguageModelSession(instructions: instructions)
@@ -145,17 +133,23 @@ class SentencePredictionService: ObservableObject {
         }
 
         do {
-            // Match earlier working API: respond(to:)
-            let prompt = "Complete this text: \(trimmed)\nCompletion:"
+            let prompt = """
+            Complete this text naturally and contextually. Return only the completion without repeating the input.
+            Maintain the same tone and style.
+            
+            \(trimmed)
+            """
             let response = try await session.respond(to: prompt)
             let parsed = parseCompletions(from: response.content, originalText: trimmed)
             let normalized = parsed
                 .map { self.normalizeCompletion($0) }
                 .filter { !$0.isEmpty }
+            let primary = normalized.first ?? ""
+            let single = primary.isEmpty ? [] : [primary]
             await MainActor.run {
-                self.sentencePredictions = normalized
-                self.inlinePrediction = normalized.first ?? ""
-                self.debugInfo = parsed.isEmpty ? "AI: empty" : "AI: \(parsed.count) predictions"
+                self.sentencePredictions = single
+                self.inlinePrediction = primary
+                self.debugInfo = primary.isEmpty ? "AI: empty" : "AI: completion"
             }
         } catch {
             recordError()
@@ -164,9 +158,11 @@ class SentencePredictionService: ObservableObject {
             let fallback = generateFallbackCompletions(for: trimmed)
                 .map { self.normalizeCompletion($0) }
                 .filter { !$0.isEmpty }
+            let primary = fallback.first ?? ""
+            let single = primary.isEmpty ? [] : [primary]
             await MainActor.run {
-                self.sentencePredictions = fallback
-                self.inlinePrediction = fallback.first ?? ""
+                self.sentencePredictions = single
+                self.inlinePrediction = primary
                 self.debugInfo = "Fallback after error"
             }
         }
@@ -194,9 +190,11 @@ class SentencePredictionService: ObservableObject {
         let completions = generateFallbackCompletions(for: trimmedText)
             .map { normalizeCompletion($0) }
             .filter { !$0.isEmpty }
+        let primary = completions.first ?? ""
+        let single = primary.isEmpty ? [] : [primary]
         await MainActor.run {
-            self.sentencePredictions = completions
-            self.inlinePrediction = completions.first ?? ""
+            self.sentencePredictions = single
+            self.inlinePrediction = primary
         }
     }
     
@@ -204,7 +202,9 @@ class SentencePredictionService: ObservableObject {
         let lowercaseText = text.lowercased()
         var completions: [String] = []
         
-        if lowercaseText.contains("i need to") {
+        if lowercaseText.contains("i love") {
+            completions = ["spending time with you", "hearing your stories", "sharing quiet evenings together"]
+        } else if lowercaseText.contains("i need to") {
             completions = ["go home", "rest now", "call someone"]
         } else if lowercaseText.contains("i want to") {
             completions = ["eat something", "go outside", "sleep"]
@@ -368,50 +368,39 @@ class SentencePredictionService: ObservableObject {
     }
     
     private func parseCompletions(from content: String, originalText: String) -> [String] {
+        let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
         let rejectionPatterns = [
             "i can't assist",
             "i cannot help",
             "i'm sorry",
-            "i can't help",
             "unable to assist",
             "cannot provide"
         ]
-        let lowercaseContent = content.lowercased()
-        for pattern in rejectionPatterns {
-            if lowercaseContent.contains(pattern) {
-                return []
-            }
+        let lowercaseContent = trimmed.lowercased()
+        for pattern in rejectionPatterns where lowercaseContent.contains(pattern) {
+            return []
         }
-        let separators = CharacterSet(charactersIn: "\n•-*123456789")
-        let lines = content.components(separatedBy: separators)
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-        var completions: [String] = []
-        for line in lines.prefix(5) {
-            var cleanLine = line
-                .replacingOccurrences(of: "^[0-9]+\\.?\\s*", with: "", options: .regularExpression)
-                .replacingOccurrences(of: "^[•\\-\\*]\\s*", with: "", options: .regularExpression)
-                .replacingOccurrences(of: "^\"|\"$", with: "")
-                .replacingOccurrences(of: "^'|'$", with: "")
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            cleanLine = cleanLine.replacingOccurrences(of: "^(completion|answer|response):\\s*", with: "", options: [.regularExpression, .caseInsensitive])
-            if cleanLine.lowercased().hasPrefix(originalText.lowercased()) {
-                if originalText.count < cleanLine.count {
-                    let startIndex = cleanLine.index(cleanLine.startIndex, offsetBy: originalText.count)
-                    cleanLine = String(cleanLine[startIndex...]).trimmingCharacters(in: .whitespacesAndNewlines)
-                }
-            }
-            if !cleanLine.isEmpty &&
-               cleanLine.count >= 2 &&
-               cleanLine.count <= 40 &&
-               !cleanLine.lowercased().contains("i can't") &&
-               !cleanLine.lowercased().contains("sorry") &&
-               !cleanLine.lowercased().contains("cannot") &&
-               !cleanLine.starts(with: originalText) {
-                completions.append(cleanLine)
-            }
+        
+        var cleanLine = trimmed
+        if let newline = cleanLine.firstIndex(of: "\n") {
+            cleanLine = String(cleanLine[..<newline])
         }
-        return Array(completions.prefix(3))
+        cleanLine = cleanLine
+            .replacingOccurrences(of: "^[0-9]+\\.?\\s*", with: "", options: .regularExpression)
+            .replacingOccurrences(of: "^[•\\-\\*]\\s*", with: "", options: .regularExpression)
+            .replacingOccurrences(of: "^\"|\"$", with: "", options: .regularExpression)
+            .replacingOccurrences(of: "^'|'$", with: "", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        if cleanLine.lowercased().hasPrefix(originalText.lowercased()),
+           originalText.count < cleanLine.count {
+            let startIndex = cleanLine.index(cleanLine.startIndex, offsetBy: originalText.count)
+            cleanLine = String(cleanLine[startIndex...]).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        
+        guard !cleanLine.isEmpty else { return [] }
+        return [cleanLine]
     }
     
     func cancelPredictionIfNeeded() {
