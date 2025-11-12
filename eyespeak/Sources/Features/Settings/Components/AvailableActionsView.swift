@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct AvailableActionsView: View {
+    @EnvironmentObject private var viewModel: AACViewModel
+    
     var body: some View {
         HStack {
             VStack(alignment:.leading, spacing: 15) {
@@ -22,10 +24,10 @@ struct AvailableActionsView: View {
                         title: "Edit Actions",
                         background: .mellowBlue,
                         cornerRadius: 22,
-                        firstCombo: nil,
-                        secondCombo: nil
+                        firstCombo: getEditActionsCombo().0,
+                        secondCombo: getEditActionsCombo().1
                     ) {
-                        print("Hello")
+                        viewModel.isEditActionsMode = true
                     }
                 }
                 .frame(width: 200)
@@ -33,6 +35,14 @@ struct AvailableActionsView: View {
             }
             Spacer()
         }
+    }
+    
+    private func getEditActionsCombo() -> (GestureType?, GestureType?) {
+        let combos = viewModel.getCombosForMenu(.settings)
+        for (combo, id) in combos where id == 0 {
+            return (combo.firstGesture, combo.secondGesture)
+        }
+        return (nil, nil)
     }
 }
 

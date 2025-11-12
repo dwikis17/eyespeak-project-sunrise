@@ -9,7 +9,13 @@ import SwiftUI
 
 struct ActionListSelection: View {
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack(alignment: .leading, spacing: 15) {
+            Text("Available Actions")
+                .font(Typography.boldHeader)
+            Text("Select which movements you can do comfortably")
+                .font(Typography.regularTitle)
+                .foregroundStyle(Color.placeholder)
+        }
     }
 }
 
