@@ -18,8 +18,13 @@ enum AppFont {
 }
 
 enum Typography {
+    //Title
+    static let boldHeaderLarge = AppFont.Montserrat.bold(38, relativeTo: .largeTitle)
+    static let boldHeaderJumbo = AppFont.Montserrat.bold(64, relativeTo: .largeTitle)
+    
     // Headers (18pt)
     static let boldHeader = AppFont.Montserrat.bold(18, relativeTo: .title3)
+    
     static let regularHeader = AppFont.Montserrat.regular(18, relativeTo: .title3)
 
     // Titles (14pt)

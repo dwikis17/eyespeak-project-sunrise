@@ -42,6 +42,10 @@ extension Color {
     /// Blueack - #363636
     static let blueack = Color(hex: "#363636")!
 
+    static let blackground = Color(hex: "#2C2C2C")!
+    
+    static let customGray = Color(hex:"#EBEBEB" )!
+
     // MARK: - Legacy Support
 
     /// Legacy alias for mellowBlue (backward compatibility)
@@ -75,6 +79,10 @@ public enum CustomColor: String {
     case placeholder = "#ACACAC"
     case blueholder = "#DDE1EC"
     case blueack = "#363636"
+    case blackground = "#2C2C2C"
+    case customGray = "#EBEBEB"
+  
+
 
     var color: Color {
         Color(hex: rawValue) ?? .clear
