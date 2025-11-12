@@ -234,7 +234,9 @@ public final class AACViewModel: ObservableObject {
             // Set swap combo when in edit mode
             if isEditMode {
                 gestureInputManager.setSwapCombo(settings.swapCombo)
+                gestureInputManager.setChangeColorCombo(settings.changeColorCombo)
             } else {
+                gestureInputManager.setChangeColorCombo(nil)
                 gestureInputManager.setSwapCombo(nil)
             }
             // Always sanitize conflicts if nav combos are configured (even with 1 page)
@@ -272,9 +274,11 @@ public final class AACViewModel: ObservableObject {
                 if isEditMode {
                     gestureInputManager.setSwapCombo(settings.swapCombo)
                     gestureInputManager.setDeleteCombo(settings.deleteCombo)
+                    gestureInputManager.setChangeColorCombo(settings.changeColorCombo)
                 } else {
                     gestureInputManager.setSwapCombo(nil)
                     gestureInputManager.setDeleteCombo(nil)
+                    gestureInputManager.setChangeColorCombo(nil)
                 }
                 // Always sanitize conflicts if nav combos are configured (even with 1 page)
                 sanitizeNavigationComboConflicts()
@@ -403,6 +407,32 @@ public final class AACViewModel: ObservableObject {
             print("⚠️ No card selected for deletion")
         }
     }
+
+    public func performChangeColorAction() {
+        // Change the color of the selected card
+        print("🎨 Change color action triggered")
+        let colors: [Color] = [.energeticOrange, .oldHulkGreen, .mellowBlue, .widowPurple, .charmingYellow]
+        let colorHexes: [String] = ["#FE773C", "#2FA553", "#586C9D", "#AD6AE3", "#F6CA33"]
+
+        if let position = selectedPosition,
+           let card = position.card {
+            let currentColor = card.color
+            var currentIndex = colors.firstIndex(of: currentColor)
+            if currentIndex == nil {
+                currentIndex = 0
+            }
+            let nextIndex = (currentIndex! + 1) % colors.count
+            let nextColorHex = colorHexes[nextIndex]
+            card.colorHex = nextColorHex
+            // Save the changes
+            try? modelContext.save()
+            
+            withAnimation {
+                selectedPosition = nil
+            }
+            self.toggleEditMode()
+        }
+    }
     
     public func toggleEditMode() {
         withAnimation {
@@ -415,12 +445,14 @@ public final class AACViewModel: ObservableObject {
                     // Set swap and delete combos when entering edit mode
                     gestureInputManager.setSwapCombo(settings.swapCombo)
                     gestureInputManager.setDeleteCombo(settings.deleteCombo)
+                    gestureInputManager.setChangeColorCombo(settings.changeColorCombo)
                 } else {
                     // When exiting edit mode, remove priority so combo can be used normally
                     gestureInputManager.setEditLayoutCombo(nil)
                     // Remove swap and delete combos when exiting edit mode
                     gestureInputManager.setSwapCombo(nil)
                     gestureInputManager.setDeleteCombo(nil)
+                    gestureInputManager.setChangeColorCombo(nil)
                     // Clear selection and swap mode when exiting edit mode
                     selectedPosition = nil
                     cancelSwapMode()
@@ -601,6 +633,14 @@ public final class AACViewModel: ObservableObject {
             }
             return
         }
+        
+        if slotIndex == -9 {
+            if isEditMode {
+               performChangeColorAction()
+            }
+            
+            return
+        }
 
         let index = currentPage * pageSize + slotIndex
         guard index >= 0, index < positions.count else {
@@ -703,9 +743,11 @@ public final class AACViewModel: ObservableObject {
             if isEditMode {
                 gestureInputManager.setSwapCombo(settings.swapCombo)
                 gestureInputManager.setDeleteCombo(settings.deleteCombo)
+                gestureInputManager.setChangeColorCombo(settings.changeColorCombo)
             } else {
                 gestureInputManager.setSwapCombo(nil)
                 gestureInputManager.setDeleteCombo(nil)
+                gestureInputManager.setChangeColorCombo(nil)
             }
             // Always sanitize conflicts if nav combos are configured (even with 1 page)
             sanitizeNavigationComboConflicts()
@@ -724,11 +766,12 @@ public final class AACViewModel: ObservableObject {
         let settingsCombo = settings.settingsCombo
         let editLayoutCombo = settings.editLayoutCombo
         let swapCombo = settings.swapCombo
+        let changeColorCombo = settings.changeColorCombo
         let deleteCombo = settings.deleteCombo
         let decrementTimerCombo = settings.decrementTimerCombo
         let incrementTimerCombo = settings.incrementTimerCombo
         // Only sanitize if priority combos are actually configured
-        guard navNext != nil || navPrev != nil || settingsCombo != nil || editLayoutCombo != nil || swapCombo != nil || deleteCombo != nil || decrementTimerCombo != nil || incrementTimerCombo != nil else { return }
+        guard navNext != nil || navPrev != nil || settingsCombo != nil || editLayoutCombo != nil || swapCombo != nil || deleteCombo != nil || decrementTimerCombo != nil || incrementTimerCombo != nil || changeColorCombo != nil else { return }
 
         func isNavCombo(_ c: ActionCombo) -> Bool {
             if let n = navNext, c.firstGesture == n.0 && c.secondGesture == n.1 { return true }
@@ -739,6 +782,7 @@ public final class AACViewModel: ObservableObject {
             if let d = deleteCombo, c.firstGesture == d.0 && c.secondGesture == d.1 { return true }
             if let dt = decrementTimerCombo, c.firstGesture == dt.0 && c.secondGesture == dt.1 { return true }  
             if let it = incrementTimerCombo, c.firstGesture == it.0 && c.secondGesture == it.1 { return true }
+            if let cc = changeColorCombo, c.firstGesture == cc.0 && c.secondGesture == cc.1 { return true }
             return false
         }
 
@@ -880,9 +924,11 @@ public final class AACViewModel: ObservableObject {
             if isEditMode {
                 gestureInputManager.setSwapCombo(settings.swapCombo)
                 gestureInputManager.setDeleteCombo(settings.deleteCombo)
+                gestureInputManager.setChangeColorCombo(settings.changeColorCombo)
             } else {
                 gestureInputManager.setSwapCombo(nil)
                 gestureInputManager.setDeleteCombo(nil)
+                gestureInputManager.setChangeColorCombo(nil)
             }
             // Use the actual positions from the database - this is a computed property that fetches fresh
             gestureInputManager.loadCombosTemplate(from: positions, pageSize: pageSize)
