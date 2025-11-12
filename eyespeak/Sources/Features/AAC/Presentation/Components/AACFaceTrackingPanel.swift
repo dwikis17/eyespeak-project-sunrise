@@ -25,11 +25,11 @@ struct AACFaceTrackingPanel: View {
             trackingPreview(statusBinding: statusBinding)
             //            statusSummary statusSummary
         }
-        .sheet(
+        .fullScreenCover(
             isPresented: calibratingBinding,
             onDismiss: viewModel.endCalibration
         ) {
-            AACCalibrationSheet(
+            AACFullScreenCalibrationView(
                 status: statusBinding,
                 isPresented: calibratingBinding
             )
