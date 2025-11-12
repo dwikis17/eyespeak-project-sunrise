@@ -29,6 +29,8 @@ struct EditLayoutview: View {
                             secondCombo: editLayoutCombo.1
                         ) {
                             viewModel.toggleEditMode()
+                            viewModel.onNavigateToAAC?()
+
                         }
                     } else {
                         NavigationCard(
