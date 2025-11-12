@@ -394,7 +394,7 @@ struct KeyboardUIView: View {
     private func handleAction(_ action: KeyboardActionID) {
         switch action {
         case .addWord:
-            inputViewModel.saveCurrentPhraseToSuggestions()
+            addCurrentPhraseToBoard()
         case .suggestion0, .suggestion1, .suggestion2:
             if let index = action.suggestionIndex {
                 inputViewModel.insertSuggestion(at: index)
@@ -415,6 +415,15 @@ struct KeyboardUIView: View {
             if let letter = action.letter {
                 inputViewModel.insertLetter(letter)
             }
+        }
+    }
+    
+    private func addCurrentPhraseToBoard() {
+        let text = inputViewModel.primaryHeaderText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        let didAdd = viewModel.addCardFromKeyboard(text: text)
+        if didAdd {
+            inputViewModel.clearAll()
         }
     }
     

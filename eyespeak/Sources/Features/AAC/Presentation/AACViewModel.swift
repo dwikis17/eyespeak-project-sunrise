@@ -538,6 +538,28 @@ public final class AACViewModel: ObservableObject {
         return try? dataManager.createCard(title: title, imageData: imageData)
     }
     
+    @discardableResult
+    public func addCardFromKeyboard(text: String) -> Bool {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+        guard let card = createCard(title: trimmed, imageData: nil) else { return false }
+        
+        if let emptySlot = positions.first(where: { $0.card == nil }) {
+            assignCardToPosition(card, position: emptySlot)
+            return true
+        }
+        
+        do {
+            let newPosition = try dataManager.createGridPosition(index: positions.count)
+            assignCardToPosition(card, position: newPosition)
+            return true
+        } catch {
+            // Cleanup the card if we failed to place it
+            try? dataManager.deleteCard(card)
+            return false
+        }
+    }
+    
     // MARK: - Combo Handling
     
     private func handleComboMatched(combo: ActionCombo, position: GridPosition) {
