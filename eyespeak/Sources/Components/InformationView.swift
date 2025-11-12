@@ -340,7 +340,7 @@ struct InformationView: View {
             editOptionButton(
                 icon: "arrow.left",
                 title: "Color",
-                combo: viewModel.recentCombos.first
+                combo: viewModel.settings.changeColorCombo
             ) {
                 // TODO: Implement color action
             }
