@@ -39,7 +39,6 @@ public final class OnboardingViewModel {
     func loadUserGestures() async {
         isLoading = true
         errorMessage = nil
-        
         do {
             // Fetch all user gestures (they should already be initialized by ModelContainer)
             userGestures = dataManager.fetchAllUserGestures()
