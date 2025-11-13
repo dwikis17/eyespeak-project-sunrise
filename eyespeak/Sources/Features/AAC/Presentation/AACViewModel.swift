@@ -53,6 +53,9 @@ public final class AACViewModel: ObservableObject {
     public var isSwapMode = false
     public var firstSwapPosition: GridPosition?
     
+    // Snooze mode state
+    public var isSnoozed = false
+    
     // Menu-specific combo storage (for Settings and Keyboard menus)
     // Key: menu name ("settings", "keyboard"), Value: Dictionary of combo -> action ID
     private var menuCombos: [String: [ActionCombo: Int]] = [:]
@@ -325,6 +328,26 @@ public final class AACViewModel: ObservableObject {
             endCalibration()
         } else {
             beginCalibration()
+        }
+    }
+    
+    // MARK: - Snooze Methods
+    
+    public func beginSnooze() {
+        guard isGestureMode else { return }
+        isSnoozed = true
+    }
+    
+    public func endSnooze() {
+        isSnoozed = false
+    }
+    
+    public func toggleSnooze() {
+        guard isGestureMode else { return }
+        if isSnoozed {
+            endSnooze()
+        } else {
+            beginSnooze()
         }
     }
     

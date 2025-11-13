@@ -20,6 +20,10 @@ struct AACFaceTrackingPanel: View {
             get: { viewModel.isCalibrating },
             set: { viewModel.isCalibrating = $0 }
         )
+        let snoozedBinding = Binding<Bool>(
+            get: { viewModel.isSnoozed },
+            set: { viewModel.isSnoozed = $0 }
+        )
 
         VStack(alignment: .leading, spacing: 0) {
             trackingPreview(statusBinding: statusBinding)
@@ -33,6 +37,13 @@ struct AACFaceTrackingPanel: View {
                 status: statusBinding,
                 isPresented: calibratingBinding
             )
+        }
+        .fullScreenCover(
+            isPresented: snoozedBinding,
+            onDismiss: viewModel.endSnooze
+        ) {
+            AACFullScreenSnoozeView(isPresented: snoozedBinding)
+                .environmentObject(viewModel)
         }
     }
 
@@ -94,6 +105,7 @@ struct AACFaceTrackingPanel: View {
             .padding(.horizontal, 10)
             .background(.ultraThinMaterial)
             .clipShape(Capsule())
+            
             Spacer()
         }
     }
