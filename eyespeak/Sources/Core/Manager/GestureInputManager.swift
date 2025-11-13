@@ -17,7 +17,6 @@ import Observation
         // Timestamp of last gesture
         private var lastGestureTime: Date?
         
-        
         // Timing window (how long between gestures)
         var timingWindow: TimeInterval = 2.0
         
@@ -32,6 +31,7 @@ import Observation
         private var navPrev: (GestureType, GestureType)?
         // Settings combo (priority 3)
         private var settingsCombo: (GestureType, GestureType)?
+        private var keyboardCombo: (GestureType, GestureType)?
         // Edit Layout combo (priority 4)
         private var editLayoutCombo: (GestureType, GestureType)?
         // Swap combo (priority 5)
@@ -171,7 +171,10 @@ import Observation
         func setFontBigCombo(_ combo: (GestureType, GestureType)?) {
             self.fontBigCombo = combo
         }
-        
+
+        func setKeyboardCombo(_ combo: (GestureType, GestureType)?) {
+            self.keyboardCombo = combo
+        }
         /// Configure timing window from settings
         func setTimingWindow(_ window: TimeInterval) {
             self.timingWindow = window
@@ -194,6 +197,7 @@ import Observation
                     if let s = settingsCombo, combo.firstGesture == s.0 && combo.secondGesture == s.1 { continue }
                     if let e = editLayoutCombo, combo.firstGesture == e.0 && combo.secondGesture == e.1 { continue }
                     if let sw = swapCombo, combo.firstGesture == sw.0 && combo.secondGesture == sw.1 { continue }
+                    if let k = keyboardCombo, combo.firstGesture == k.0 && combo.secondGesture == k.1 { continue }
                     if let cc = changeColorCombo, combo.firstGesture == cc.0 && combo.secondGesture == cc.1 { continue }
                     if let d = deleteCombo, combo.firstGesture == d.0 && combo.secondGesture == d.1 { continue }
                     if let dt = decrementTimerCombo, combo.firstGesture == dt.0 && combo.secondGesture == dt.1 { continue }
@@ -257,7 +261,6 @@ import Observation
                 return
             }
             // 3) Edit Layout combo (priority 4)
-            print("editLayoutCombo: \(editLayoutCombo)")
             if let e = editLayoutCombo, first == e.0 && second == e.1 {
                 let combo = ActionCombo(name: "Edit Layout", firstGesture: e.0, secondGesture: e.1)
                 onComboMatchedBySlot?(combo, -4) // special slot index for edit layout
@@ -321,6 +324,13 @@ import Observation
                 reset()
                 return
             }
+            // 11) Keyboard combo (priority 12)
+            if let k = keyboardCombo, first == k.0 && second == k.1 {
+                let combo = ActionCombo(name: "Keyboard", firstGesture: k.0, secondGesture: k.1)
+                onComboMatchedBySlot?(combo, -12) // special slot index for keyboard
+                reset()
+                return
+            }
             // 4) Find matching combo by template
             for (combo, slotIndex) in availableCombosBySlot {
                 if combo.firstGesture == first && combo.secondGesture == second {
@@ -330,7 +340,6 @@ import Observation
                     return
                 }
             }
-
 
             
             print("❌ No match found")

@@ -110,9 +110,19 @@ struct InformationView: View {
                     }
                 }
             }
-            
+
             // Keyboard button (mirrors style, navigates to Keyboard tab)
-            if viewModel.currentMenu != .keyboard {
+            if let keyboardCombo = viewModel.settings.keyboardCombo {
+                NavigationCard(
+                    title: "Keyboard",
+                    background: .mellowBlue,
+                    cornerRadius: 22,
+                    firstCombo: keyboardCombo.0,
+                    secondCombo: keyboardCombo.1
+                ) {
+                    appState.currentTab = .keyboard
+                }
+            } else {
                 NavigationCard(
                     title: "Keyboard",
                     background: .mellowBlue,
@@ -122,18 +132,7 @@ struct InformationView: View {
                 ) {
                     appState.currentTab = .keyboard
                 }
-            } else {
-                NavigationCard(
-                    title: "AAC Board",
-                    background: .mellowBlue,
-                    cornerRadius: 22,
-                    firstCombo: nil,
-                    secondCombo: nil
-                ) {
-                    appState.currentTab = .aac
-                }
             }
-            
             // Calibrate card
             NavigationCard(
                 title: "Calibrate",
@@ -248,7 +247,6 @@ struct InformationView: View {
         }
     }
 
-    
     private var editView: some View {
         Card {
             VStack(alignment: .center, spacing: 20) {
@@ -256,7 +254,7 @@ struct InformationView: View {
                     Text("Edit Mode")
                         .font(AppFont.Montserrat.bold(13))
                         .foregroundColor(.primary)
-                    
+
                     if viewModel.isSwapMode {
                         Spacer()
                         Text("SWAP MODE")
@@ -269,9 +267,9 @@ struct InformationView: View {
                             .cornerRadius(8)
                     }
                 }
-                
+
                 Divider()
-                
+
                 if viewModel.isSwapMode {
                     // Swap mode: show first selected card and waiting message
                     VStack(spacing: 12) {
@@ -280,7 +278,7 @@ struct InformationView: View {
                             .font(.caption)
                             .foregroundColor(.orange)
                             .multilineTextAlignment(.center)
-                        
+
                         Button("Cancel Swap") {
                             viewModel.cancelSwapMode()
                         }
@@ -297,12 +295,12 @@ struct InformationView: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
-                        
+
                         // Connector Arrow (Middle)
                         Image("arrow")
                             .renderingMode(.template)
                             .foregroundColor(.primary)
-                        
+
                         // Edit Options (Right)
                         editOptionsView
                     }
@@ -310,31 +308,34 @@ struct InformationView: View {
             }
         }
     }
-    
+
     private var selectedCardView: some View {
         Group {
             // In swap mode, show first swap position; otherwise show selected position
-            let positionToShow = viewModel.isSwapMode ? viewModel.firstSwapPosition : viewModel.selectedPosition
-            
+            let positionToShow =
+                viewModel.isSwapMode
+                ? viewModel.firstSwapPosition : viewModel.selectedPosition
+
             if let position = positionToShow,
-               let card = position.card,
-               !card.title.isEmpty {
+                let card = position.card,
+                !card.title.isEmpty
+            {
                 // Selected card with content
                 CardContentView(
                     card: card,
                     isPressed: false,
                     isHighlighted: false
                 )
-                .frame(width:103, height:103)
+                .frame(width: 103, height: 103)
             } else {
                 // Default fallback - empty card placeholder
                 EmptyCellView()
-                    .frame(width:103, height:103)
-    
+                    .frame(width: 103, height: 103)
+
             }
         }
     }
-    
+
     private var editOptionsView: some View {
         VStack(spacing: 10) {
             // Delete button
@@ -346,7 +347,7 @@ struct InformationView: View {
                 // Delete action is handled by combo matching in edit mode
                 viewModel.performDeleteAction()
             }
-            
+
             // Swap button
             editOptionButton(
                 icon: "questionmark",
@@ -359,7 +360,7 @@ struct InformationView: View {
                     viewModel.performSwapAction()
                 }
             }
-            
+
             // Color button
             editOptionButton(
                 icon: "arrow.left",
@@ -370,7 +371,7 @@ struct InformationView: View {
             }
         }
     }
-    
+
     private func editOptionButton(
         icon: String,
         title: String,
@@ -417,23 +418,22 @@ struct InformationView: View {
                         .background(Color.gray.opacity(0.3))
                         .cornerRadius(64.0517)
                 }
-                
+
                 // Button title
                 Text(title)
                     .font(AppFont.Montserrat.bold(7.4))
                     .foregroundStyle(.white)
-    
-        
+
             }
             .frame(maxWidth: 90)
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .background(Color.mellowBlue)
             .cornerRadius(16.44)
-           
+
         }
     }
-    
+
     private var gestureModePlaceholder: some View {
         Card {
             VStack(spacing: 16) {

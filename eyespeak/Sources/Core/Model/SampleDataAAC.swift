@@ -111,6 +111,7 @@ struct SampleData {
         let navNext = settings.navNextCombo
         let navPrev = settings.navPrevCombo
         let settingsCombo = settings.settingsCombo
+        let keyboardCombo = settings.keyboardCombo
         let editLayoutCombo = settings.editLayoutCombo
         let swapCombo = settings.swapCombo
         let deleteCombo = settings.deleteCombo
@@ -134,6 +135,7 @@ struct SampleData {
                 let isNavNext = navNext != nil && assigned.firstGesture == navNext!.0 && assigned.secondGesture == navNext!.1
                 let isNavPrev = navPrev != nil && assigned.firstGesture == navPrev!.0 && assigned.secondGesture == navPrev!.1
                 let isSettings = settingsCombo != nil && assigned.firstGesture == settingsCombo!.0 && assigned.secondGesture == settingsCombo!.1
+                let isKeyboard = keyboardCombo != nil && assigned.firstGesture == keyboardCombo!.0 && assigned.secondGesture == keyboardCombo!.1
                 let isEditLayout = editLayoutCombo != nil && assigned.firstGesture == editLayoutCombo!.0 && assigned.secondGesture == editLayoutCombo!.1
                 let isSwap = swapCombo != nil && assigned.firstGesture == swapCombo!.0 && assigned.secondGesture == swapCombo!.1
                 let isDelete = deleteCombo != nil && assigned.firstGesture == deleteCombo!.0 && assigned.secondGesture == deleteCombo!.1
@@ -142,7 +144,7 @@ struct SampleData {
                 let isFontSmall = fontSmallCombo != nil && assigned.firstGesture == fontSmallCombo!.0 && assigned.secondGesture == fontSmallCombo!.1
                 let isFontMedium = fontMediumCombo != nil && assigned.firstGesture == fontMediumCombo!.0 && assigned.secondGesture == fontMediumCombo!.1
                 let isFontBig = fontBigCombo != nil && assigned.firstGesture == fontBigCombo!.0 && assigned.secondGesture == fontBigCombo!.1
-                if isNavNext || isNavPrev || isSettings || isEditLayout || isSwap || isDelete || isDecrementTimer || isIncrementTimer || isFontSmall || isFontMedium || isFontBig {
+                if isNavNext || isNavPrev || isSettings || isEditLayout || isSwap || isDelete || isDecrementTimer || isIncrementTimer || isFontSmall || isFontMedium || isFontBig || isKeyboard {
                     // choose next non-conflicting combo
                     if let alt = combos.first(where: { c in
                         let isNavNextAlt = navNext != nil && c.firstGesture == navNext!.0 && c.secondGesture == navNext!.1
@@ -156,7 +158,8 @@ struct SampleData {
                         let isFontSmallAlt = fontSmallCombo != nil && c.firstGesture == fontSmallCombo!.0 && c.secondGesture == fontSmallCombo!.1
                         let isFontMediumAlt = fontMediumCombo != nil && c.firstGesture == fontMediumCombo!.0 && c.secondGesture == fontMediumCombo!.1
                         let isFontBigAlt = fontBigCombo != nil && c.firstGesture == fontBigCombo!.0 && c.secondGesture == fontBigCombo!.1
-                        return !isNavNextAlt && !isNavPrevAlt && !isSettingsAlt && !isEditLayoutAlt && !isSwapAlt && !isDeleteAlt && !isDecrementTimerAlt && !isIncrementTimerAlt && !isFontSmallAlt && !isFontMediumAlt && !isFontBigAlt
+                        let isKeyboardAlt = keyboardCombo != nil && c.firstGesture == keyboardCombo!.0 && c.secondGesture == keyboardCombo!.1
+                        return !isNavNextAlt && !isNavPrevAlt && !isSettingsAlt && !isEditLayoutAlt && !isSwapAlt && !isDeleteAlt && !isDecrementTimerAlt && !isIncrementTimerAlt && !isFontSmallAlt && !isFontMediumAlt && !isFontBigAlt && !isKeyboardAlt
                     }) { assigned = alt }
                 }
                 position.actionCombo = assigned

@@ -429,12 +429,28 @@ struct KeyboardUIView: View {
     
     private func ensureKeyboardCombos() {
         var existing = loadAssignedCombos()
+        
+        // Remove any existing assignments that conflict with global combos
+        var conflictsToRemove: [KeyboardActionID] = []
+        for (actionId, combo) in existing {
+            if isReservedCombo(combo) {
+                conflictsToRemove.append(actionId)
+                // Remove the conflicting assignment from storage
+                viewModel.settings.removeMenuComboAssignment(menuName: "keyboard", actionId: actionId.rawValue)
+            }
+        }
+        for actionId in conflictsToRemove {
+            existing.removeValue(forKey: actionId)
+        }
+        
+        // Find missing actions (including those that were just removed due to conflicts)
         let missing = KeyboardActionID.allCases.filter { existing[$0] == nil }
         guard !missing.isEmpty else {
             assignedCombos = existing
             return
         }
         
+        // Get available combos excluding already assigned ones and reserved global combos
         var pool = availableCombos(excluding: Set(existing.values.map(\.id)))
         for action in missing {
             guard !pool.isEmpty else { break }
@@ -454,6 +470,7 @@ struct KeyboardUIView: View {
     
     private func isReservedCombo(_ combo: ActionCombo) -> Bool {
         let settings = viewModel.settings
+        // Check all global combos that work in ANY menu (from InformationView control panel)
         if let prev = settings.navPrevCombo,
            combo.firstGesture == prev.0 && combo.secondGesture == prev.1 {
             return true
@@ -464,6 +481,22 @@ struct KeyboardUIView: View {
         }
         if let settingsCombo = settings.settingsCombo,
            combo.firstGesture == settingsCombo.0 && combo.secondGesture == settingsCombo.1 {
+            return true
+        }
+        if let keyboardCombo = settings.keyboardCombo,
+           combo.firstGesture == keyboardCombo.0 && combo.secondGesture == keyboardCombo.1 {
+            return true
+        }
+        if let deleteCombo = settings.deleteCombo,
+           combo.firstGesture == deleteCombo.0 && combo.secondGesture == deleteCombo.1 {
+            return true
+        }
+        if let swapCombo = settings.swapCombo,
+           combo.firstGesture == swapCombo.0 && combo.secondGesture == swapCombo.1 {
+            return true
+        }
+        if let changeColorCombo = settings.changeColorCombo,
+           combo.firstGesture == changeColorCombo.0 && combo.secondGesture == changeColorCombo.1 {
             return true
         }
         return false
