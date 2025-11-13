@@ -144,6 +144,17 @@ struct InformationView: View {
             ) {
                 viewModel.toggleCalibration()
             }
+            
+            // Snooze card
+            NavigationCard(
+                title: "Snooze",
+                background: .mellowBlue,
+                cornerRadius: 22,
+                firstCombo: nil,
+                secondCombo: nil
+            ) {
+                viewModel.toggleSnooze()
+            }
         }
     }
 
