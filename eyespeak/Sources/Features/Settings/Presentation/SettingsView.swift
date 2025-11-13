@@ -12,18 +12,26 @@ struct SettingsView: View {
     @State private var testButtonCombo: ActionCombo?
     @State private var showingComboPicker = false
     @State private var buttonTriggered = false
+    @AppStorage("fontScale") private var fontScaleRaw: String = "medium"
 
     var body: some View {
         Group {
             if viewModel.isEditActionsMode {
                 EditActionsView()
                     .environmentObject(viewModel)
+                    .id(fontScaleRaw)
             } else {
                 VStack(spacing: 15) {
                     headerView
+                        .id("\(fontScaleRaw)-header")
                     ResetTimerView()
+                        .id("\(fontScaleRaw)-reset")
+                    TextSizeSettingView()
+                        .id("\(fontScaleRaw)-textsize")
                     AvailableActionsView()
+                        .id("\(fontScaleRaw)-available")
                     EditLayoutview()
+                        .id("\(fontScaleRaw)-editlayout")
                     Spacer()
                 }
                 .padding(.vertical, 20)
@@ -56,7 +64,7 @@ struct SettingsView: View {
     private var headerView: some View {
         HStack {
             Text("SETTINGS")
-                .font(AppFont.Montserrat.bold(15))
+                .font(Typography.boldHeader)
                 .foregroundStyle(Color.mellowBlue)
             Spacer()
         }

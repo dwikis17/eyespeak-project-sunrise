@@ -10,6 +10,7 @@ import SwiftUI
 
 struct CardGridView: View {
     @EnvironmentObject private var viewModel: AACViewModel
+    @AppStorage("fontScale") private var fontScaleRaw: String = "medium"
 
     var body: some View {
         gridSection

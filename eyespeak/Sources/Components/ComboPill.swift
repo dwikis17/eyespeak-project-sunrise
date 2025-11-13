@@ -34,6 +34,11 @@ struct ComboPill: View {
     var isEnabled: Bool = true
     var ensureMinimumHitArea: Bool = false
     var accessibilityLabel: String?
+    @AppStorage("fontScale") private var fontScaleRaw: String = "medium"
+
+    private var scaleMultiplier: CGFloat {
+        FontScale(rawValue: fontScaleRaw)?.multiplier ?? FontScale.medium.multiplier
+    }
 
     private var resolvedForeground: Color {
         foreground.opacity(isEnabled ? 1 : 0.4)
@@ -49,15 +54,24 @@ struct ComboPill: View {
     }
 
     var body: some View {
-        let pill = HStack(alignment: .top, spacing: spacing) {
-            comboIcon(for: firstGesture, iconSize: iconSize)
-            comboIcon(for: secondGesture, iconSize: iconSize)
+        let scaledSpacing = spacing * scaleMultiplier
+        let scaledPadding = paddingValue * scaleMultiplier
+        let scaledIconSize = iconSize * scaleMultiplier
+        let scaledSize = CGSize(
+            width: size.width * scaleMultiplier,
+            height: size.height * scaleMultiplier
+        )
+        let scaledCornerRadius = cornerRadius * scaleMultiplier
+
+        let pill = HStack(alignment: .top, spacing: scaledSpacing) {
+            comboIcon(for: firstGesture, iconSize: scaledIconSize)
+            comboIcon(for: secondGesture, iconSize: scaledIconSize)
         }
         .foregroundStyle(resolvedForeground)
-        .padding(paddingValue)
-        .frame(width: size.width, height: size.height, alignment: .top)
+        .padding(scaledPadding)
+        .frame(width: scaledSize.width, height: scaledSize.height, alignment: .top)
         .background(background)
-        .cornerRadius(cornerRadius, antialiased: true)
+        .cornerRadius(scaledCornerRadius, antialiased: true)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(resolvedAccessibilityLabel)
 
@@ -87,6 +101,11 @@ struct OutlineComboPill: View {
     var strokeWidth: CGFloat = 0.76652
     var isEnabled: Bool = true
     var accessibilityLabel: String?
+    @AppStorage("fontScale") private var fontScaleRaw: String = "medium"
+
+    private var scaleMultiplier: CGFloat {
+        FontScale(rawValue: fontScaleRaw)?.multiplier ?? FontScale.medium.multiplier
+    }
 
     private var resolvedColor: Color {
         let base = iconColor ?? strokeColor
@@ -103,19 +122,30 @@ struct OutlineComboPill: View {
     }
 
     var body: some View {
-        HStack(alignment: .center, spacing: spacing) {
-            comboIcon(for: firstGesture, iconSize: iconSize, alignment: .center)
-            comboIcon(for: secondGesture, iconSize: iconSize, alignment: .center)
+        let scaledSpacing = spacing * scaleMultiplier
+        let scaledPadding = paddingValue * scaleMultiplier
+        let scaledIconSize = iconSize * scaleMultiplier
+        let scaledSize = CGSize(
+            width: size.width * scaleMultiplier,
+            height: size.height * scaleMultiplier
+        )
+        let scaledCornerRadius = cornerRadius * scaleMultiplier
+        let scaledInset = insetAmount * scaleMultiplier
+        let scaledStrokeWidth = strokeWidth * scaleMultiplier
+
+        HStack(alignment: .center, spacing: scaledSpacing) {
+            comboIcon(for: firstGesture, iconSize: scaledIconSize, alignment: .center)
+            comboIcon(for: secondGesture, iconSize: scaledIconSize, alignment: .center)
         }
         .foregroundStyle(resolvedColor)
-        .padding(paddingValue)
-        .frame(width: size.width, height: size.height, alignment: .center)
+        .padding(scaledPadding)
+        .frame(width: scaledSize.width, height: scaledSize.height, alignment: .center)
         .background(background)
-        .cornerRadius(cornerRadius, antialiased: true)
+        .cornerRadius(scaledCornerRadius, antialiased: true)
         .overlay(
-            RoundedRectangle(cornerRadius: cornerRadius)
-                .inset(by: insetAmount)
-                .stroke(strokeColor.opacity(isEnabled ? 1 : 0.4), lineWidth: strokeWidth)
+            RoundedRectangle(cornerRadius: scaledCornerRadius)
+                .inset(by: scaledInset)
+                .stroke(strokeColor.opacity(isEnabled ? 1 : 0.4), lineWidth: scaledStrokeWidth)
         )
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(resolvedAccessibilityLabel)
