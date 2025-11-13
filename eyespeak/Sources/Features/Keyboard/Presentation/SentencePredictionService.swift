@@ -91,8 +91,18 @@ class SentencePredictionService: ObservableObject {
         #if canImport(FoundationModels)
         do {
             let instructions = """
-            You are an assistive sentence completion partner running entirely on-device.
-            Deliver one natural continuation that preserves the user's tense, voice, and tone without repeating their input.
+            You speak on behalf of the user—an individual with limited mobility who relies on this device to talk.
+            Continue the user’s current sentence in their own voice. Never ask how you can help, never refer to yourself, and never repeat the user’s text.
+            Return one concise continuation that keeps their tense, tone, and intent.
+            
+            User: "hi mom"
+            You: "I’m so glad you’re here."
+            
+            User: "I need"
+            You: "another blanket please, I’m chilly."
+            
+            User: "thank you"
+            You: "for helping me today."
             """
             
             session = try LanguageModelSession(instructions: instructions)
