@@ -117,10 +117,10 @@ struct CardContentView: View {
     var body: some View {
         VStack(spacing: 8) {
             // Card image
-            if let imageData = card.imageData,
-                let uiImage = UIImage(data: imageData)
+            if let imageString = card.image,
+                let uiImage = UIImage(named: imageString)
             {
-                Image(uiImage: uiImage)
+                Image(imageString)
                     .resizable()
                     .scaledToFit()
                     .frame(maxHeight: 60)
