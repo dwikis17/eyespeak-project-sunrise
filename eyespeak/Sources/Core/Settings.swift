@@ -17,6 +17,21 @@ struct ComboInputSettings: Codable, Equatable {
     static let defaults = ComboInputSettings(isEnabled: true, maxCombos: 2, sensitivity: 0.5)
 }
 
+/// Font scale options for text size settings
+public enum FontScale: String {
+    case small
+    case medium
+    case big
+    
+    var multiplier: CGFloat {
+        switch self {
+        case .small: return 0.9
+        case .medium: return 1.0
+        case .big: return 1.2
+        }
+    }
+}
+
 public class UserSettings {
     @AppStorage("timerSpeed") var timerSpeed: Double = 4.0
     @AppStorage("fontSize") var fontSize: Double = 14
@@ -31,7 +46,10 @@ public class UserSettings {
     @AppStorage("deleteCombo") private var deleteComboRaw: String?
     @AppStorage("decrementTimerCombo") private var decrementTimerComboRaw: String?
     @AppStorage("incrementTimerCombo") private var incrementTimerComboRaw: String?
-    @AppStorage("menuComboAssignments") private var menuComboAssignmentsData: Data?
+    @AppStorage("fontSmallCombo") private var fontSmallComboRaw: String?
+    @AppStorage("fontMediumCombo") private var fontMediumComboRaw: String?
+    @AppStorage("fontBigCombo") private var fontBigComboRaw: String?
+    @AppStorage("fontScale") private var fontScaleRaw: String?
 
     @AppStorage("comboInputSettings") private var comboInputSettingsData: Data?
 
@@ -83,6 +101,22 @@ public class UserSettings {
     var incrementTimerCombo: (GestureType, GestureType)? {
         get { decodePair(incrementTimerComboRaw) }
         set { incrementTimerComboRaw = encodePair(newValue) }
+    }
+    var fontSmallCombo: (GestureType, GestureType)? {
+        get { decodePair(fontSmallComboRaw) }
+        set { fontSmallComboRaw = encodePair(newValue) }
+    }
+    var fontMediumCombo: (GestureType, GestureType)? {
+        get { decodePair(fontMediumComboRaw) }
+        set { fontMediumComboRaw = encodePair(newValue) }
+    }
+    var fontBigCombo: (GestureType, GestureType)? {
+        get { decodePair(fontBigComboRaw) }
+        set { fontBigComboRaw = encodePair(newValue) }
+    }
+    var fontScale: FontScale {
+        get { FontScale(rawValue: fontScaleRaw ?? "medium") ?? .medium }
+        set { fontScaleRaw = newValue.rawValue }
     }
 
     private func encodePair(_ pair: (GestureType, GestureType)?) -> String? {

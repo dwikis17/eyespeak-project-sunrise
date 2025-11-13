@@ -179,6 +179,34 @@ public final class AACViewModel: ObservableObject {
                     return
                 }
 
+                // Font size combos
+                if let fontSmallCombo = self.settings.fontSmallCombo,
+                    combo.firstGesture == fontSmallCombo.0
+                        && combo.secondGesture == fontSmallCombo.1
+                {
+                    print("✨ Font Small combo matched in \(menuName) menu")
+                    self.settings.fontScale = .small
+                    return
+                }
+
+                if let fontMediumCombo = self.settings.fontMediumCombo,
+                    combo.firstGesture == fontMediumCombo.0
+                        && combo.secondGesture == fontMediumCombo.1
+                {
+                    print("✨ Font Medium combo matched in \(menuName) menu")
+                    self.settings.fontScale = .medium
+                    return
+                }
+
+                if let fontBigCombo = self.settings.fontBigCombo,
+                    combo.firstGesture == fontBigCombo.0
+                        && combo.secondGesture == fontBigCombo.1
+                {
+                    print("✨ Font Big combo matched in \(menuName) menu")
+                    self.settings.fontScale = .big
+                    return
+                }
+
                 // IMPORTANT: Check menuCombos FIRST when in edit actions mode
                 // This ensures edit actions combos (like Save) take priority over editLayoutCombo
                 // Find the combo in menuCombos by matching the gesture pattern
@@ -268,6 +296,10 @@ public final class AACViewModel: ObservableObject {
             gestureInputManager.setIncrementTimerCombo(
                 settings.incrementTimerCombo
             )
+            // Set font size combos (always available)
+            gestureInputManager.setFontSmallCombo(settings.fontSmallCombo)
+            gestureInputManager.setFontMediumCombo(settings.fontMediumCombo)
+            gestureInputManager.setFontBigCombo(settings.fontBigCombo)
             print("settings.editLayoutCombo: \(settings.editLayoutCombo)")
             // Only set edit layout combo as priority when in edit mode or Settings menu
             // Otherwise, let it be used normally for card activation
@@ -870,6 +902,10 @@ public final class AACViewModel: ObservableObject {
             gestureInputManager.setIncrementTimerCombo(
                 settings.incrementTimerCombo
             )
+            // Set font size combos (always available)
+            gestureInputManager.setFontSmallCombo(settings.fontSmallCombo)
+            gestureInputManager.setFontMediumCombo(settings.fontMediumCombo)
+            gestureInputManager.setFontBigCombo(settings.fontBigCombo)
             // Only set edit layout combo as priority when in edit mode or Settings menu
             if isEditMode || currentMenu == .settings {
                 gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
@@ -1101,6 +1137,10 @@ public final class AACViewModel: ObservableObject {
             gestureInputManager.setIncrementTimerCombo(
                 settings.incrementTimerCombo
             )
+            // Set font size combos (always available)
+            gestureInputManager.setFontSmallCombo(settings.fontSmallCombo)
+            gestureInputManager.setFontMediumCombo(settings.fontMediumCombo)
+            gestureInputManager.setFontBigCombo(settings.fontBigCombo)
             // Only set editLayoutCombo as priority when in edit mode (to allow exit)
             // Otherwise, let it be used normally for card activation
             if isEditMode {
@@ -1145,6 +1185,10 @@ public final class AACViewModel: ObservableObject {
             gestureInputManager.setIncrementTimerCombo(
                 settings.incrementTimerCombo
             )
+            // Set font size combos (always available)
+            gestureInputManager.setFontSmallCombo(settings.fontSmallCombo)
+            gestureInputManager.setFontMediumCombo(settings.fontMediumCombo)
+            gestureInputManager.setFontBigCombo(settings.fontBigCombo)
             // In Settings menu, always allow editLayoutCombo to work (unless in edit actions mode)
             if !isEditActionsMode {
                 gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
@@ -1285,6 +1329,9 @@ public final class AACViewModel: ObservableObject {
         let changeColorCombo = settings.changeColorCombo
         let decrementTimerCombo = settings.decrementTimerCombo
         let incrementTimerCombo = settings.incrementTimerCombo
+        let fontSmallCombo = settings.fontSmallCombo
+        let fontMediumCombo = settings.fontMediumCombo
+        let fontBigCombo = settings.fontBigCombo
 
         // Filter out priority combos to avoid conflicts with InformationView
         let availableCombos = allCombos.filter { combo in
@@ -1297,8 +1344,11 @@ public final class AACViewModel: ObservableObject {
             let isChangeColor = changeColorCombo != nil && combo.firstGesture == changeColorCombo!.0 && combo.secondGesture == changeColorCombo!.1
             let isDecrementTimer = decrementTimerCombo != nil && combo.firstGesture == decrementTimerCombo!.0 && combo.secondGesture == decrementTimerCombo!.1
             let isIncrementTimer = incrementTimerCombo != nil && combo.firstGesture == incrementTimerCombo!.0 && combo.secondGesture == incrementTimerCombo!.1
+            let isFontSmall = fontSmallCombo != nil && combo.firstGesture == fontSmallCombo!.0 && combo.secondGesture == fontSmallCombo!.1
+            let isFontMedium = fontMediumCombo != nil && combo.firstGesture == fontMediumCombo!.0 && combo.secondGesture == fontMediumCombo!.1
+            let isFontBig = fontBigCombo != nil && combo.firstGesture == fontBigCombo!.0 && combo.secondGesture == fontBigCombo!.1
             
-            return !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isChangeColor && !isDecrementTimer && !isIncrementTimer
+            return !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isChangeColor && !isDecrementTimer && !isIncrementTimer && !isFontSmall && !isFontMedium && !isFontBig
         }
 
         guard !availableCombos.isEmpty else {
