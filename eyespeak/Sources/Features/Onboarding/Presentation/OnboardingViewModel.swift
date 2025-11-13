@@ -36,7 +36,10 @@ public final class OnboardingViewModel {
     
     // MARK: - Public Methods
     
+    @MainActor
     func loadUserGestures() async {
+        // Prevent concurrent loads
+        if isLoading { return }
         isLoading = true
         errorMessage = nil
         

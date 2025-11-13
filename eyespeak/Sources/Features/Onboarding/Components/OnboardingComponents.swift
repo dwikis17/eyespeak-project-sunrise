@@ -91,11 +91,12 @@ struct OnboardingInfoTile: View {
     var title: String
     var subtitle: String
     var isEnabled: Bool = true
+    var isSelected: Bool = false
     var body: some View {
         HStack(spacing: 12) {
             ZStack {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color.orange)
+                    .fill(LinearGradient.redOrange)
                     .frame(width: 42, height: 42)
                 Image(systemName: icon)
                     .foregroundColor(.white)
@@ -109,15 +110,20 @@ struct OnboardingInfoTile: View {
                     .foregroundColor(.secondary)
             }
             Spacer()
-            Circle()
-                .fill(isEnabled ? Color.green : Color.gray.opacity(0.4))
-                .frame(width: 12, height: 12)
+            Image(systemName: isEnabled ? "checkmark.circle.fill" : "circle")
+                .foregroundColor(isEnabled ? .green : .gray.opacity(0.6))
+                .font(.system(size: 18, weight: .semibold))
         }
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(Color(.systemBackground))
                 .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(LinearGradient.redOrange, lineWidth: 2)
+                .opacity(isSelected ? 1 : 0)
         )
     }
 }

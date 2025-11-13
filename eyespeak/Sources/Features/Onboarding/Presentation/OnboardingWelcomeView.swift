@@ -8,6 +8,7 @@ struct OnboardingWelcomeView: View {
     var currentStep: Int = 0
     @State private var faceStatus = FaceStatus()
     @State private var playedBlinkStartCue = false
+    @State private var trackingEnabled = true
     
     
     var body: some View {
@@ -37,6 +38,7 @@ struct OnboardingWelcomeView: View {
 
                             BlinkHoldCTAView(title: "Blink and hold to continue", action: {
                                 // First cue: simulate blink start when button tapped
+                                trackingEnabled = false
                                 AudioServicesPlaySystemSound(1057)
                                 onContinue() // Second cue handled by parent during page change
                             }, background: Color(.systemGray5), foreground: .black, cornerRadius: 20, height: 120, textSize: 22, iconSize: 24)
@@ -57,18 +59,24 @@ struct OnboardingWelcomeView: View {
         .background(Color(.systemGroupedBackground))
         // Invisible face-tracking view to enable blink-and-hold continue
         .overlay(
-            AACFaceTrackingView(
-                status: $faceStatus,
-                onEyesClosed: {
-                    AudioServicesPlaySystemSound(1057)
-                    onContinue()
-                },
-                eyesClosedDuration: 3.0
-            )
-            .frame(width: 1, height: 1)
-            .allowsHitTesting(false)
-            .opacity(0.01)
+            Group {
+                if trackingEnabled {
+                    AACFaceTrackingView(
+                        status: $faceStatus,
+                        onEyesClosed: {
+                            trackingEnabled = false
+                            AudioServicesPlaySystemSound(1057)
+                            onContinue()
+                        },
+                        eyesClosedDuration: 1.5
+                    )
+                    .frame(width: 1, height: 1)
+                    .allowsHitTesting(false)
+                    .opacity(0.01)
+                }
+            }
         )
+        .onDisappear { trackingEnabled = false }
         .onChange(of: faceStatus.leftBlink) { newVal in
             if newVal && !playedBlinkStartCue {
                 AudioServicesPlaySystemSound(1057)

@@ -8,68 +8,80 @@ struct OnboardingFirstTimeSetupView: View {
     var currentStep: Int
     @State private var faceStatus = FaceStatus()
     @State private var playedBlinkStartCue = false
+    @State private var trackingEnabled = true
 
     var body: some View {
-        VStack(spacing: 20) {
-            HStack(alignment: .top, spacing: 20) {
-                // Main intro card
+        GeometryReader { geo in
+            VStack(spacing: 16) {
                 OnboardingCardContainer {
-                    VStack(alignment: .leading, spacing: 16) {
-                        WelcomeHeaderView(
-                            title: "First Time Setup",
-                            subtitle: "We need to learn about you"
-                        )
+                    HStack(alignment: .center, spacing: 20) {
+                        // Left: Header, description, dots, CTA (centered column)
+                        VStack(alignment: .center, spacing: 16) {
+                            Spacer()
 
-                        Text("Since this is your first time, we’ll guide you through Blink Scanning — a simple way to help your device understand your movement. Don’t worry, this is quick and easy.")
-                            .font(.system(size: 16))
-                            .foregroundColor(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
+                            WelcomeHeaderView(
+                                title: "First Time Setup",
+                                subtitle: "We need to learn about you",
+                                alignment: .center,
+                                titleSize: 72,
+                                subtitleSize: 32
+                            )
 
-                        ProgressDotsView(current: currentStep, total: totalSteps)
+                            Text("Since this is your first time, we'll use **Switch Scanning** to help you select which actions work for you")
+                                .font(.system(size: 16))
+                                .foregroundColor(.secondary)
+                                .frame(maxWidth: .infinity)
+                                .multilineTextAlignment(.center)
+                                .fixedSize(horizontal: false, vertical: true)
+
+                            ProgressDotsView(current: currentStep, total: totalSteps, dotSize: 12, spacing: 8)
+                                .frame(maxWidth: .infinity)
+
+                            Spacer()
+
+                            BlinkHoldCTAView(title: "Blink and hold to continue", action: {
+                                trackingEnabled = false
+                                AudioServicesPlaySystemSound(1057)
+                                onContinue()
+                            }, background: Color(.systemGray5), foreground: .black, cornerRadius: 20, height: 120, textSize: 22, iconSize: 24)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                        .padding(.horizontal, 32)
+                        .padding(.vertical, 24)
+
+                        // Right: Animated steps column from OnboardingSelectionAnimationView
+                        OnboardingSelectionAnimationView()
+                            .frame(width: 500)
+                            .frame(maxHeight: .infinity, alignment: .center)
+                        
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-
-                // Right column - sample steps/items (original UI)
-                VStack(spacing: 12) {
-                    OnboardingInfoTile(
-                        icon: "arrow.right",
-                        title: "Look Right",
-                        subtitle: "Select when you look toward your right"
-                    )
-                    OnboardingInfoTile(
-                        icon: "arrow.left",
-                        title: "Look Left",
-                        subtitle: "Select when you look toward your left"
-                    )
-                    OnboardingInfoTile(
-                        icon: "arrow.up",
-                        title: "Look Up",
-                        subtitle: "Select when you look upward"
-                    )
-                }
-                .frame(width: 320)
+                .frame(maxWidth: .infinity, maxHeight: geo.size.height - 40)
             }
-
-            BlinkHoldCTAView(action: {
-                // First cue: simulate blink start when button tapped
-                AudioServicesPlaySystemSound(1057)
-                onContinue() // Second cue handled by parent during page change
-            })
+            .padding(20)
+            .frame(width: geo.size.width, height: geo.size.height)
         }
-        .padding(24)
+        .background(Color(.systemGroupedBackground))
         .overlay(
-            AACFaceTrackingView(
-                status: $faceStatus,
-                onEyesClosed: {
-                    AudioServicesPlaySystemSound(1057)
-                    onContinue()
-                },
-                eyesClosedDuration: 3.0
-            )
-            .frame(width: 1, height: 1)
-            .allowsHitTesting(false)
-            .opacity(0.01)
+            Group {
+                if trackingEnabled {
+                    AACFaceTrackingView(
+                        status: $faceStatus,
+                        onEyesClosed: {
+                            trackingEnabled = false
+                            AudioServicesPlaySystemSound(1057)
+                            onContinue()
+                        },
+                        eyesClosedDuration: 1.5
+                    )
+                    .frame(width: 1, height: 1)
+                    .allowsHitTesting(false)
+                    .opacity(0.01)
+                }
+            }
         )
+        .onDisappear { trackingEnabled = false }
         .onChange(of: faceStatus.leftBlink) { newVal in
             if newVal && !playedBlinkStartCue {
                 AudioServicesPlaySystemSound(1057)

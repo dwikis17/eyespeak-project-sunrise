@@ -16,34 +16,43 @@ struct OnboardingView: View {
     private let totalSteps: Int = 3
     
     var body: some View {
-        Group {
+        ZStack {
             if currentStep == 0 {
                 OnboardingWelcomeView(
                     onContinue: {
                         AudioServicesPlaySystemSound(1057)
-                        withAnimation(.spring(response: 0.3)) { currentStep = 1 }
+                        withAnimation(.easeInOut(duration: 0.35)) { currentStep = 1 }
                     },
                     totalSteps: totalSteps,
                     currentStep: currentStep
                 )
                 .environment(appState)
-            } else if currentStep == 1 {
+                .transition(.opacity)
+                .zIndex(0)
+            }
+            if currentStep == 1 {
                 OnboardingFirstTimeSetupView(
                     onContinue: {
                         AudioServicesPlaySystemSound(1057)
-                        withAnimation(.spring(response: 0.3)) { currentStep = 2 }
+                        // Preload gestures in the background to avoid jank on step 3
+                        Task { await viewModel?.loadUserGestures() }
+                        withAnimation(.easeInOut(duration: 0.35)) { currentStep = 2 }
                     },
                     totalSteps: totalSteps,
                     currentStep: currentStep
                 )
                 .environment(appState)
-            } else if let viewModel = viewModel {
+                .transition(.opacity)
+                .zIndex(1)
+            }
+            if let viewModel = viewModel, currentStep >= 2 {
                 GestureSelectionView()
                     .environment(appState)
-            } else {
-                ProgressView("Loading...")
+                    .transition(.opacity)
+                    .zIndex(2)
             }
         }
+        .animation(.easeInOut(duration: 0.35), value: currentStep)
         .onAppear {
             // Initialize the view model with the actual modelContext
             viewModel = OnboardingViewModel(modelContext: modelContext)
