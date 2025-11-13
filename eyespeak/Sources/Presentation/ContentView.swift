@@ -31,7 +31,9 @@ public struct ContentView: View {
                 }
             }
         }
-       
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.boneWhite)
+        .ignoresSafeArea()
     }
 }
 
@@ -77,12 +79,14 @@ private struct MainContentView: View {
                             )
 
                     case .keyboard:
-                        KeyboardView()
+                        KeyboardUIView()
+                            .padding(.horizontal, 30)
+                            .padding(.vertical, 45)
                             .frame(
-                                width: geo.size.width * 0.75,
-                                height: geo.size.height
+                                width: 1036,
+                                height: 1024,
+                                alignment: .bottom
                             )
-
                     case .eyeTrackingAccessible, .eyeTrackingSimple:
                         // Legacy tabs - default to AAC
                         CardGridView()
@@ -120,8 +124,27 @@ struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         let modelContainer = ModelContainer.preview
         let di = AACDIContainer.makePreviewDI(modelContainer: modelContainer)
-        return ContentView(container: di)
-            .environment(AppStateManager())
-            .modelContainer(modelContainer)
+        let defaultAppState = AppStateManager()
+        let keyboardAppState = AppStateManager()
+        keyboardAppState.currentTab = .keyboard
+        let settingsAppState = AppStateManager()
+        settingsAppState.currentTab = .settings
+
+        return Group {
+            ContentView(container: di)
+                .environment(defaultAppState)
+                .modelContainer(modelContainer)
+                .previewDisplayName("AAC")
+
+            ContentView(container: di)
+                .environment(keyboardAppState)
+                .modelContainer(modelContainer)
+                .previewDisplayName("Keyboard")
+            
+            ContentView(container: di)
+                .environment(settingsAppState)
+                .modelContainer(modelContainer)
+                .previewDisplayName("Settings")
+        }
     }
 }

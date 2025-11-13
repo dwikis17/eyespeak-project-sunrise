@@ -1,6 +1,17 @@
 import SwiftUI
 
 struct AddWordButtonView: View {
+    private let firstGesture: GestureType
+    private let secondGesture: GestureType
+    
+    init(
+        firstGesture: GestureType = .lookUp,
+        secondGesture: GestureType = .lookRight
+    ) {
+        self.firstGesture = firstGesture
+        self.secondGesture = secondGesture
+    }
+    
     var body: some View {
         let buttonColor = Color.mellowBlue
 
@@ -8,8 +19,8 @@ struct AddWordButtonView: View {
             HStack {
                 Spacer()
                 ComboPill(
-                    firstGesture: .lookUp,
-                    secondGesture: .lookRight,
+                    firstGesture: firstGesture,
+                    secondGesture: secondGesture,
                     foreground: buttonColor,
                     background: .whiteWhite
                 )

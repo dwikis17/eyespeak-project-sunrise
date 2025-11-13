@@ -113,6 +113,7 @@ public final class AACViewModel: ObservableObject {
         self.gestureInputManager = gestureInputManager
         self.speechService = speechService
         setupGestureManager()
+        restoreMenuCombosFromStorage()
     }
 
     // MARK: - Convenience Initializer for Backward Compatibility
@@ -122,6 +123,7 @@ public final class AACViewModel: ObservableObject {
         self.gestureInputManager = GestureInputManager()
         self.speechService = SpeechService.shared
         setupGestureManager()
+        restoreMenuCombosFromStorage()
     }
 
     // MARK: - Setup Methods
@@ -642,7 +644,29 @@ public final class AACViewModel: ObservableObject {
     public func createCard(title: String, imageData: Data?) -> AACard? {
         return try? dataManager.createCard(title: title, imageData: imageData)
     }
-
+    
+    @discardableResult
+    public func addCardFromKeyboard(text: String) -> Bool {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+        guard let card = createCard(title: trimmed, imageData: nil) else { return false }
+        
+        if let emptySlot = positions.first(where: { $0.card == nil }) {
+            assignCardToPosition(card, position: emptySlot)
+            return true
+        }
+        
+        do {
+            let newPosition = try dataManager.createGridPosition(index: positions.count)
+            assignCardToPosition(card, position: newPosition)
+            return true
+        } catch {
+            // Cleanup the card if we failed to place it
+            try? dataManager.deleteCard(card)
+            return false
+        }
+    }
+    
     // MARK: - Combo Handling
 
     private func handleComboMatched(combo: ActionCombo, position: GridPosition)
@@ -1200,25 +1224,10 @@ public final class AACViewModel: ObservableObject {
             )
             return
         }
-
-        if menuCombos[menuName] == nil {
-            menuCombos[menuName] = [:]
-        }
-
-        // Remove any existing combo with the same gesture pattern first
-        // This prevents duplicate entries when regenerating
-        menuCombos[menuName] = menuCombos[menuName]?.filter { existingCombo, _ in
-            !(existingCombo.firstGesture == combo.firstGesture &&
-              existingCombo.secondGesture == combo.secondGesture)
-        } ?? [:]
-
-        // Store by object reference (will be matched by gesture pattern in handler)
-        menuCombos[menuName]?[combo] = actionId
-        print(
-            "✅ Assigned combo \(combo.name) (\(combo.firstGesture.rawValue) + \(combo.secondGesture.rawValue)) to \(menuName) menu action \(actionId)"
-        )
-
-        // Reload combos if this is the current menu
+        
+        storeMenuCombo(combo, menuName: menuName, actionId: actionId, persist: true)
+        print("✅ Assigned combo \(combo.name) to \(menuName) menu action \(actionId)")
+        
         if currentMenu == menu {
             reloadCombosForCurrentMenu()
         }
@@ -1226,17 +1235,75 @@ public final class AACViewModel: ObservableObject {
 
     /// Get combos for a specific menu
     public func getCombosForMenu(_ menu: Tab) -> [ActionCombo: Int] {
-        let menuName: String
-        switch menu {
-        case .settings:
-            menuName = "settings"
-        case .keyboard:
-            menuName = "keyboard"
-        default:
+        guard let menuName = menuName(for: menu) else {
             return [:]
         }
-
+        
         return menuCombos[menuName] ?? [:]
+    }
+    
+    // MARK: - Menu Combo Persistence Helpers
+    
+    private func restoreMenuCombosFromStorage() {
+        let assignments = settings.allMenuComboAssignments()
+        guard !assignments.isEmpty else { return }
+        
+        for assignment in assignments {
+            guard let _ = tab(for: assignment.menuName),
+                  let combo = dataManager.fetchActionCombo(id: assignment.comboId) else {
+                continue
+            }
+            storeMenuCombo(
+                combo,
+                menuName: assignment.menuName,
+                actionId: assignment.actionId,
+                persist: false
+            )
+        }
+    }
+    
+    private func storeMenuCombo(
+        _ combo: ActionCombo,
+        menuName: String,
+        actionId: Int,
+        persist: Bool
+    ) {
+        var mapping = menuCombos[menuName] ?? [:]
+        for (existingCombo, id) in mapping where id == actionId {
+            mapping.removeValue(forKey: existingCombo)
+        }
+        mapping[combo] = actionId
+        menuCombos[menuName] = mapping
+        
+        if persist {
+            settings.setMenuComboAssignment(
+                menuName: menuName,
+                actionId: actionId,
+                comboId: combo.id
+            )
+        }
+    }
+    
+    private func menuName(for menu: Tab) -> String? {
+        switch menu {
+        case .settings:
+            return "settings"
+        case .keyboard:
+            return "keyboard"
+        default:
+            return nil
+        }
+    }
+    
+    private func tab(for menuName: String) -> Tab? {
+        switch menuName {
+        case "settings":
+            return .settings
+        case "keyboard":
+            return .keyboard
+        default:
+            return nil
+        }
     }
 
     // MARK: - Edit Actions Combo Management
