@@ -36,6 +36,7 @@ import Observation
         private var editLayoutCombo: (GestureType, GestureType)?
         // Swap combo (priority 5)
         private var swapCombo: (GestureType, GestureType)?
+        private var changeColorCombo: (GestureType, GestureType)?
         // Delete combo (priority 6)
         private var deleteCombo: (GestureType, GestureType)?
 
@@ -102,6 +103,8 @@ import Observation
                     if let d = deleteCombo, combo.firstGesture == d.0 && combo.secondGesture == d.1 { continue }
                     if let dt = decrementTimerCombo, combo.firstGesture == dt.0 && combo.secondGesture == dt.1 { continue }
                     if let it = incrementTimerCombo, combo.firstGesture == it.0 && combo.secondGesture == it.1 { continue }
+                    if let cc = changeColorCombo, combo.firstGesture == cc.0 && combo.secondGesture == cc.1 { continue }
+
                     availableCombosBySlot[combo] = slotIndex
                 }
             }
@@ -129,6 +132,7 @@ import Observation
             self.swapCombo = combo
         }
         
+        
         /// Configure delete combo (priority 6, after swap)
         func setDeleteCombo(_ combo: (GestureType, GestureType)?) {
             self.deleteCombo = combo
@@ -142,6 +146,10 @@ import Observation
         /// Configure increment timer combo (priority 8, after decrement timer)
         func setIncrementTimerCombo(_ combo: (GestureType, GestureType)?) {
             self.incrementTimerCombo = combo
+        }
+        
+        func setChangeColorCombo(_ combo: (GestureType, GestureType)?) {
+            self.changeColorCombo = combo
         }
         /// Configure timing window from settings
         func setTimingWindow(_ window: TimeInterval) {
@@ -165,6 +173,7 @@ import Observation
                     if let s = settingsCombo, combo.firstGesture == s.0 && combo.secondGesture == s.1 { continue }
                     if let e = editLayoutCombo, combo.firstGesture == e.0 && combo.secondGesture == e.1 { continue }
                     if let sw = swapCombo, combo.firstGesture == sw.0 && combo.secondGesture == sw.1 { continue }
+                    if let cc = changeColorCombo, combo.firstGesture == cc.0 && combo.secondGesture == cc.1 { continue }
                     if let d = deleteCombo, combo.firstGesture == d.0 && combo.secondGesture == d.1 { continue }
                     if let dt = decrementTimerCombo, combo.firstGesture == dt.0 && combo.secondGesture == dt.1 { continue }
                     if let it = incrementTimerCombo, combo.firstGesture == it.0 && combo.secondGesture == it.1 { continue }
@@ -257,6 +266,13 @@ import Observation
             if let it = incrementTimerCombo, first == it.0 && second == it.1 {
                 let combo = ActionCombo(name: "Increment Timer", firstGesture: it.0, secondGesture: it.1)
                 onComboMatchedBySlot?(combo, -8) // special slot index for increment timer
+                reset()
+                return
+            }
+            
+            if let cc = changeColorCombo, first == cc.0 && second == cc.1 {
+                let combo = ActionCombo(name: "Change Color", firstGesture: cc.0, secondGesture: cc.1)
+                onComboMatchedBySlot?(combo, -9) // special slot index for changing color
                 reset()
                 return
             }

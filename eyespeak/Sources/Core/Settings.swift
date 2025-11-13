@@ -27,6 +27,7 @@ public class UserSettings {
     @AppStorage("settingsCombo") private var settingsComboRaw: String?
     @AppStorage("editLayoutCombo") private var editLayoutComboRaw: String?
     @AppStorage("swapCombo") private var swapComboRaw: String?
+    @AppStorage("changeColorCombo") private var changeColorComboRaw: String?
     @AppStorage("deleteCombo") private var deleteComboRaw: String?
     @AppStorage("decrementTimerCombo") private var decrementTimerComboRaw: String?
     @AppStorage("incrementTimerCombo") private var incrementTimerComboRaw: String?
@@ -65,6 +66,10 @@ public class UserSettings {
     var swapCombo: (GestureType, GestureType)? {
         get { decodePair(swapComboRaw) }
         set { swapComboRaw = encodePair(newValue) }
+    }
+    var changeColorCombo: (GestureType, GestureType)? {
+        get { decodePair(changeColorComboRaw) }
+        set { changeColorComboRaw = encodePair(newValue) }
     }
     var deleteCombo: (GestureType, GestureType)? {
         get { decodePair(deleteComboRaw) }

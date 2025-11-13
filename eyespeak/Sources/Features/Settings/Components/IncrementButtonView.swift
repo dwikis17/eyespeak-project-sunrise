@@ -4,7 +4,7 @@ struct IncrementButtonView: View {
     var title: String
     var background: Color = .mellowBlue
     var cornerRadius: CGFloat = 14
-    var pillSize = CGSize(width: 27.32, height: 15.41)
+    var pillSize = CGSize(width: 38.32, height: 21.41)
 
     // optional combo icons (use nil when not configured)
     var firstCombo: GestureType? = nil
@@ -29,9 +29,9 @@ struct IncrementButtonView: View {
                     foreground: background,
                     background: .whiteWhite,
                     size: pillSize,
-                    paddingValue: 2.927,
-                    iconSize: 10,
-                    spacing: 3.927
+                    paddingValue: 4.927,
+                    iconSize: 11.825,
+                    spacing: 4.927
                 )
                 .padding(10)  // outer padding around capsule
             }
