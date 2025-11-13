@@ -16,7 +16,20 @@ import FoundationModels
 class SentencePredictionService: ObservableObject {
     #if canImport(FoundationModels)
     private var systemModel: SystemLanguageModel?
-    private var session: LanguageModelSession?
+    private static let sessionInstructions = """
+    You speak on behalf of the user—an individual with limited mobility who relies on this device to talk.
+    Continue the user’s current sentence in their own voice. Never ask how you can help, never refer to yourself, and never repeat the user’s text.
+    Return one concise continuation that keeps their tense, tone, and intent.
+    
+    User: "hi mom"
+    You: "I’m so glad you’re here."
+    
+    User: "I need"
+    You: "another blanket please, I’m chilly."
+    
+    User: "thank you"
+    You: "for helping me today."
+    """
     #endif
     private var lastErrorTime: Date?
     private var errorCount = 0
@@ -28,6 +41,17 @@ class SentencePredictionService: ObservableObject {
     
     private var lastRequestTime: Date?
     private let minRequestInterval: TimeInterval = 1.0
+    private let assistantToneMarkers = [
+        "how can i assist",
+        "how may i assist",
+        "how can i help",
+        "how may i help",
+        "assist you today",
+        "let me know how i can help",
+        "how can i support",
+        "i can help you",
+        "i am here to help"
+    ]
     
     init() {
         checkModelAvailability()
@@ -56,7 +80,6 @@ class SentencePredictionService: ObservableObject {
             print("✅ Apple Intelligence model available")
             isModelAvailable = true
             debugInfo = "Apple Intelligence: available"
-            setupSession()
         case .unavailable(.deviceNotEligible):
             print("❌ Device not eligible for Apple Intelligence")
             isModelAvailable = false
@@ -85,34 +108,6 @@ class SentencePredictionService: ObservableObject {
         #endif
     }
     
-    private func setupSession() {
-        guard let model = systemModel else { return }
-        
-        #if canImport(FoundationModels)
-        do {
-            let instructions = """
-            You speak on behalf of the user—an individual with limited mobility who relies on this device to talk.
-            Continue the user’s current sentence in their own voice. Never ask how you can help, never refer to yourself, and never repeat the user’s text.
-            Return one concise continuation that keeps their tense, tone, and intent.
-            
-            User: "hi mom"
-            You: "I’m so glad you’re here."
-            
-            User: "I need"
-            You: "another blanket please, I’m chilly."
-            
-            User: "thank you"
-            You: "for helping me today."
-            """
-            
-            session = try LanguageModelSession(instructions: instructions)
-        } catch {
-            print("Error setting up LanguageModelSession: \(error)")
-            isModelAvailable = false
-        }
-        #endif
-    }
-    
     func generateSentencePredictions(for text: String) async {
         #if canImport(FoundationModels)
         guard isModelAvailable,
@@ -133,33 +128,26 @@ class SentencePredictionService: ObservableObject {
         }
         lastRequestTime = now
 
-        await ensureSessionAvailable()
-        guard let session else {
-            await MainActor.run {
-                self.sentencePredictions = []
-                self.inlinePrediction = ""
-            }
-            return
-        }
-
         do {
-            let prompt = """
-            Complete this text naturally and contextually. Return only the completion without repeating the input.
-            Maintain the same tone and style.
+            let prediction = try await requestPrediction(for: trimmed)
+            let debugLabel: String
+            if prediction.isEmpty {
+                debugLabel = "AI: empty"
+            } else if isAssistantTone(prediction) {
+                logAssistantToneDetection(input: trimmed, prediction: prediction)
+                debugLabel = "AI: assistant"
+            } else {
+                debugLabel = "AI: completion"
+            }
             
-            \(trimmed)
-            """
-            let response = try await session.respond(to: prompt)
-            let parsed = parseCompletions(from: response.content, originalText: trimmed)
-            let normalized = parsed
-                .map { self.normalizeCompletion($0) }
-                .filter { !$0.isEmpty }
-            let primary = normalized.first ?? ""
-            let single = primary.isEmpty ? [] : [primary]
+            let single = prediction.isEmpty ? [] : [prediction]
             await MainActor.run {
                 self.sentencePredictions = single
-                self.inlinePrediction = primary
-                self.debugInfo = primary.isEmpty ? "AI: empty" : "AI: completion"
+                self.inlinePrediction = prediction
+                self.debugInfo = debugLabel
+            }
+            if !prediction.isEmpty {
+                resetErrorCount()
             }
         } catch {
             recordError()
@@ -214,13 +202,8 @@ class SentencePredictionService: ObservableObject {
         #if canImport(FoundationModels)
         if let generationError = error as? LanguageModelSession.GenerationError,
            case .guardrailViolation = generationError {
-            do {
-                guard let _ = session else { return }
-                print("Guardrail may have been triggered incorrectly for text: '\(text)'")
-                print("Consider filing feedback at https://feedbackassistant.apple.com")
-            } catch {
-                print("Failed to log feedback: \(error)")
-            }
+            print("Guardrail may have been triggered incorrectly for text: '\(text)'")
+            print("Consider filing feedback at https://feedbackassistant.apple.com")
         }
         #endif
     }
@@ -241,11 +224,40 @@ class SentencePredictionService: ObservableObject {
         lastErrorTime = nil
     }
     
-    private func ensureSessionAvailable() async {
-        #if canImport(FoundationModels)
-        guard session == nil || !isModelAvailable else { return }
-        checkModelAvailability()
-        #endif
+    #if canImport(FoundationModels)
+    private func requestPrediction(for text: String) async throws -> String {
+        let session = try LanguageModelSession(instructions: Self.sessionInstructions)
+        let prompt = prompt(for: text)
+        let response = try await session.respond(to: prompt)
+        let parsed = parseCompletions(from: response.content, originalText: text)
+        let normalized = parsed
+            .map { self.normalizeCompletion($0) }
+            .filter { !$0.isEmpty }
+        return normalized.first ?? ""
+    }
+    #endif
+    
+    private func prompt(for text: String) -> String {
+        """
+        You are speaking on behalf of the user. Continue their sentence as a first-person statement without greeting them, offering assistance, or referring to yourself.
+        Reply with one natural continuation only and do not repeat the user's words.
+        
+        USER TEXT:
+        \(text)
+        """
+    }
+    
+    private func isAssistantTone(_ text: String) -> Bool {
+        guard !text.isEmpty else { return false }
+        let normalized = text.lowercased()
+        return assistantToneMarkers.contains { normalized.contains($0) }
+    }
+    
+    private func logAssistantToneDetection(input: String, prediction: String) {
+        print("⚠️ SentencePredictionService detected assistant-style completion.")
+        print("Input: '\(input)'")
+        print("Prediction: '\(prediction)'")
+        print("⚠️ Output shown to user for awareness.\n")
     }
     
     private func parseCompletions(from content: String, originalText: String) -> [String] {
