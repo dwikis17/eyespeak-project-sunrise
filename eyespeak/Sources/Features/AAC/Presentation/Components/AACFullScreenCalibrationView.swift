@@ -11,6 +11,7 @@ import AudioToolbox
 struct AACFullScreenCalibrationView: View {
     @Binding var status: FaceStatus
     @Binding var isPresented: Bool
+    var onHoldToSnooze: (() -> Void)? = nil
 
     @State private var step: CalibrationStep = .center
     @State private var instruction: String = "Let's set up your app"
@@ -20,9 +21,11 @@ struct AACFullScreenCalibrationView: View {
     @State private var holdProgress: CGFloat = 0
     @State private var isHolding: Bool = false
     @State private var isCalibrating: Bool = false
+    @State private var didTriggerSnooze = false
 
     private let timer = Timer.publish(every: 0.01, on: .main, in: .common).autoconnect()
     private let holdTimer = Timer.publish(every: 0.01, on: .main, in: .common).autoconnect()
+    private let snoozeHoldDuration: CGFloat = 4.0
 
     enum CalibrationStep: CaseIterable {
         case center, left, right, up, down, offScreenLeft, offScreenRight, offScreenUp, offScreenDown
@@ -85,7 +88,7 @@ struct AACFullScreenCalibrationView: View {
                                     Image(systemName: "eye.fill")
                                         .font(.system(size: 24))
                                         .foregroundColor(Color.white)
-                                    Text("Blink and hold to continue")
+                                    Text("Hold to snooze")
                                         .font(Typography.boldHeader)
                                         .foregroundColor(Color.whiteWhite)
                                 }
@@ -93,10 +96,6 @@ struct AACFullScreenCalibrationView: View {
                             .frame(height: 60)
                             .padding(.horizontal, 40)
                             .padding(.bottom, 20)
-                            .onTapGesture {
-                                showInstruction = false
-                                startCalibration()
-                            }
                         }
                     }
                 }
@@ -141,26 +140,35 @@ struct AACFullScreenCalibrationView: View {
         }
         .foregroundColor(Color.whiteWhite)
         .onReceive(holdTimer) { _ in
-            guard showInstruction else { return }
-            if status.leftBlink || status.rightBlink {
+            guard showInstruction, !didTriggerSnooze else { return }
+            let eyesClosed = status.leftBlink && status.rightBlink
+            if eyesClosed {
                 if !isHolding {
                     isHolding = true
                     playSound()
                 }
                 if holdProgress < 1.0 {
-                    holdProgress += 0.005
-                } else {
-                    showInstruction = false
-                    startCalibration()
+                    holdProgress = min(
+                        1.0,
+                        holdProgress + (CGFloat(0.01) / snoozeHoldDuration)
+                    )
+                    if holdProgress >= 1.0 {
+                        didTriggerSnooze = true
+                        onHoldToSnooze?()
+                    }
                 }
             } else {
-                isHolding = false
+                if isHolding {
+                    isHolding = false
+                }
                 holdProgress = 0
+                autoStartCalibrationIfPossible()
             }
         }
     }
 
     private func startCalibration() {
+        guard !isCalibrating else { return }
         isCalibrating = true
         isCapturing = true
     }
@@ -196,6 +204,18 @@ struct AACFullScreenCalibrationView: View {
 
     private func playSound() {
         AudioServicesPlayAlertSound(1103)
+    }
+    
+    private func autoStartCalibrationIfPossible() {
+        guard showInstruction else { return }
+        guard !(status.leftBlink && status.rightBlink) else { return }
+        guard !didTriggerSnooze else { return }
+        holdProgress = 0
+        isHolding = false
+        withAnimation {
+            showInstruction = false
+        }
+        startCalibration()
     }
 
     private func moveToNextStep() {

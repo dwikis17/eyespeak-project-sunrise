@@ -35,7 +35,10 @@ struct AACFaceTrackingPanel: View {
         ) {
             AACFullScreenCalibrationView(
                 status: statusBinding,
-                isPresented: calibratingBinding
+                isPresented: calibratingBinding,
+                onHoldToSnooze: {
+                    viewModel.beginSnooze()
+                }
             )
         }
         .fullScreenCover(
@@ -59,8 +62,11 @@ struct AACFaceTrackingPanel: View {
                     AACFaceTrackingView(
                         status: statusBinding,
                         onGesture: { viewModel.handleDetectedGesture($0) },
-                        onEyesClosed: {
-                            viewModel.toggleCalibration()
+                        onEyesClosedForCalibration: {
+                            viewModel.beginCalibration()
+                        },
+                        onEyesClosedForSnooze: {
+                            viewModel.beginSnooze()
                         }
                     )
                     .clipShape(RoundedRectangle(cornerRadius: 18))

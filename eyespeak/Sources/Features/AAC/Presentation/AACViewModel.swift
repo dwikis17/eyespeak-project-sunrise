@@ -408,7 +408,7 @@ public final class AACViewModel: ObservableObject {
     }
 
     public func beginCalibration() {
-        guard isGestureMode else { return }
+        guard isGestureMode, !isCalibrating, !isSnoozed else { return }
         isCalibrating = true
     }
 
@@ -428,7 +428,8 @@ public final class AACViewModel: ObservableObject {
     // MARK: - Snooze Methods
     
     public func beginSnooze() {
-        guard isGestureMode else { return }
+        guard isGestureMode, !isSnoozed else { return }
+        endCalibration()
         isSnoozed = true
     }
     
