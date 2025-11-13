@@ -5,6 +5,7 @@ struct NavigationCard: View {
     var background: Color = .mellowBlue
     var cornerRadius: CGFloat = 22
     var pillSize = CGSize(width: 38.431, height: 21.679)
+    var isSelected: Bool = true
 
     // optional combo icons (use nil when not configured)
     var firstCombo: GestureType? = nil
@@ -17,23 +18,48 @@ struct NavigationCard: View {
     @ViewBuilder
     private var contentBody: some View {
         ZStack(alignment: .topTrailing) {
-            // Card background
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .fill(background)
+            // Card background - selected: filled, unselected: white with border
+            if isSelected {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(background)
+            } else {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(Color.whiteWhite)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                            .stroke(background, lineWidth: 1)
+                    )
+            }
 
-            // Top-right white pill with arrows (only if both icons provided)
+            // Top-right pill with arrows (only if both icons provided)
             if let first = firstCombo, let second = secondCombo {
-                ComboPill(
-                    firstGesture: first,
-                    secondGesture: second,
-                    foreground: background,
-                    background: .whiteWhite,
-                    size: pillSize,
-                    paddingValue: 4.927,
-                    iconSize: 11.825,
-                    spacing: 4.927
-                )
+                if isSelected {
+                    // Selected: white pill with blue icons
+                    ComboPill(
+                        firstGesture: first,
+                        secondGesture: second,
+                        foreground: background,
+                        background: .whiteWhite,
+                        size: pillSize,
+                        paddingValue: 4.927,
+                        iconSize: 11.825,
+                        spacing: 4.927
+                    )
                     .padding(10) // outer padding around capsule
+                } else {
+                    // Unselected: blue pill with white icons
+                    ComboPill(
+                        firstGesture: first,
+                        secondGesture: second,
+                        foreground: .whiteWhite,
+                        background: background,
+                        size: pillSize,
+                        paddingValue: 4.927,
+                        iconSize: 11.825,
+                        spacing: 4.927
+                    )
+                    .padding(10) // outer padding around capsule
+                }
             }
 
             // Bottom-left title
@@ -43,7 +69,7 @@ struct NavigationCard: View {
                     Text(title.uppercased())
                         .font(.system(size: 14, design: .rounded))
                         .tracking(3)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(isSelected ? .whiteWhite : background)
                     Spacer()
                 }
                 .padding(12)

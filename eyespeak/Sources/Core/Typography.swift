@@ -18,23 +18,52 @@ enum AppFont {
 }
 
 enum Typography {
+    private static func scale() -> CGFloat {
+        let fontScaleRaw = UserDefaults.standard.string(forKey: "fontScale") ?? "medium"
+        let fontScale = FontScale(rawValue: fontScaleRaw) ?? .medium
+        return fontScale.multiplier
+    }
+    
     //Title
-    static let boldHeaderLarge = AppFont.Montserrat.bold(38, relativeTo: .largeTitle)
-    static let boldHeaderJumbo = AppFont.Montserrat.bold(64, relativeTo: .largeTitle)
+    static var boldHeaderLarge: Font {
+        AppFont.Montserrat.bold(38 * scale(), relativeTo: .largeTitle)
+    }
+    static var boldHeaderJumbo: Font {
+        AppFont.Montserrat.bold(64 * scale(), relativeTo: .largeTitle)
+    }
     
     // Headers (18pt)
-    static let boldHeader = AppFont.Montserrat.bold(18, relativeTo: .title3)
+    static var boldHeader: Font {
+        AppFont.Montserrat.bold(18 * scale(), relativeTo: .title3)
+    }
     
-    static let regularHeader = AppFont.Montserrat.regular(18, relativeTo: .title3)
+    static var regularHeader: Font {
+        AppFont.Montserrat.regular(18 * scale(), relativeTo: .title3)
+    }
 
     // Titles (14pt)
-    static let boldTitle = AppFont.Montserrat.bold(14, relativeTo: .body)
-    static let regularTitle = AppFont.Montserrat.regular(14, relativeTo: .body)
+    static var boldTitle: Font {
+        AppFont.Montserrat.bold(14 * scale(), relativeTo: .body)
+    }
+    static var regularTitle: Font {
+        AppFont.Montserrat.regular(14 * scale(), relativeTo: .body)
+    }
 
     // Body (9pt)
-    static let boldBody = AppFont.Montserrat.bold(9, relativeTo: .caption2)
-    static let regularBody = AppFont.Montserrat.regular(9, relativeTo: .caption2)
+    static var boldBody: Font {
+        AppFont.Montserrat.bold(9 * scale(), relativeTo: .caption2)
+    }
+    static var regularBody: Font {
+        AppFont.Montserrat.regular(9 * scale(), relativeTo: .caption2)
+    }
 
     // Keyboard
-    static let keyboardMedium = AppFont.Montserrat.medium(28, relativeTo: .title)
+    static var keyboardMedium: Font {
+        AppFont.Montserrat.medium(28 * scale(), relativeTo: .title)
+    }
+    
+    // Card title font (scaled headline)
+    static var cardTitle: Font {
+        AppFont.Montserrat.semibold(17 * scale(), relativeTo: .headline)
+    }
 }

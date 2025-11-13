@@ -113,14 +113,15 @@ struct CardContentView: View {
     let card: AACard
     let isPressed: Bool
     var isHighlighted: Bool = false
+    @AppStorage("fontScale") private var fontScaleRaw: String = "medium"
 
     var body: some View {
         VStack(spacing: 8) {
             // Card image
-            if let imageData = card.imageData,
-                let uiImage = UIImage(data: imageData)
+            if let imageString = card.image,
+                let uiImage = UIImage(named: imageString)
             {
-                Image(uiImage: uiImage)
+                Image(imageString)
                     .resizable()
                     .scaledToFit()
                     .frame(maxHeight: 60)
@@ -132,7 +133,7 @@ struct CardContentView: View {
 
             // Card title
             Text(card.title)
-                .font(.headline)
+                .font(Typography.cardTitle)
                 .lineLimit(2)
                 .minimumScaleFactor(0.8)
                 .multilineTextAlignment(.center)

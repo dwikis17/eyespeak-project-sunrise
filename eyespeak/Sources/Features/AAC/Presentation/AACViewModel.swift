@@ -116,6 +116,7 @@ public final class AACViewModel: ObservableObject {
         self.gestureInputManager = gestureInputManager
         self.speechService = speechService
         setupGestureManager()
+        restoreMenuCombosFromStorage()
     }
 
     // MARK: - Convenience Initializer for Backward Compatibility
@@ -125,6 +126,7 @@ public final class AACViewModel: ObservableObject {
         self.gestureInputManager = GestureInputManager()
         self.speechService = SpeechService.shared
         setupGestureManager()
+        restoreMenuCombosFromStorage()
     }
 
     // MARK: - Setup Methods
@@ -177,6 +179,34 @@ public final class AACViewModel: ObservableObject {
                         5.0,
                         self.settings.timerSpeed + 1.0
                     )
+                    return
+                }
+
+                // Font size combos
+                if let fontSmallCombo = self.settings.fontSmallCombo,
+                    combo.firstGesture == fontSmallCombo.0
+                        && combo.secondGesture == fontSmallCombo.1
+                {
+                    print("✨ Font Small combo matched in \(menuName) menu")
+                    self.settings.fontScale = .small
+                    return
+                }
+
+                if let fontMediumCombo = self.settings.fontMediumCombo,
+                    combo.firstGesture == fontMediumCombo.0
+                        && combo.secondGesture == fontMediumCombo.1
+                {
+                    print("✨ Font Medium combo matched in \(menuName) menu")
+                    self.settings.fontScale = .medium
+                    return
+                }
+
+                if let fontBigCombo = self.settings.fontBigCombo,
+                    combo.firstGesture == fontBigCombo.0
+                        && combo.secondGesture == fontBigCombo.1
+                {
+                    print("✨ Font Big combo matched in \(menuName) menu")
+                    self.settings.fontScale = .big
                     return
                 }
 
@@ -269,6 +299,10 @@ public final class AACViewModel: ObservableObject {
             gestureInputManager.setIncrementTimerCombo(
                 settings.incrementTimerCombo
             )
+            // Set font size combos (always available)
+            gestureInputManager.setFontSmallCombo(settings.fontSmallCombo)
+            gestureInputManager.setFontMediumCombo(settings.fontMediumCombo)
+            gestureInputManager.setFontBigCombo(settings.fontBigCombo)
             print("settings.editLayoutCombo: \(settings.editLayoutCombo)")
             // Only set edit layout combo as priority when in edit mode or Settings menu
             // Otherwise, let it be used normally for card activation
@@ -633,7 +667,29 @@ public final class AACViewModel: ObservableObject {
     public func createCard(title: String, imageData: Data?) -> AACard? {
         return try? dataManager.createCard(title: title, imageData: imageData)
     }
-
+    
+    @discardableResult
+    public func addCardFromKeyboard(text: String) -> Bool {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+        guard let card = createCard(title: trimmed, imageData: nil) else { return false }
+        
+        if let emptySlot = positions.first(where: { $0.card == nil }) {
+            assignCardToPosition(card, position: emptySlot)
+            return true
+        }
+        
+        do {
+            let newPosition = try dataManager.createGridPosition(index: positions.count)
+            assignCardToPosition(card, position: newPosition)
+            return true
+        } catch {
+            // Cleanup the card if we failed to place it
+            try? dataManager.deleteCard(card)
+            return false
+        }
+    }
+    
     // MARK: - Combo Handling
 
     private func handleComboMatched(combo: ActionCombo, position: GridPosition)
@@ -869,6 +925,10 @@ public final class AACViewModel: ObservableObject {
             gestureInputManager.setIncrementTimerCombo(
                 settings.incrementTimerCombo
             )
+            // Set font size combos (always available)
+            gestureInputManager.setFontSmallCombo(settings.fontSmallCombo)
+            gestureInputManager.setFontMediumCombo(settings.fontMediumCombo)
+            gestureInputManager.setFontBigCombo(settings.fontBigCombo)
             // Only set edit layout combo as priority when in edit mode or Settings menu
             if isEditMode || currentMenu == .settings {
                 gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
@@ -1100,6 +1160,10 @@ public final class AACViewModel: ObservableObject {
             gestureInputManager.setIncrementTimerCombo(
                 settings.incrementTimerCombo
             )
+            // Set font size combos (always available)
+            gestureInputManager.setFontSmallCombo(settings.fontSmallCombo)
+            gestureInputManager.setFontMediumCombo(settings.fontMediumCombo)
+            gestureInputManager.setFontBigCombo(settings.fontBigCombo)
             // Only set editLayoutCombo as priority when in edit mode (to allow exit)
             // Otherwise, let it be used normally for card activation
             if isEditMode {
@@ -1144,6 +1208,10 @@ public final class AACViewModel: ObservableObject {
             gestureInputManager.setIncrementTimerCombo(
                 settings.incrementTimerCombo
             )
+            // Set font size combos (always available)
+            gestureInputManager.setFontSmallCombo(settings.fontSmallCombo)
+            gestureInputManager.setFontMediumCombo(settings.fontMediumCombo)
+            gestureInputManager.setFontBigCombo(settings.fontBigCombo)
             // In Settings menu, always allow editLayoutCombo to work (unless in edit actions mode)
             if !isEditActionsMode {
                 gestureInputManager.setEditLayoutCombo(settings.editLayoutCombo)
@@ -1179,25 +1247,10 @@ public final class AACViewModel: ObservableObject {
             )
             return
         }
-
-        if menuCombos[menuName] == nil {
-            menuCombos[menuName] = [:]
-        }
-
-        // Remove any existing combo with the same gesture pattern first
-        // This prevents duplicate entries when regenerating
-        menuCombos[menuName] = menuCombos[menuName]?.filter { existingCombo, _ in
-            !(existingCombo.firstGesture == combo.firstGesture &&
-              existingCombo.secondGesture == combo.secondGesture)
-        } ?? [:]
-
-        // Store by object reference (will be matched by gesture pattern in handler)
-        menuCombos[menuName]?[combo] = actionId
-        print(
-            "✅ Assigned combo \(combo.name) (\(combo.firstGesture.rawValue) + \(combo.secondGesture.rawValue)) to \(menuName) menu action \(actionId)"
-        )
-
-        // Reload combos if this is the current menu
+        
+        storeMenuCombo(combo, menuName: menuName, actionId: actionId, persist: true)
+        print("✅ Assigned combo \(combo.name) to \(menuName) menu action \(actionId)")
+        
         if currentMenu == menu {
             reloadCombosForCurrentMenu()
         }
@@ -1205,17 +1258,75 @@ public final class AACViewModel: ObservableObject {
 
     /// Get combos for a specific menu
     public func getCombosForMenu(_ menu: Tab) -> [ActionCombo: Int] {
-        let menuName: String
-        switch menu {
-        case .settings:
-            menuName = "settings"
-        case .keyboard:
-            menuName = "keyboard"
-        default:
+        guard let menuName = menuName(for: menu) else {
             return [:]
         }
-
+        
         return menuCombos[menuName] ?? [:]
+    }
+    
+    // MARK: - Menu Combo Persistence Helpers
+    
+    private func restoreMenuCombosFromStorage() {
+        let assignments = settings.allMenuComboAssignments()
+        guard !assignments.isEmpty else { return }
+        
+        for assignment in assignments {
+            guard let _ = tab(for: assignment.menuName),
+                  let combo = dataManager.fetchActionCombo(id: assignment.comboId) else {
+                continue
+            }
+            storeMenuCombo(
+                combo,
+                menuName: assignment.menuName,
+                actionId: assignment.actionId,
+                persist: false
+            )
+        }
+    }
+    
+    private func storeMenuCombo(
+        _ combo: ActionCombo,
+        menuName: String,
+        actionId: Int,
+        persist: Bool
+    ) {
+        var mapping = menuCombos[menuName] ?? [:]
+        for (existingCombo, id) in mapping where id == actionId {
+            mapping.removeValue(forKey: existingCombo)
+        }
+        mapping[combo] = actionId
+        menuCombos[menuName] = mapping
+        
+        if persist {
+            settings.setMenuComboAssignment(
+                menuName: menuName,
+                actionId: actionId,
+                comboId: combo.id
+            )
+        }
+    }
+    
+    private func menuName(for menu: Tab) -> String? {
+        switch menu {
+        case .settings:
+            return "settings"
+        case .keyboard:
+            return "keyboard"
+        default:
+            return nil
+        }
+    }
+    
+    private func tab(for menuName: String) -> Tab? {
+        switch menuName {
+        case "settings":
+            return .settings
+        case "keyboard":
+            return .keyboard
+        default:
+            return nil
+        }
     }
 
     // MARK: - Edit Actions Combo Management
@@ -1241,6 +1352,9 @@ public final class AACViewModel: ObservableObject {
         let changeColorCombo = settings.changeColorCombo
         let decrementTimerCombo = settings.decrementTimerCombo
         let incrementTimerCombo = settings.incrementTimerCombo
+        let fontSmallCombo = settings.fontSmallCombo
+        let fontMediumCombo = settings.fontMediumCombo
+        let fontBigCombo = settings.fontBigCombo
 
         // Filter out priority combos to avoid conflicts with InformationView
         let availableCombos = allCombos.filter { combo in
@@ -1253,8 +1367,11 @@ public final class AACViewModel: ObservableObject {
             let isChangeColor = changeColorCombo != nil && combo.firstGesture == changeColorCombo!.0 && combo.secondGesture == changeColorCombo!.1
             let isDecrementTimer = decrementTimerCombo != nil && combo.firstGesture == decrementTimerCombo!.0 && combo.secondGesture == decrementTimerCombo!.1
             let isIncrementTimer = incrementTimerCombo != nil && combo.firstGesture == incrementTimerCombo!.0 && combo.secondGesture == incrementTimerCombo!.1
+            let isFontSmall = fontSmallCombo != nil && combo.firstGesture == fontSmallCombo!.0 && combo.secondGesture == fontSmallCombo!.1
+            let isFontMedium = fontMediumCombo != nil && combo.firstGesture == fontMediumCombo!.0 && combo.secondGesture == fontMediumCombo!.1
+            let isFontBig = fontBigCombo != nil && combo.firstGesture == fontBigCombo!.0 && combo.secondGesture == fontBigCombo!.1
             
-            return !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isChangeColor && !isDecrementTimer && !isIncrementTimer
+            return !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isChangeColor && !isDecrementTimer && !isIncrementTimer && !isFontSmall && !isFontMedium && !isFontBig
         }
 
         guard !availableCombos.isEmpty else {

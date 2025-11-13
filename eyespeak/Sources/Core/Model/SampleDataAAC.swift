@@ -13,42 +13,42 @@ struct SampleData {
         // Sample Cards - Expanded Essential Communication Vocabulary
         let cards = [
             // Basic Communication
-            AACard(title: "HOW ARE YOU", imageData: nil, colorHex: CustomColor.oldHulkGreen.rawValue),
-            AACard(title: "YES", imageData: nil, colorHex: CustomColor.oldHulkGreen.rawValue),
-            AACard(title: "NO", imageData: nil, colorHex: CustomColor.oldHulkGreen.rawValue),
-            AACard(title: "THANK YOU", imageData: nil, colorHex: CustomColor.oldHulkGreen.rawValue),
-            AACard(title: "PLEASE", imageData: nil, colorHex: CustomColor.oldHulkGreen.rawValue),
+            AACard(title: "HOW ARE YOU", imageData: nil, colorHex: CustomColor.oldHulkGreen.rawValue, image: "questionmark"),
+            AACard(title: "YES", imageData: nil, colorHex: CustomColor.oldHulkGreen.rawValue, image:"yes"),
+            AACard(title: "NO", imageData: nil, colorHex: CustomColor.oldHulkGreen.rawValue,image:"no"),
+            AACard(title: "THANK YOU", imageData: nil, colorHex: CustomColor.oldHulkGreen.rawValue, image: "thankyou"),
+            AACard(title: "PLEASE", imageData: nil, colorHex: CustomColor.oldHulkGreen.rawValue, image: "questionmark"),
             
             // People & Pronouns
-            AACard(title: "I'M GOOD", imageData: nil, colorHex: CustomColor.mellowBlue.rawValue),
-            AACard(title: "I LOVE YOU", imageData: nil, colorHex: CustomColor.mellowBlue.rawValue),
-            AACard(title: "I'M HAPPY", imageData: nil, colorHex: CustomColor.mellowBlue.rawValue),
-            AACard(title: "I'M SAD", imageData: nil, colorHex: CustomColor.mellowBlue.rawValue),
-            AACard(title: "I'M FRUSTRATED", imageData: nil, colorHex: CustomColor.energeticOrange.rawValue),
+            AACard(title: "I'M GOOD", imageData: nil, colorHex: CustomColor.mellowBlue.rawValue, image: "imgood"),
+            AACard(title: "I LOVE YOU", imageData: nil, colorHex: CustomColor.mellowBlue.rawValue, image: "iloveyou"),
+            AACard(title: "I'M HAPPY", imageData: nil, colorHex: CustomColor.mellowBlue.rawValue,image: "imhappy"),
+            AACard(title: "I'M SAD", imageData: nil, colorHex: CustomColor.mellowBlue.rawValue, image: "imsad"),
+            AACard(title: "I'M FRUSTRATED", imageData: nil, colorHex: CustomColor.energeticOrange.rawValue, image: "imfrustrated"),
             
             // Emotions & Feelings
-            AACard(title: "THIRSTY", imageData: nil, colorHex: CustomColor.energeticOrange.rawValue),
-            AACard(title: "HUNGRY", imageData: nil, colorHex: CustomColor.energeticOrange.rawValue),
-            AACard(title: "BATHROOM", imageData: nil, colorHex: CustomColor.energeticOrange.rawValue),
+            AACard(title: "THIRSTY", imageData: nil, colorHex: CustomColor.energeticOrange.rawValue, image: "thirsty"),
+            AACard(title: "HUNGRY", imageData: nil, colorHex: CustomColor.energeticOrange.rawValue, image: "hungry"),
+            AACard(title: "BATHROOM", imageData: nil, colorHex: CustomColor.energeticOrange.rawValue, image: "bathroom"),
 
             // Activities & Actions
-            AACard(title: "FAMILY", imageData: nil, colorHex: CustomColor.widowPurple.rawValue),
-            AACard(title: "FRIENDS", imageData: nil, colorHex: CustomColor.widowPurple.rawValue),
+            AACard(title: "FAMILY", imageData: nil, colorHex: CustomColor.widowPurple.rawValue, image: "family"),
+            AACard(title: "FRIENDS", imageData: nil, colorHex: CustomColor.widowPurple.rawValue, image: "friends"),
 
             
             // Descriptors
-            AACard(title: "REPOSITION ME", imageData: nil, colorHex: CustomColor.energeticOrange.rawValue),
-            AACard(title: "TIRED", imageData: nil, colorHex: CustomColor.energeticOrange.rawValue),
-            AACard(title: "HOT/COLD", imageData: nil, colorHex: CustomColor.energeticOrange.rawValue),
+            AACard(title: "REPOSITION ME", imageData: nil, colorHex: CustomColor.energeticOrange.rawValue, image: "reposition"),
+            AACard(title: "TIRED", imageData: nil, colorHex: CustomColor.energeticOrange.rawValue, image: "tired"),
+            AACard(title: "HOT/COLD", imageData: nil, colorHex: CustomColor.energeticOrange.rawValue, image: "hotcold"),
          
             
             // Places
-            AACard(title: "DOCTOR", imageData: nil, colorHex: CustomColor.widowPurple.rawValue),
-            AACard(title: "NURSE", imageData: nil, colorHex: CustomColor.widowPurple.rawValue),
+            AACard(title: "DOCTOR", imageData: nil, colorHex: CustomColor.widowPurple.rawValue, image: "doctor"),
+            AACard(title: "NURSE", imageData: nil, colorHex: CustomColor.widowPurple.rawValue, image: "nurse"),
    
             // Time & Questions
-            AACard(title: "MORE", imageData: nil, colorHex: CustomColor.charmingYellow.rawValue),
-            AACard(title: "LESS", imageData: nil, colorHex: CustomColor.charmingYellow.rawValue),
+            AACard(title: "MORE", imageData: nil, colorHex: CustomColor.charmingYellow.rawValue, image: "more"),
+            AACard(title: "LESS", imageData: nil, colorHex: CustomColor.charmingYellow.rawValue, image: "less"),
         ]
         
         // Insert all cards
@@ -116,6 +116,9 @@ struct SampleData {
         let deleteCombo = settings.deleteCombo
         let decrementTimerCombo = settings.decrementTimerCombo
         let incrementTimerCombo = settings.incrementTimerCombo
+        let fontSmallCombo = settings.fontSmallCombo
+        let fontMediumCombo = settings.fontMediumCombo
+        let fontBigCombo = settings.fontBigCombo
         
         for index in 0..<gridSize {
             let position = GridPosition(order: index)
@@ -136,7 +139,10 @@ struct SampleData {
                 let isDelete = deleteCombo != nil && assigned.firstGesture == deleteCombo!.0 && assigned.secondGesture == deleteCombo!.1
                 let isDecrementTimer = decrementTimerCombo != nil && assigned.firstGesture == decrementTimerCombo!.0 && assigned.secondGesture == decrementTimerCombo!.1
                 let isIncrementTimer = incrementTimerCombo != nil && assigned.firstGesture == incrementTimerCombo!.0 && assigned.secondGesture == incrementTimerCombo!.1
-                if isNavNext || isNavPrev || isSettings || isEditLayout || isSwap || isDelete || isDecrementTimer || isIncrementTimer {
+                let isFontSmall = fontSmallCombo != nil && assigned.firstGesture == fontSmallCombo!.0 && assigned.secondGesture == fontSmallCombo!.1
+                let isFontMedium = fontMediumCombo != nil && assigned.firstGesture == fontMediumCombo!.0 && assigned.secondGesture == fontMediumCombo!.1
+                let isFontBig = fontBigCombo != nil && assigned.firstGesture == fontBigCombo!.0 && assigned.secondGesture == fontBigCombo!.1
+                if isNavNext || isNavPrev || isSettings || isEditLayout || isSwap || isDelete || isDecrementTimer || isIncrementTimer || isFontSmall || isFontMedium || isFontBig {
                     // choose next non-conflicting combo
                     if let alt = combos.first(where: { c in
                         let isNavNextAlt = navNext != nil && c.firstGesture == navNext!.0 && c.secondGesture == navNext!.1
@@ -147,7 +153,10 @@ struct SampleData {
                         let isDeleteAlt = deleteCombo != nil && c.firstGesture == deleteCombo!.0 && c.secondGesture == deleteCombo!.1
                         let isDecrementTimerAlt = decrementTimerCombo != nil && c.firstGesture == decrementTimerCombo!.0 && c.secondGesture == decrementTimerCombo!.1
                         let isIncrementTimerAlt = incrementTimerCombo != nil && c.firstGesture == incrementTimerCombo!.0 && c.secondGesture == incrementTimerCombo!.1
-                        return !isNavNextAlt && !isNavPrevAlt && !isSettingsAlt && !isEditLayoutAlt && !isSwapAlt && !isDeleteAlt && !isDecrementTimerAlt && !isIncrementTimerAlt
+                        let isFontSmallAlt = fontSmallCombo != nil && c.firstGesture == fontSmallCombo!.0 && c.secondGesture == fontSmallCombo!.1
+                        let isFontMediumAlt = fontMediumCombo != nil && c.firstGesture == fontMediumCombo!.0 && c.secondGesture == fontMediumCombo!.1
+                        let isFontBigAlt = fontBigCombo != nil && c.firstGesture == fontBigCombo!.0 && c.secondGesture == fontBigCombo!.1
+                        return !isNavNextAlt && !isNavPrevAlt && !isSettingsAlt && !isEditLayoutAlt && !isSwapAlt && !isDeleteAlt && !isDecrementTimerAlt && !isIncrementTimerAlt && !isFontSmallAlt && !isFontMediumAlt && !isFontBigAlt
                     }) { assigned = alt }
                 }
                 position.actionCombo = assigned
