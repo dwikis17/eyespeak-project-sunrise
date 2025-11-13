@@ -47,6 +47,7 @@ private enum KeyboardActionID: Int, CaseIterable {
         [
             .addWord,
             .suggestion0, .suggestion1, .suggestion2,
+            .acceptPrediction,
             .letterQ, .letterW, .letterE, .letterR, .letterT, .letterY, .letterU, .letterI, .letterO, .letterP,
             .letterA, .letterS, .letterD, .letterF, .letterG, .letterH, .letterJ, .letterK, .letterL,
             .letterZ, .letterX, .letterC, .letterV, .letterB, .letterN, .letterM,
