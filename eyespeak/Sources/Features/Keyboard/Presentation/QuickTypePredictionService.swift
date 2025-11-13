@@ -80,12 +80,18 @@ actor QuickTypePredictionService {
     #endif
     
     private func parseList(_ text: String) -> [String] {
-        let separators = CharacterSet(charactersIn: ",\n")
-        let tokens = text
-            .components(separatedBy: separators)
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-        return Array(tokens.prefix(3))
+        let primarySeparators = CharacterSet(charactersIn: ",\n")
+        let primaryTokens = text.components(separatedBy: primarySeparators)
+        var cleaned = sanitizeTokens(primaryTokens)
+        
+        if cleaned.count < 3 {
+            // Fall back to whitespace-delimited scan if the model ignored instructions.
+            let secondaryTokens = text.components(separatedBy: .whitespacesAndNewlines)
+            let extra = sanitizeTokens(secondaryTokens, existing: Set(cleaned))
+            cleaned.append(contentsOf: extra)
+        }
+        
+        return Array(cleaned.prefix(3))
     }
     
     private func cacheKey(for context: String) -> String {
@@ -107,5 +113,45 @@ actor QuickTypePredictionService {
             cache.remove(at: cache.startIndex)
         }
         cache[key] = CacheEntry(predictions: predictions, timestamp: Date())
+    }
+    
+    private func sanitizeTokens(_ tokens: [String], existing: Set<String> = []) -> [String] {
+        var seen = existing
+        var cleaned: [String] = []
+        for token in tokens {
+            guard let word = sanitizeWord(token) else { continue }
+            guard !seen.contains(word) else { continue }
+            seen.insert(word)
+            cleaned.append(word)
+            if cleaned.count == 3 { break }
+        }
+        return cleaned
+    }
+    
+    private func sanitizeWord(_ token: String) -> String? {
+        let lowercased = token.lowercased()
+        var builder = ""
+        var hasLetter = false
+        for character in lowercased {
+            if character.isWhitespace {
+                break
+            }
+            if character.isLetter || character.isNumber {
+                builder.append(character)
+                hasLetter = true
+            } else if character == "'" && hasLetter {
+                builder.append(character)
+            } else if builder.isEmpty {
+                continue
+            } else {
+                break
+            }
+        }
+        
+        builder = builder.trimmingCharacters(in: CharacterSet(charactersIn: "'"))
+        if builder.count > 18 {
+            builder = String(builder.prefix(18))
+        }
+        return builder.isEmpty ? nil : builder
     }
 }
