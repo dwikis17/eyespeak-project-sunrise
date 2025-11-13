@@ -52,6 +52,7 @@ public class UserSettings {
     @AppStorage("fontScale") private var fontScaleRaw: String?
 
     @AppStorage("comboInputSettings") private var comboInputSettingsData: Data?
+    @AppStorage("menuComboAssignments") private var menuComboAssignmentsData: Data?
 
     var comboInputSettings: ComboInputSettings {
         get {
