@@ -44,6 +44,10 @@ import Observation
         private var decrementTimerCombo: (GestureType, GestureType)?
         // Increment timer combo (priority 8)
         private var incrementTimerCombo: (GestureType, GestureType)?
+        // Font size combos (priority 9-11)
+        private var fontSmallCombo: (GestureType, GestureType)?
+        private var fontMediumCombo: (GestureType, GestureType)?
+        private var fontBigCombo: (GestureType, GestureType)?
         
         // MARK: - Public Methods
         
@@ -104,6 +108,9 @@ import Observation
                     if let dt = decrementTimerCombo, combo.firstGesture == dt.0 && combo.secondGesture == dt.1 { continue }
                     if let it = incrementTimerCombo, combo.firstGesture == it.0 && combo.secondGesture == it.1 { continue }
                     if let cc = changeColorCombo, combo.firstGesture == cc.0 && combo.secondGesture == cc.1 { continue }
+                    if let fs = fontSmallCombo, combo.firstGesture == fs.0 && combo.secondGesture == fs.1 { continue }
+                    if let fm = fontMediumCombo, combo.firstGesture == fm.0 && combo.secondGesture == fm.1 { continue }
+                    if let fb = fontBigCombo, combo.firstGesture == fb.0 && combo.secondGesture == fb.1 { continue }
 
                     availableCombosBySlot[combo] = slotIndex
                 }
@@ -151,6 +158,20 @@ import Observation
         func setChangeColorCombo(_ combo: (GestureType, GestureType)?) {
             self.changeColorCombo = combo
         }
+        
+        /// Configure font size combos (priority 9-11)
+        func setFontSmallCombo(_ combo: (GestureType, GestureType)?) {
+            self.fontSmallCombo = combo
+        }
+        
+        func setFontMediumCombo(_ combo: (GestureType, GestureType)?) {
+            self.fontMediumCombo = combo
+        }
+        
+        func setFontBigCombo(_ combo: (GestureType, GestureType)?) {
+            self.fontBigCombo = combo
+        }
+        
         /// Configure timing window from settings
         func setTimingWindow(_ window: TimeInterval) {
             self.timingWindow = window
@@ -177,6 +198,9 @@ import Observation
                     if let d = deleteCombo, combo.firstGesture == d.0 && combo.secondGesture == d.1 { continue }
                     if let dt = decrementTimerCombo, combo.firstGesture == dt.0 && combo.secondGesture == dt.1 { continue }
                     if let it = incrementTimerCombo, combo.firstGesture == it.0 && combo.secondGesture == it.1 { continue }
+                    if let fs = fontSmallCombo, combo.firstGesture == fs.0 && combo.secondGesture == fs.1 { continue }
+                    if let fm = fontMediumCombo, combo.firstGesture == fm.0 && combo.secondGesture == fm.1 { continue }
+                    if let fb = fontBigCombo, combo.firstGesture == fb.0 && combo.secondGesture == fb.1 { continue }
                     // Use the index as the slot (0-based)
                     availableCombosBySlot[combo] = index
                 }
@@ -276,7 +300,27 @@ import Observation
                 reset()
                 return
             }
-            
+            // 8) Font small combo (priority 9)
+            if let fs = fontSmallCombo, first == fs.0 && second == fs.1 {
+                let combo = ActionCombo(name: "Font Small", firstGesture: fs.0, secondGesture: fs.1)
+                onComboMatchedBySlot?(combo, -9) // special slot index for font small
+                reset()
+                return
+            }
+            // 9) Font medium combo (priority 10)
+            if let fm = fontMediumCombo, first == fm.0 && second == fm.1 {
+                let combo = ActionCombo(name: "Font Medium", firstGesture: fm.0, secondGesture: fm.1)
+                onComboMatchedBySlot?(combo, -10) // special slot index for font medium
+                reset()
+                return
+            }
+            // 10) Font big combo (priority 11)
+            if let fb = fontBigCombo, first == fb.0 && second == fb.1 {
+                let combo = ActionCombo(name: "Font Big", firstGesture: fb.0, secondGesture: fb.1)
+                onComboMatchedBySlot?(combo, -11) // special slot index for font big
+                reset()
+                return
+            }
             // 4) Find matching combo by template
             for (combo, slotIndex) in availableCombosBySlot {
                 if combo.firstGesture == first && combo.secondGesture == second {
@@ -286,6 +330,8 @@ import Observation
                     return
                 }
             }
+
+
             
             print("❌ No match found")
         }

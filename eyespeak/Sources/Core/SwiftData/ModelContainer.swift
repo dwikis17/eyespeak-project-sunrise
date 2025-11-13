@@ -87,7 +87,10 @@ extension ModelContainer {
         let deleteCombo = settings.deleteCombo
         let decrementTimerCombo = settings.decrementTimerCombo
         let incrementTimerCombo = settings.incrementTimerCombo
-        guard navNext != nil || navPrev != nil || settingsCombo != nil || editLayoutCombo != nil || swapCombo != nil || deleteCombo != nil || decrementTimerCombo != nil || incrementTimerCombo != nil else { return }
+        let fontSmallCombo = settings.fontSmallCombo
+        let fontMediumCombo = settings.fontMediumCombo
+        let fontBigCombo = settings.fontBigCombo
+        guard navNext != nil || navPrev != nil || settingsCombo != nil || editLayoutCombo != nil || swapCombo != nil || deleteCombo != nil || decrementTimerCombo != nil || incrementTimerCombo != nil || fontSmallCombo != nil || fontMediumCombo != nil || fontBigCombo != nil else { return }
 
         func isNavCombo(_ c: ActionCombo) -> Bool {
             if let n = navNext, c.firstGesture == n.0 && c.secondGesture == n.1 { return true }
@@ -98,6 +101,9 @@ extension ModelContainer {
             if let d = deleteCombo, c.firstGesture == d.0 && c.secondGesture == d.1 { return true }
             if let dt = decrementTimerCombo, c.firstGesture == dt.0 && c.secondGesture == dt.1 { return true }
             if let it = incrementTimerCombo, c.firstGesture == it.0 && c.secondGesture == it.1 { return true }
+            if let fs = fontSmallCombo, c.firstGesture == fs.0 && c.secondGesture == fs.1 { return true }
+            if let fm = fontMediumCombo, c.firstGesture == fm.0 && c.secondGesture == fm.1 { return true }
+            if let fb = fontBigCombo, c.firstGesture == fb.0 && c.secondGesture == fb.1 { return true }
             return false
         }
 
