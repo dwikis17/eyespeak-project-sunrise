@@ -63,6 +63,9 @@ public final class AACViewModel: ObservableObject {
     // Menu-specific combo storage (for Settings and Keyboard menus)
     // Key: menu name ("settings", "keyboard"), Value: Dictionary of combo -> action ID
     private var menuCombos: [String: [ActionCombo: Int]] = [:]
+    
+    // Cache of enabled gesture types for fast lookup
+    private var enabledGestureTypes: Set<GestureType> = []
 
     // Callback to navigate to settings (needs to be set by parent view)
     public var onNavigateToSettings: (() -> Void)?
@@ -119,6 +122,7 @@ public final class AACViewModel: ObservableObject {
         self.speechService = speechService
         setupGestureManager()
         restoreMenuCombosFromStorage()
+        refreshEnabledGestures()
     }
 
     // MARK: - Convenience Initializer for Backward Compatibility
@@ -129,6 +133,7 @@ public final class AACViewModel: ObservableObject {
         self.speechService = SpeechService.shared
         setupGestureManager()
         restoreMenuCombosFromStorage()
+        refreshEnabledGestures()
     }
 
     // MARK: - Setup Methods
@@ -422,6 +427,12 @@ public final class AACViewModel: ObservableObject {
 
     public func handleDetectedGesture(_ gesture: GestureType) {
         guard isGestureMode, !isCalibrating else { return }
+        
+        // Only process gestures that are enabled by the user
+        guard enabledGestureTypes.contains(gesture) else {
+            print("⛔️ Ignoring disabled gesture: \(gesture.rawValue)")
+            return
+        }
 
         lastDetectedGesture = gesture
 
@@ -887,7 +898,15 @@ public final class AACViewModel: ObservableObject {
         gestures.forEach { body in
             print(body.gestureType, body.isEnabled, "body")
         }
+        refreshEnabledGestures()
         return gestures
+    }
+    
+    /// Refresh the cache of enabled gesture types from the database
+    private func refreshEnabledGestures() {
+        let allGestures = dataManager.fetchAllUserGestures()
+        enabledGestureTypes = Set(allGestures.filter { $0.isEnabled }.map { $0.gestureType })
+        print("🔄 Refreshed enabled gestures cache: \(enabledGestureTypes.count) gestures enabled")
     }
 
     // MARK: - Grid Position Methods

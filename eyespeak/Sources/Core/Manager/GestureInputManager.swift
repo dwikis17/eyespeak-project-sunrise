@@ -20,6 +20,9 @@ import Observation
         // Timing window (how long between gestures)
         var timingWindow: TimeInterval = 2.0
         
+        // Duplicate suppression window (prevent same gesture from registering twice quickly)
+        private let duplicateSuppressionWindow: TimeInterval = 0.5
+        
         // Matched combo callback (page-relative by slot index)
         var onComboMatchedBySlot: ((ActionCombo, Int) -> Void)?
         
@@ -54,6 +57,16 @@ import Observation
         /// Register a gesture input
         func registerGesture(_ gesture: GestureType) {
             let now = Date()
+            
+            // Suppress duplicate gestures within the suppression window
+            if let previousGesture = lastGesture,
+               let lastTime = lastGestureTime,
+               gesture == previousGesture,
+               now.timeIntervalSince(lastTime) < duplicateSuppressionWindow {
+                print("⏱️ Suppressed duplicate gesture: \(gesture.rawValue) (within \(duplicateSuppressionWindow)s window)")
+                return
+            }
+            
             lastGesture = gesture
             
             // Check if previous gesture timed out
