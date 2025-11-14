@@ -56,6 +56,7 @@ struct InformationView: View {
             }
             LegendsView()
         }
+        .frame(maxHeight: .infinity)
     }
 
     private var controlPanelSection: some View {
@@ -198,7 +199,7 @@ struct InformationView: View {
                         }
                     }
                 }
-                .frame(maxHeight: 206)
+                .frame(height:.infinity)
 
                 // Live countdown bar linked to gesture timing window
                 GeometryReader { geo in

@@ -55,11 +55,12 @@ private struct MainContentView: View {
     var body: some View {
         GeometryReader { geo in
             HStack(alignment: .center, spacing: 0) {
-                InformationView()
+               InformationView()
                     .frame(
-                        width: geo.size.width * 0.23,
-                        height: geo.size.height
+                        width: geo.size.width * 0.22,
+                        height: geo.size.height - 60
                     )
+        
                     .padding()
                 Spacer()
                 Group {
@@ -80,13 +81,11 @@ private struct MainContentView: View {
 
                     case .keyboard:
                         KeyboardUIView()
-                            .padding(.horizontal, 30)
-                            .padding(.vertical, 45)
                             .frame(
-                                width: 1036,
-                                height: 1024,
-                                alignment: .bottom
+                                width: geo.size.width * 0.72,
+                                height: geo.size.height
                             )
+
                     case .eyeTrackingAccessible, .eyeTrackingSimple:
                         // Legacy tabs - default to AAC
                         CardGridView()
@@ -143,7 +142,7 @@ struct ContentView_Previews: PreviewProvider {
                 .environment(keyboardAppState)
                 .modelContainer(modelContainer)
                 .previewDisplayName("Keyboard")
-            
+
             ContentView(container: di)
                 .environment(settingsAppState)
                 .modelContainer(modelContainer)

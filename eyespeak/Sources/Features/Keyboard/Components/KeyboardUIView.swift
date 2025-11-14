@@ -127,8 +127,9 @@ struct KeyboardUIView: View {
             phraseSection
             keyboardSection
         }
-        .padding(0)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.bottom, 50)
+        .padding(.trailing, 30)
         .task {
             ensureKeyboardCombos()
         }
@@ -158,7 +159,7 @@ struct KeyboardUIView: View {
             .buttonStyle(.plain)
             .accessibilityLabel("Add word to board")
         }
-        .padding(0)
+
         .frame(maxWidth: .infinity, alignment: .topTrailing)
     }
     
@@ -177,7 +178,6 @@ struct KeyboardUIView: View {
                                 .foregroundColor(.blueholder)
                         }
                     }()
-                    
                     headerText
                         .font(Font.custom("Montserrat", size: 64))
                     
@@ -203,7 +203,7 @@ struct KeyboardUIView: View {
                     }
                     .frame(width: 60, alignment: .center)
                 }
-                .padding(0)
+    
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(.horizontal, 5)
@@ -223,7 +223,6 @@ struct KeyboardUIView: View {
             bottomLetterRow
             controlRow
         }
-        .padding(0)
         .frame(maxWidth: .infinity, alignment: .trailing)
     }
     
