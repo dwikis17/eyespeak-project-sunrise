@@ -28,7 +28,7 @@ struct LegendsView: View {
         
         return VStack(alignment: .leading, spacing: 13) {
             Text("LEGENDS")
-                .font(Typography.montserratBoldBody)
+                .font(Typography.boldHeader)
                 .foregroundColor(.black)
             
             Rectangle()
@@ -39,7 +39,7 @@ struct LegendsView: View {
             
             if items.isEmpty {
                 Text("No gestures selected yet.")
-                    .font(Typography.legendLabel)
+                    .font(Typography.regularBody)
                     .foregroundColor(Color(red: 0.67, green: 0.67, blue: 0.67))
                     .padding(.vertical, 14)
             } else if hasMultipleColumns {
@@ -104,7 +104,7 @@ private struct LegendRow: View {
     var body: some View {
         HStack(alignment: .center) {
             Text(item.title)
-                .font(Typography.legendLabel)
+                .font(Typography.boldBody)
                 .foregroundColor(Color(red: 0.67, green: 0.67, blue: 0.67))
             Spacer()
             legendIcon

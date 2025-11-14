@@ -10,7 +10,7 @@ import SwiftData
 @MainActor
 @Observable
 public class AppStateManager {
-    var currentTab: Tab = .aac
+    var currentTab: Tab = .settings
     let settings = UserSettings()
     var hasCompletedOnboarding = false
     var showOnboarding = false

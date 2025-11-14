@@ -31,6 +31,23 @@ import Observation
         private var navPrev: (GestureType, GestureType)?
         // Settings combo (priority 3)
         private var settingsCombo: (GestureType, GestureType)?
+        private var keyboardCombo: (GestureType, GestureType)?
+        // Edit Layout combo (priority 4)
+        private var editLayoutCombo: (GestureType, GestureType)?
+        // Swap combo (priority 5)
+        private var swapCombo: (GestureType, GestureType)?
+        private var changeColorCombo: (GestureType, GestureType)?
+        // Delete combo (priority 6)
+        private var deleteCombo: (GestureType, GestureType)?
+
+        // Decrement timer combo (priority 7)
+        private var decrementTimerCombo: (GestureType, GestureType)?
+        // Increment timer combo (priority 8)
+        private var incrementTimerCombo: (GestureType, GestureType)?
+        // Font size combos (priority 9-11)
+        private var fontSmallCombo: (GestureType, GestureType)?
+        private var fontMediumCombo: (GestureType, GestureType)?
+        private var fontBigCombo: (GestureType, GestureType)?
         
         // MARK: - Public Methods
         
@@ -85,6 +102,16 @@ import Observation
                     if let n = navNext, combo.firstGesture == n.0 && combo.secondGesture == n.1 { continue }
                     if let p = navPrev, combo.firstGesture == p.0 && combo.secondGesture == p.1 { continue }
                     if let s = settingsCombo, combo.firstGesture == s.0 && combo.secondGesture == s.1 { continue }
+                    if let e = editLayoutCombo, combo.firstGesture == e.0 && combo.secondGesture == e.1 { continue }
+                    if let sw = swapCombo, combo.firstGesture == sw.0 && combo.secondGesture == sw.1 { continue }
+                    if let d = deleteCombo, combo.firstGesture == d.0 && combo.secondGesture == d.1 { continue }
+                    if let dt = decrementTimerCombo, combo.firstGesture == dt.0 && combo.secondGesture == dt.1 { continue }
+                    if let it = incrementTimerCombo, combo.firstGesture == it.0 && combo.secondGesture == it.1 { continue }
+                    if let cc = changeColorCombo, combo.firstGesture == cc.0 && combo.secondGesture == cc.1 { continue }
+                    if let fs = fontSmallCombo, combo.firstGesture == fs.0 && combo.secondGesture == fs.1 { continue }
+                    if let fm = fontMediumCombo, combo.firstGesture == fm.0 && combo.secondGesture == fm.1 { continue }
+                    if let fb = fontBigCombo, combo.firstGesture == fb.0 && combo.secondGesture == fb.1 { continue }
+
                     availableCombosBySlot[combo] = slotIndex
                 }
             }
@@ -100,6 +127,89 @@ import Observation
         /// Configure settings combo (priority 3, after nav prev/next)
         func setSettingsCombo(_ combo: (GestureType, GestureType)?) {
             self.settingsCombo = combo
+        }
+        
+        /// Configure edit layout combo (priority 4, after settings)
+        func setEditLayoutCombo(_ combo: (GestureType, GestureType)?) {
+            self.editLayoutCombo = combo
+        }
+        
+        /// Configure swap combo (priority 5, after edit layout)
+        func setSwapCombo(_ combo: (GestureType, GestureType)?) {
+            self.swapCombo = combo
+        }
+        
+        
+        /// Configure delete combo (priority 6, after swap)
+        func setDeleteCombo(_ combo: (GestureType, GestureType)?) {
+            self.deleteCombo = combo
+        }
+
+        /// Configure decrement timer combo (priority 7, after delete)
+        func setDecrementTimerCombo(_ combo: (GestureType, GestureType)?) {
+            self.decrementTimerCombo = combo
+        }
+        
+        /// Configure increment timer combo (priority 8, after decrement timer)
+        func setIncrementTimerCombo(_ combo: (GestureType, GestureType)?) {
+            self.incrementTimerCombo = combo
+        }
+        
+        func setChangeColorCombo(_ combo: (GestureType, GestureType)?) {
+            self.changeColorCombo = combo
+        }
+        
+        /// Configure font size combos (priority 9-11)
+        func setFontSmallCombo(_ combo: (GestureType, GestureType)?) {
+            self.fontSmallCombo = combo
+        }
+        
+        func setFontMediumCombo(_ combo: (GestureType, GestureType)?) {
+            self.fontMediumCombo = combo
+        }
+        
+        func setFontBigCombo(_ combo: (GestureType, GestureType)?) {
+            self.fontBigCombo = combo
+        }
+
+        func setKeyboardCombo(_ combo: (GestureType, GestureType)?) {
+            self.keyboardCombo = combo
+        }
+        /// Configure timing window from settings
+        func setTimingWindow(_ window: TimeInterval) {
+            self.timingWindow = window
+        }
+        
+        /// Load menu-specific combos directly (for Settings/Keyboard menus)
+        /// This avoids creating temporary GridPosition objects that might interfere with the database
+        func loadMenuCombos(_ menuComboMap: [ActionCombo: Int]) {
+            availableCombosBySlot.removeAll()
+            guard !menuComboMap.isEmpty else { return }
+            
+            // Sort by actionId to ensure consistent slot mapping
+            let sortedCombos = menuComboMap.sorted { $0.value < $1.value }
+            
+            for (index, (combo, actionId)) in sortedCombos.enumerated() {
+                if combo.isEnabled {
+                    // Skip combos reserved for navigation priority
+                    if let n = navNext, combo.firstGesture == n.0 && combo.secondGesture == n.1 { continue }
+                    if let p = navPrev, combo.firstGesture == p.0 && combo.secondGesture == p.1 { continue }
+                    if let s = settingsCombo, combo.firstGesture == s.0 && combo.secondGesture == s.1 { continue }
+                    if let e = editLayoutCombo, combo.firstGesture == e.0 && combo.secondGesture == e.1 { continue }
+                    if let sw = swapCombo, combo.firstGesture == sw.0 && combo.secondGesture == sw.1 { continue }
+                    if let k = keyboardCombo, combo.firstGesture == k.0 && combo.secondGesture == k.1 { continue }
+                    if let cc = changeColorCombo, combo.firstGesture == cc.0 && combo.secondGesture == cc.1 { continue }
+                    if let d = deleteCombo, combo.firstGesture == d.0 && combo.secondGesture == d.1 { continue }
+                    if let dt = decrementTimerCombo, combo.firstGesture == dt.0 && combo.secondGesture == dt.1 { continue }
+                    if let it = incrementTimerCombo, combo.firstGesture == it.0 && combo.secondGesture == it.1 { continue }
+                    if let fs = fontSmallCombo, combo.firstGesture == fs.0 && combo.secondGesture == fs.1 { continue }
+                    if let fm = fontMediumCombo, combo.firstGesture == fm.0 && combo.secondGesture == fm.1 { continue }
+                    if let fb = fontBigCombo, combo.firstGesture == fb.0 && combo.secondGesture == fb.1 { continue }
+                    // Use the index as the slot (0-based)
+                    availableCombosBySlot[combo] = index
+                }
+            }
+            print("✅ Loaded \(availableCombosBySlot.count) menu-specific combos")
         }
         
         /// Reset gesture sequence
@@ -150,8 +260,78 @@ import Observation
                 reset()
                 return
             }
+            // 3) Edit Layout combo (priority 4)
+            if let e = editLayoutCombo, first == e.0 && second == e.1 {
+                let combo = ActionCombo(name: "Edit Layout", firstGesture: e.0, secondGesture: e.1)
+                onComboMatchedBySlot?(combo, -4) // special slot index for edit layout
+                reset()
+                return
+            }
+            // 4) Swap combo (priority 5)
+            if let sw = swapCombo, first == sw.0 && second == sw.1 {
+                let combo = ActionCombo(name: "Swap", firstGesture: sw.0, secondGesture: sw.1)
+                onComboMatchedBySlot?(combo, -5) // special slot index for swap
+                reset()
+                return
+            }
+            // 5) Delete combo (priority 6)
+            if let d = deleteCombo, first == d.0 && second == d.1 {
+                let combo = ActionCombo(name: "Delete", firstGesture: d.0, secondGesture: d.1)
+                onComboMatchedBySlot?(combo, -6) // special slot index for delete
+                reset()
+                return
+            }
+
+            // 6) Decrement timer combo (priority 7)
+            if let dt = decrementTimerCombo, first == dt.0 && second == dt.1 {
+                let combo = ActionCombo(name: "Decrement Timer", firstGesture: dt.0, secondGesture: dt.1)
+                onComboMatchedBySlot?(combo, -7) // special slot index for decrement timer
+                reset()
+                return
+            }
+            // 7) Increment timer combo (priority 8)
+            if let it = incrementTimerCombo, first == it.0 && second == it.1 {
+                let combo = ActionCombo(name: "Increment Timer", firstGesture: it.0, secondGesture: it.1)
+                onComboMatchedBySlot?(combo, -8) // special slot index for increment timer
+                reset()
+                return
+            }
             
-            // 3) Find matching combo by template
+            if let cc = changeColorCombo, first == cc.0 && second == cc.1 {
+                let combo = ActionCombo(name: "Change Color", firstGesture: cc.0, secondGesture: cc.1)
+                onComboMatchedBySlot?(combo, -9) // special slot index for changing color
+                reset()
+                return
+            }
+            // 8) Font small combo (priority 9)
+            if let fs = fontSmallCombo, first == fs.0 && second == fs.1 {
+                let combo = ActionCombo(name: "Font Small", firstGesture: fs.0, secondGesture: fs.1)
+                onComboMatchedBySlot?(combo, -9) // special slot index for font small
+                reset()
+                return
+            }
+            // 9) Font medium combo (priority 10)
+            if let fm = fontMediumCombo, first == fm.0 && second == fm.1 {
+                let combo = ActionCombo(name: "Font Medium", firstGesture: fm.0, secondGesture: fm.1)
+                onComboMatchedBySlot?(combo, -10) // special slot index for font medium
+                reset()
+                return
+            }
+            // 10) Font big combo (priority 11)
+            if let fb = fontBigCombo, first == fb.0 && second == fb.1 {
+                let combo = ActionCombo(name: "Font Big", firstGesture: fb.0, secondGesture: fb.1)
+                onComboMatchedBySlot?(combo, -11) // special slot index for font big
+                reset()
+                return
+            }
+            // 11) Keyboard combo (priority 12)
+            if let k = keyboardCombo, first == k.0 && second == k.1 {
+                let combo = ActionCombo(name: "Keyboard", firstGesture: k.0, secondGesture: k.1)
+                onComboMatchedBySlot?(combo, -12) // special slot index for keyboard
+                reset()
+                return
+            }
+            // 4) Find matching combo by template
             for (combo, slotIndex) in availableCombosBySlot {
                 if combo.firstGesture == first && combo.secondGesture == second {
                     print("✨ MATCH FOUND! Combo: \(combo.name) at slot #\(slotIndex)")
@@ -160,6 +340,7 @@ import Observation
                     return
                 }
             }
+
             
             print("❌ No match found")
         }

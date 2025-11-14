@@ -17,12 +17,15 @@ struct AACFaceTrackingView: UIViewRepresentable {
     @Binding var status: FaceStatus
     var onGesture: ((GestureType) -> Void)?
     var onEyesClosed: (() -> Void)? = nil
+    var onEyesClosedForCalibration: (() -> Void)? = nil
+    var onEyesClosedForSnooze: (() -> Void)? = nil
     var eyesClosedDuration: CFTimeInterval = 3.0
 
     func makeCoordinator() -> Coordinator {
         let coordinator = Coordinator(status: $status, eyesClosedDuration: eyesClosedDuration)
         coordinator.onGesture = onGesture
-        coordinator.onEyesClosed = onEyesClosed
+        coordinator.onEyesClosedForCalibration = onEyesClosedForCalibration
+        coordinator.onEyesClosedForSnooze = onEyesClosedForSnooze
         return coordinator
     }
 
@@ -44,7 +47,10 @@ struct AACFaceTrackingView: UIViewRepresentable {
 
     func updateUIView(_ uiView: ARSCNView, context: Context) {
         context.coordinator.onGesture = onGesture
-        context.coordinator.onEyesClosed = onEyesClosed
+        context.coordinator.onEyesClosedForCalibration = onEyesClosedForCalibration
+        context.coordinator.onEyesClosedForSnooze = onEyesClosedForSnooze
+                context.coordinator.onEyesClosed = onEyesClosed
+
     }
 
     static func dismantleUIView(_ uiView: ARSCNView, coordinator: Coordinator) {
@@ -77,6 +83,12 @@ struct AACFaceTrackingView: UIViewRepresentable {
         private var lastSmileState = false
         private var directionLatch: FaceStatus.Direction = .center
         private var eyesClosedStartTime: CFAbsoluteTime?
+        private var eyesClosedCalibrateTriggered = false
+        private var eyesClosedSnoozeTriggered = false
+        private let calibrationHoldDuration: CFTimeInterval = 2.0
+        private let snoozeHoldDuration: CFTimeInterval = 4.0
+        var onEyesClosedForCalibration: (() -> Void)?
+        var onEyesClosedForSnooze: (() -> Void)?
         private var eyesClosedTriggered = false
         private let eyesClosedDuration: CFTimeInterval
         var onEyesClosed: (() -> Void)?
@@ -227,20 +239,28 @@ struct AACFaceTrackingView: UIViewRepresentable {
                 if lipsPuckerRight && !self.lastLipRightState { self.onGesture?(.lipPuckerLeft) }
                 if smiling && !self.lastSmileState { self.onGesture?(.smile) }
 
-                // Detect sustained eye closure for calibration trigger
+                // Detect sustained eye closure for calibration/snooze triggers
                 if leftBlink && rightBlink {
                     if self.eyesClosedStartTime == nil {
                         self.eyesClosedStartTime = CACurrentMediaTime()
                     }
-                    if let start = self.eyesClosedStartTime,
-                       !self.eyesClosedTriggered,
-                       CACurrentMediaTime() - start >= self.eyesClosedDuration {
-                        self.eyesClosedTriggered = true
-                        self.onEyesClosed?()
+                    if let start = self.eyesClosedStartTime {
+                        let elapsed = CACurrentMediaTime() - start
+                        if !self.eyesClosedCalibrateTriggered,
+                           elapsed >= self.calibrationHoldDuration {
+                            self.eyesClosedCalibrateTriggered = true
+                            self.onEyesClosedForCalibration?()
+                        }
+                        if !self.eyesClosedSnoozeTriggered,
+                           elapsed >= self.snoozeHoldDuration {
+                            self.eyesClosedSnoozeTriggered = true
+                            self.onEyesClosedForSnooze?()
+                        }
                     }
                 } else {
                     self.eyesClosedStartTime = nil
-                    self.eyesClosedTriggered = false
+                    self.eyesClosedCalibrateTriggered = false
+                    self.eyesClosedSnoozeTriggered = false
                 }
 
                 // Update last-state flags
