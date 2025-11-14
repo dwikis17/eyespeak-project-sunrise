@@ -6,6 +6,7 @@ struct LegendsView: View {
         filter: #Predicate<UserGesture> { $0.isEnabled == true },
         sort: [SortDescriptor(\UserGesture.order)]
     ) private var enabledGestures: [UserGesture]
+    @AppStorage("fontSize") private var fontSize: Double = 14
     
     private var legendItems: [LegendItem] {
         enabledGestures.map(LegendItem.init)
@@ -55,6 +56,7 @@ struct LegendsView: View {
         .padding(16.679)
         .background(Color.white)
         .cornerRadius(22.239)
+        .id(fontSize)
     }
 }
 
