@@ -20,7 +20,7 @@ struct AACFaceTrackingView: UIViewRepresentable {
     var onEyesClosedForSnooze: (() -> Void)? = nil
 
     func makeCoordinator() -> Coordinator {
-        let coordinator = Coordinator(status: $status)
+        let coordinator = Coordinator(status: $status, eyesClosedDuration: eyesClosedDuration)
         coordinator.onGesture = onGesture
         coordinator.onEyesClosedForCalibration = onEyesClosedForCalibration
         coordinator.onEyesClosedForSnooze = onEyesClosedForSnooze
@@ -30,27 +30,34 @@ struct AACFaceTrackingView: UIViewRepresentable {
     func makeUIView(context: Context) -> ARSCNView {
         let view = ARSCNView(frame: .zero)
         view.automaticallyUpdatesLighting = true
+        view.contentMode = .scaleAspectFill
         view.session.delegate = context.coordinator
         view.delegate = context.coordinator
         view.scene = SCNScene()
+        // Run face tracking once on creation instead of on every SwiftUI update
+        if ARFaceTrackingConfiguration.isSupported {
+            let config = ARFaceTrackingConfiguration()
+            config.isLightEstimationEnabled = true
+            view.session.run(config, options: [.resetTracking, .removeExistingAnchors])
+        }
         return view
     }
 
     func updateUIView(_ uiView: ARSCNView, context: Context) {
-        guard ARFaceTrackingConfiguration.isSupported else { return }
-        let config = ARFaceTrackingConfiguration()
-        config.isLightEstimationEnabled = true
-        uiView.session.run(config, options: [.resetTracking, .removeExistingAnchors])
         context.coordinator.onGesture = onGesture
         context.coordinator.onEyesClosedForCalibration = onEyesClosedForCalibration
         context.coordinator.onEyesClosedForSnooze = onEyesClosedForSnooze
     }
 
+    static func dismantleUIView(_ uiView: ARSCNView, coordinator: Coordinator) {
+        uiView.session.pause()
+    }
+
     final class Coordinator: NSObject, ARSCNViewDelegate, ARSessionDelegate {
         @Binding var status: FaceStatus
-        private let blinkThreshold: Float = 0.6 // 0..1 blend shape value
-        private let blinkSuppressionThreshold: Float = 0.5
-        private let blinkSuppressionDecay: Float = 0.025
+        private let blinkThreshold: Float = 0.5 // 0..1 blend shape value
+        private let blinkSuppressionThreshold: Float = 0.45
+        private let blinkSuppressionDecay: Float = 0.035
         private let mouthOpenThreshold: Float = 0.35
         private let eyebrowsRaiseThreshold: Float = 0.25
         private let lipShiftThreshold: Float = 0.18
@@ -72,15 +79,13 @@ struct AACFaceTrackingView: UIViewRepresentable {
         private var lastSmileState = false
         private var directionLatch: FaceStatus.Direction = .center
         private var eyesClosedStartTime: CFAbsoluteTime?
-        private var eyesClosedCalibrateTriggered = false
-        private var eyesClosedSnoozeTriggered = false
-        private let calibrationHoldDuration: CFTimeInterval = 2.0
-        private let snoozeHoldDuration: CFTimeInterval = 4.0
-        var onEyesClosedForCalibration: (() -> Void)?
-        var onEyesClosedForSnooze: (() -> Void)?
+        private var eyesClosedTriggered = false
+        private let eyesClosedDuration: CFTimeInterval = 2.0
+        var onEyesClosed: (() -> Void)?
 
-        init(status: Binding<FaceStatus>) {
+        init(status: Binding<FaceStatus>, eyesClosedDuration: CFTimeInterval) {
             self._status = status
+            self.eyesClosedDuration = eyesClosedDuration
         }
 
         private func playSound(for direction: FaceStatus.Direction) {
@@ -100,6 +105,9 @@ struct AACFaceTrackingView: UIViewRepresentable {
             AudioServicesPlaySystemSound(soundID)
         }
 
+        private var lastUpdateTime: CFTimeInterval = 0
+        private let minUpdateInterval: CFTimeInterval = 1.0 / 30.0
+
         func session(_ session: ARSession, didUpdate frame: ARFrame) {
             // no-op; we use didUpdate node for face anchor below
         }
@@ -110,6 +118,11 @@ struct AACFaceTrackingView: UIViewRepresentable {
 
         func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
             guard let faceAnchor = anchor as? ARFaceAnchor else { return }
+
+            // Throttle processing to reduce frame retention in delegate
+            let now = CACurrentMediaTime()
+            if now - lastUpdateTime < minUpdateInterval { return }
+            lastUpdateTime = now
 
             let transform = faceAnchor.transform
             let (yaw, pitch) = Self.extractYawPitch(from: transform)

@@ -12,8 +12,8 @@ extension LinearGradient {
     /// Orange Gradient - From #F6924F to #E21E1E
     static let orangeGradient = LinearGradient(
         gradient: Gradient(colors: [
-            Color(hex: "#F6924F")!,
-            Color(hex: "#E21E1E")!
+            Color(hex: "#E21E1E")!,
+            Color(hex: "#F6924F")!
         ]),
         startPoint: .leading,
         endPoint: .trailing
