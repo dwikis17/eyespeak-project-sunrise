@@ -26,6 +26,7 @@ struct AACFaceTrackingView: UIViewRepresentable {
         coordinator.onGesture = onGesture
         coordinator.onEyesClosedForCalibration = onEyesClosedForCalibration
         coordinator.onEyesClosedForSnooze = onEyesClosedForSnooze
+        coordinator.onEyesClosed = onEyesClosed
         return coordinator
     }
 
@@ -49,8 +50,7 @@ struct AACFaceTrackingView: UIViewRepresentable {
         context.coordinator.onGesture = onGesture
         context.coordinator.onEyesClosedForCalibration = onEyesClosedForCalibration
         context.coordinator.onEyesClosedForSnooze = onEyesClosedForSnooze
-                context.coordinator.onEyesClosed = onEyesClosed
-
+        context.coordinator.onEyesClosed = onEyesClosed
     }
 
     static func dismantleUIView(_ uiView: ARSCNView, coordinator: Coordinator) {
@@ -246,6 +246,11 @@ struct AACFaceTrackingView: UIViewRepresentable {
                     }
                     if let start = self.eyesClosedStartTime {
                         let elapsed = CACurrentMediaTime() - start
+                        if !self.eyesClosedTriggered,
+                           elapsed >= self.eyesClosedDuration {
+                            self.eyesClosedTriggered = true
+                            self.onEyesClosed?()
+                        }
                         if !self.eyesClosedCalibrateTriggered,
                            elapsed >= self.calibrationHoldDuration {
                             self.eyesClosedCalibrateTriggered = true
@@ -259,6 +264,7 @@ struct AACFaceTrackingView: UIViewRepresentable {
                     }
                 } else {
                     self.eyesClosedStartTime = nil
+                    self.eyesClosedTriggered = false
                     self.eyesClosedCalibrateTriggered = false
                     self.eyesClosedSnoozeTriggered = false
                 }
