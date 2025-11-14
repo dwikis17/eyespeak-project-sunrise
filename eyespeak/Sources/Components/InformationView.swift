@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 // Reusable Card wrapper
 struct Card<Content: View>: View {
@@ -9,7 +10,6 @@ struct Card<Content: View>: View {
     }
 
     var body: some View {
-
         content
             .padding()  // internal padding for content
             .background(
@@ -38,18 +38,22 @@ struct InformationView: View {
                     HStack(alignment: .top, spacing: 15) {
                         AACFaceTrackingPanel()
                             .frame(maxWidth: .infinity)
-        
+
                         lastInputSection
                             .frame(width: 112)
                             .frame(maxHeight: .infinity)
                     }
-                    
+
                 }
-                .frame(maxHeight: 191) // Stretches the HStack
+                .frame(maxHeight: 191)  // Stretches the HStack
             } else {
                 gestureModePlaceholder
             }
-            controlPanelSection
+            if viewModel.isEditMode {
+                editView
+            } else {
+                controlPanelSection
+            }
             LegendsView()
         }
     }
@@ -57,86 +61,98 @@ struct InformationView: View {
     private var controlPanelSection: some View {
         LazyVGrid(columns: columns, spacing: 10) {
             // Settings button with optional combo badge
-            // Use NavigationCard directly and pass optional combos + action
-            // Calibrate card (moved from panel)
-                 if let settingsCombo = viewModel.settings.settingsCombo {
-                NavigationCard(
-                    title: "Settings",
-                    background: .customBlue,
-                    cornerRadius: 22,
-                    firstCombo: settingsCombo.0.iconName,
-                    secondCombo: settingsCombo.1.iconName
-                ) {
-                    // action closure
-                    appState.currentTab = .settings
+            if viewModel.currentMenu != .settings {
+                if let settingsCombo = viewModel.settings.settingsCombo {
+                    NavigationCard(
+                        title: "Settings",
+                        background: .mellowBlue,
+                        cornerRadius: 22,
+                        firstCombo: settingsCombo.0,
+                        secondCombo: settingsCombo.1
+                    ) {
+                        // action closure
+                        appState.currentTab = .settings
+                    }
+                } else {
+                    // no combo configured — keep same visual but without pill
+                    NavigationCard(
+                        title: "Settings",
+                        background: .mellowBlue,
+                        cornerRadius: 22,
+                        firstCombo: nil,
+                        secondCombo: nil
+                    ) {
+                        appState.currentTab = .settings
+                    }
                 }
             } else {
-                // no combo configured — keep same visual but without pill
+                if let settingsCombo = viewModel.settings.settingsCombo {
+                    NavigationCard(
+                        title: "AAC Board",
+                        background: .mellowBlue,
+                        cornerRadius: 22,
+                        firstCombo: settingsCombo.0,
+                        secondCombo: settingsCombo.1
+                    ) {
+                        // action closure
+                        appState.currentTab = .aac
+                    }
+                } else {
+                    // no combo configured — keep same visual but without pill
+                    NavigationCard(
+                        title: "AAC Board",
+                        background: .mellowBlue,
+                        cornerRadius: 22,
+                        firstCombo: nil,
+                        secondCombo: nil
+                    ) {
+                        appState.currentTab = .aac
+                    }
+                }
+            }
+
+            // Keyboard button (mirrors style, navigates to Keyboard tab)
+            if let keyboardCombo = viewModel.settings.keyboardCombo {
                 NavigationCard(
-                    title: "Settings",
-                    background: .customBlue,
+                    title: "Keyboard",
+                    background: .mellowBlue,
+                    cornerRadius: 22,
+                    firstCombo: keyboardCombo.0,
+                    secondCombo: keyboardCombo.1
+                ) {
+                    appState.currentTab = .keyboard
+                }
+            } else {
+                NavigationCard(
+                    title: "Keyboard",
+                    background: .mellowBlue,
                     cornerRadius: 22,
                     firstCombo: nil,
                     secondCombo: nil
                 ) {
-                    appState.currentTab = .settings
+                    appState.currentTab = .keyboard
                 }
             }
+            // Calibrate card
             NavigationCard(
                 title: "Calibrate",
-                background: .customBlue,
+                background: .mellowBlue,
                 cornerRadius: 22,
                 firstCombo: nil,
                 secondCombo: nil
             ) {
                 viewModel.toggleCalibration()
             }
-       
-            if let settingsCombo = viewModel.settings.settingsCombo {
-                NavigationCard(
-                    title: "Settings",
-                    background: .customBlue,
-                    cornerRadius: 22,
-                    firstCombo: settingsCombo.0.iconName,
-                    secondCombo: settingsCombo.1.iconName
-                ) {
-                    // action closure
-                    appState.currentTab = .settings
-                }
-            } else {
-                // no combo configured — keep same visual but without pill
-                NavigationCard(
-                    title: "Settings",
-                    background: .customBlue,
-                    cornerRadius: 22,
-                    firstCombo: nil,
-                    secondCombo: nil
-                ) {
-                    appState.currentTab = .settings
-                }
-            }
-            if let settingsCombo = viewModel.settings.settingsCombo {
-                NavigationCard(
-                    title: "Settings",
-                    background: .customBlue,
-                    cornerRadius: 22,
-                    firstCombo: settingsCombo.0.iconName,
-                    secondCombo: settingsCombo.1.iconName
-                ) {
-                    // action closure
-                    appState.currentTab = .settings
-                }
-            } else {
-                // no combo configured — keep same visual but without pill
-                NavigationCard(
-                    title: "Settings",
-                    background: .customBlue,
-                    cornerRadius: 22,
-                    firstCombo: nil,
-                    secondCombo: nil
-                ) {
-                    appState.currentTab = .settings
-                }
+            
+            // Snooze card
+            NavigationCard(
+                title: "Snooze",
+                background: .mellowBlue,
+                cornerRadius: 22,
+                firstCombo: nil,
+                secondCombo: nil
+            ) {
+                viewModel.toggleSnooze()
             }
         }
     }
@@ -145,7 +161,7 @@ struct InformationView: View {
         Card {
             VStack(alignment: .leading, spacing: 12) {
                 Text("CURRENT INPUT")
-                    .font(Typography.montserratBoldBody)
+                    .font(Typography.boldTitle)
                     .foregroundColor(.primary)
 
                 Divider()
@@ -153,7 +169,7 @@ struct InformationView: View {
                 // Inner gradient card with live last-input icons
                 ZStack(alignment: .center) {
                     RoundedRectangle(cornerRadius: 14)
-                        .fill(LinearGradient.redOrange)
+                        .fill(LinearGradient.orangeGradient)
                         .shadow(
                             color: .black.opacity(0.08),
                             radius: 6,
@@ -182,7 +198,7 @@ struct InformationView: View {
                         }
                     }
                 }
-                .frame(maxHeight: .infinity)
+                .frame(maxHeight: 206)
 
                 // Live countdown bar linked to gesture timing window
                 GeometryReader { geo in
@@ -221,7 +237,10 @@ struct InformationView: View {
                     .font(AppFont.Montserrat.bold(13))
                 Divider()
                 VStack(spacing: 10) {
-                    ForEach(Array(viewModel.recentCombos.prefix(3).enumerated()), id: \.offset) { _, pair in
+                    ForEach(
+                        Array(viewModel.recentCombos.prefix(3).enumerated()),
+                        id: \.offset
+                    ) { _, pair in
                         HStack(spacing: 12) {
                             Image(systemName: pair.0.iconName)
                             Image(systemName: pair.1.iconName)
@@ -233,9 +252,196 @@ struct InformationView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                     }
                 }
-            
+
             }
             .frame(maxHeight: .infinity, alignment: .top)
+        }
+    }
+
+    private var editView: some View {
+        Card {
+            VStack(alignment: .center, spacing: 20) {
+                HStack {
+                    Text("Edit Mode")
+                        .font(AppFont.Montserrat.bold(13))
+                        .foregroundColor(.primary)
+
+                    if viewModel.isSwapMode {
+                        Spacer()
+                        Text("SWAP MODE")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(.orange)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.orange.opacity(0.2))
+                            .cornerRadius(8)
+                    }
+                }
+
+                Divider()
+
+                if viewModel.isSwapMode {
+                    // Swap mode: show first selected card and waiting message
+                    VStack(spacing: 12) {
+                        selectedCardView
+                        Text("Select second card to swap")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                            .multilineTextAlignment(.center)
+
+                        Button("Cancel Swap") {
+                            viewModel.cancelSwapMode()
+                        }
+                        .font(.caption)
+                        .foregroundColor(.red)
+                        .padding(.top, 8)
+                    }
+                } else {
+                    HStack(alignment: .center, spacing: 15) {
+                        // Selected Item (Left)
+                        VStack(spacing: 8) {
+                            selectedCardView
+                            Text("Selected")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+
+                        // Connector Arrow (Middle)
+                        Image("arrow")
+                            .renderingMode(.template)
+                            .foregroundColor(.primary)
+
+                        // Edit Options (Right)
+                        editOptionsView
+                    }
+                }
+            }
+        }
+    }
+
+    private var selectedCardView: some View {
+        Group {
+            // In swap mode, show first swap position; otherwise show selected position
+            let positionToShow =
+                viewModel.isSwapMode
+                ? viewModel.firstSwapPosition : viewModel.selectedPosition
+
+            if let position = positionToShow,
+                let card = position.card,
+                !card.title.isEmpty
+            {
+                // Selected card with content
+                CardContentView(
+                    card: card,
+                    isPressed: false,
+                    isHighlighted: false
+                )
+                .frame(width: 103, height: 103)
+            } else {
+                // Default fallback - empty card placeholder
+                EmptyCellView()
+                    .frame(width: 103, height: 103)
+
+            }
+        }
+    }
+
+    private var editOptionsView: some View {
+        VStack(spacing: 10) {
+            // Delete button
+            editOptionButton(
+                icon: "arrow.left",
+                title: "Delete",
+                combo: viewModel.settings.deleteCombo
+            ) {
+                // Delete action is handled by combo matching in edit mode
+                viewModel.performDeleteAction()
+            }
+
+            // Swap button
+            editOptionButton(
+                icon: "questionmark",
+                title: "Swap",
+                combo: viewModel.settings.swapCombo,
+                useDoubleIcon: true
+            ) {
+                // Swap action is handled by combo matching in edit mode
+                if let position = viewModel.selectedPosition {
+                    viewModel.performSwapAction()
+                }
+            }
+
+            // Color button
+            editOptionButton(
+                icon: "arrow.left",
+                title: "Color",
+                combo: viewModel.settings.changeColorCombo
+            ) {
+                // TODO: Implement color action
+            }
+        }
+    }
+
+    private func editOptionButton(
+        icon: String,
+        title: String,
+        combo: (GestureType, GestureType)?,
+        useDoubleIcon: Bool = false,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                // Combo badge or icon on left
+                if let combo = combo {
+                    // Show combo badge if combo is provided
+                    ComboPill(
+                        firstGesture: combo.0,
+                        secondGesture: combo.1,
+                        foreground: .black,
+                        background: Color.customGray,
+                        size: CGSize(width: 38.431, height: 21.679),
+                        paddingValue: 4.927,
+                        iconSize: 11.825,
+                        spacing: 4.927,
+                        cornerRadius: 64.0517
+                    )
+                } else if useDoubleIcon {
+                    // For Swap button with question marks when no combo is provided
+                    HStack(spacing: 4) {
+                        Image(systemName: icon)
+                            .font(.system(size: 11.825, weight: .semibold))
+                        Image(systemName: icon)
+                            .font(.system(size: 11.825, weight: .semibold))
+                    }
+                    .foregroundColor(.whiteWhite)
+                    .padding(4.927)
+                    .frame(width: 38.431, height: 21.679)
+                    .background(Color.gray.opacity(0.3))
+                    .cornerRadius(64.0517)
+                } else {
+                    // Single icon fallback
+                    Image(systemName: icon)
+                        .font(.system(size: 11.825, weight: .semibold))
+                        .foregroundColor(.whiteWhite)
+                        .padding(4.927)
+                        .frame(width: 38.431, height: 21.679)
+                        .background(Color.gray.opacity(0.3))
+                        .cornerRadius(64.0517)
+                }
+
+                // Button title
+                Text(title)
+                    .font(AppFont.Montserrat.bold(7.4))
+                    .foregroundStyle(.white)
+
+            }
+            .frame(maxWidth: 90)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(Color.mellowBlue)
+            .cornerRadius(16.44)
+
         }
     }
 

@@ -18,22 +18,52 @@ enum AppFont {
 }
 
 enum Typography {
+    private static func scale() -> CGFloat {
+        let fontScaleRaw = UserDefaults.standard.string(forKey: "fontScale") ?? "medium"
+        let fontScale = FontScale(rawValue: fontScaleRaw) ?? .medium
+        return fontScale.multiplier
+    }
+    
     //Title
-    static let boldHeaderLarge = AppFont.Montserrat.bold(38, relativeTo: .largeTitle)
-    static let boldHeaderJumbo = AppFont.Montserrat.bold(64, relativeTo: .largeTitle)
+    static var boldHeaderLarge: Font {
+        AppFont.Montserrat.bold(38 * scale(), relativeTo: .largeTitle)
+    }
+    static var boldHeaderJumbo: Font {
+        AppFont.Montserrat.bold(64 * scale(), relativeTo: .largeTitle)
+    }
     
     // Headers (18pt)
-    static let boldHeader = AppFont.Montserrat.bold(18, relativeTo: .title3)
+    static var boldHeader: Font {
+        AppFont.Montserrat.bold(18 * scale(), relativeTo: .title3)
+    }
     
-    static let regularHeader = AppFont.Montserrat.regular(18, relativeTo: .title3)
+    static var regularHeader: Font {
+        AppFont.Montserrat.regular(18 * scale(), relativeTo: .title3)
+    }
 
-    // Common aliases used in views
-    static let montserratMediumBody = AppFont.Montserrat.medium(17, relativeTo: .body)
-    static let montserratBoldBody   = AppFont.Montserrat.bold(17, relativeTo: .body)
+    // Titles (14pt)
+    static var boldTitle: Font {
+        AppFont.Montserrat.bold(14 * scale(), relativeTo: .body)
+    }
+    static var regularTitle: Font {
+        AppFont.Montserrat.regular(14 * scale(), relativeTo: .body)
+    }
 
-    // Helvetica Neue preset as requested
-    static let helveticaCaption = Font.custom("HelveticaNeue", size: 16.5549, relativeTo: .caption)
+    // Body (9pt)
+    static var boldBody: Font {
+        AppFont.Montserrat.bold(9 * scale(), relativeTo: .caption2)
+    }
+    static var regularBody: Font {
+        AppFont.Montserrat.regular(9 * scale(), relativeTo: .caption2)
+    }
 
-    // Legends small label preset
-    static let legendLabel = AppFont.Montserrat.bold(9, relativeTo: .caption2)
+    // Keyboard
+    static var keyboardMedium: Font {
+        AppFont.Montserrat.medium(28 * scale(), relativeTo: .title)
+    }
+    
+    // Card title font (scaled headline)
+    static var cardTitle: Font {
+        AppFont.Montserrat.semibold(17 * scale(), relativeTo: .headline)
+    }
 }

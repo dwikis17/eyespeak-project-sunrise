@@ -48,7 +48,7 @@ struct EyeTrackingCardCell: View {
                 VStack {
                     HStack {
                         Spacer()
-                        GestureIndicatorBadge(combo: combo)
+                        GestureIndicatorBadge(combo: combo, badgeColor: position.card?.color)
                     }
                     Spacer()
                 }

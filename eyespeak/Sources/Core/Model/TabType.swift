@@ -8,7 +8,7 @@
 import Foundation
 
 
-enum Tab: Hashable, CaseIterable {
+public enum Tab: Hashable, CaseIterable {
     case keyboard
     case aac
     case eyeTrackingAccessible

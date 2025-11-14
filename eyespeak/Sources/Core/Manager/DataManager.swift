@@ -61,6 +61,14 @@ public final class DataManager {
         return (try? modelContext.fetch(descriptor)) ?? []
     }
     
+    func fetchActionCombo(id: UUID) -> ActionCombo? {
+        var descriptor = FetchDescriptor<ActionCombo>(
+            predicate: #Predicate { $0.id == id }
+        )
+        descriptor.fetchLimit = 1
+        return try? modelContext.fetch(descriptor).first
+    }
+    
     func fetchAllUserGestures() -> [UserGesture] {
         let descriptor = FetchDescriptor<UserGesture>()
         return (try? modelContext.fetch(descriptor)) ?? []
