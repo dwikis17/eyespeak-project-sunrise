@@ -110,6 +110,9 @@ private struct MainContentView: View {
             aacViewModel.onNavigateToAAC = {
                 appState.currentTab = .aac
             }
+            aacViewModel.onNavigateToKeyboard = {
+                appState.currentTab = .keyboard
+            }
             // Set initial menu
             aacViewModel.setCurrentMenu(appState.currentTab)
         }

@@ -70,6 +70,8 @@ public final class AACViewModel: ObservableObject {
     // Callback to navigate to AAC (needs to be set by parent view)
     public var onNavigateToAAC: (() -> Void)?
 
+    public var onNavigateToKeyboard: (() -> Void)?
+
     // Callback for menu-specific combo matches (Settings, Keyboard)
     public var onMenuComboMatched: ((String, ActionCombo, Int) -> Void)?
 
@@ -150,7 +152,7 @@ public final class AACViewModel: ObservableObject {
                     print(
                         "✨ Settings navigation combo matched in \(menuName) menu"
                     )
-                    if self.currentMenu == .aac {
+                    if self.currentMenu != .settings {
                         self.onNavigateToSettings?()
                     } else if self.currentMenu == .settings {
                         self.onNavigateToAAC?()
@@ -158,56 +160,75 @@ public final class AACViewModel: ObservableObject {
                     return
                 }
 
-                if let decrementTimerCombo = self.settings.decrementTimerCombo,
-                    combo.firstGesture == decrementTimerCombo.0
-                        && combo.secondGesture == decrementTimerCombo.1
+                if let keyboardCombo = self.settings.keyboardCombo,
+                    combo.firstGesture == keyboardCombo.0
+                        && combo.secondGesture == keyboardCombo.1
                 {
-                    print("✨ Decrement Timer combo matched in \(menuName) menu")
-                    self.settings.timerSpeed = max(
-                        0.5,
-                        self.settings.timerSpeed - 1.0
-                    )
+                    print("✨ Keyboard combo matched in \(menuName) menu")
+                    self.onNavigateToKeyboard?()
+                    print("HERE")
                     return
                 }
 
-                if let incrementTimerCombo = self.settings.incrementTimerCombo,
-                    combo.firstGesture == incrementTimerCombo.0
-                        && combo.secondGesture == incrementTimerCombo.1
-                {
-                    print("✨ Increment Timer combo matched in \(menuName) menu")
-                    self.settings.timerSpeed = min(
-                        5.0,
-                        self.settings.timerSpeed + 1.0
-                    )
-                    return
-                }
+                if self.currentMenu == .settings {
+                    if let incrementTimerCombo = self.settings
+                        .incrementTimerCombo,
+                        combo.firstGesture == incrementTimerCombo.0
+                            && combo.secondGesture == incrementTimerCombo.1
+                    {
+                        print(
+                            "✨ Increment Timer combo matched in \(menuName) menu"
+                        )
+                        self.settings.timerSpeed = min(
+                            5.0,
+                            self.settings.timerSpeed + 1.0
+                        )
+                        return
+                    }
 
-                // Font size combos
-                if let fontSmallCombo = self.settings.fontSmallCombo,
-                    combo.firstGesture == fontSmallCombo.0
-                        && combo.secondGesture == fontSmallCombo.1
-                {
-                    print("✨ Font Small combo matched in \(menuName) menu")
-                    self.settings.fontScale = .small
-                    return
-                }
+                    if let decrementTimerCombo = self.settings
+                        .decrementTimerCombo,
+                        combo.firstGesture == decrementTimerCombo.0
+                            && combo.secondGesture == decrementTimerCombo.1
+                    {
+                        print(
+                            "✨ Decrement Timer combo matched in \(menuName) menu"
+                        )
+                        self.settings.timerSpeed = max(
+                            0.5,
+                            self.settings.timerSpeed - 1.0
+                        )
+                        return
+                    }
 
-                if let fontMediumCombo = self.settings.fontMediumCombo,
-                    combo.firstGesture == fontMediumCombo.0
-                        && combo.secondGesture == fontMediumCombo.1
-                {
-                    print("✨ Font Medium combo matched in \(menuName) menu")
-                    self.settings.fontScale = .medium
-                    return
-                }
+                    // Font size combos
+                    if let fontSmallCombo = self.settings.fontSmallCombo,
+                        combo.firstGesture == fontSmallCombo.0
+                            && combo.secondGesture == fontSmallCombo.1
+                    {
+                        print("✨ Font Small combo matched in \(menuName) menu")
+                        self.settings.fontScale = .small
+                        return
+                    }
 
-                if let fontBigCombo = self.settings.fontBigCombo,
-                    combo.firstGesture == fontBigCombo.0
-                        && combo.secondGesture == fontBigCombo.1
-                {
-                    print("✨ Font Big combo matched in \(menuName) menu")
-                    self.settings.fontScale = .big
-                    return
+                    if let fontMediumCombo = self.settings.fontMediumCombo,
+                        combo.firstGesture == fontMediumCombo.0
+                            && combo.secondGesture == fontMediumCombo.1
+                    {
+                        print("✨ Font Medium combo matched in \(menuName) menu")
+                        self.settings.fontScale = .medium
+                        return
+                    }
+
+                    if let fontBigCombo = self.settings.fontBigCombo,
+                        combo.firstGesture == fontBigCombo.0
+                            && combo.secondGesture == fontBigCombo.1
+                    {
+                        print("✨ Font Big combo matched in \(menuName) menu")
+                        self.settings.fontScale = .big
+                        return
+                    }
+
                 }
 
                 // IMPORTANT: Check menuCombos FIRST when in edit actions mode
@@ -246,14 +267,13 @@ public final class AACViewModel: ObservableObject {
                 // Only check editLayoutCombo if NOT in edit actions mode
                 // This prevents conflicts when save combo matches editLayoutCombo
                 if !self.isEditActionsMode,
-                   let editLayoutCombo = self.settings.editLayoutCombo,
-                   combo.firstGesture == editLayoutCombo.0
-                    && combo.secondGesture == editLayoutCombo.1
+                    let editLayoutCombo = self.settings.editLayoutCombo,
+                    combo.firstGesture == editLayoutCombo.0
+                        && combo.secondGesture == editLayoutCombo.1
                 {
                     print("✨ Edit Layout combo matched in \(menuName) menu")
                     self.toggleEditMode()
                     onNavigateToAAC?()
-
                     return
                 }
                 // If no match in menu combos, don't trigger AAC actions
@@ -292,6 +312,7 @@ public final class AACViewModel: ObservableObject {
             gestureInputManager.setSettingsCombo(settings.settingsCombo)
             // Set timing window from settings
             gestureInputManager.setTimingWindow(settings.timerSpeed)
+            gestureInputManager.setKeyboardCombo(settings.keyboardCombo)
             // Set timer combos (always available)
             gestureInputManager.setDecrementTimerCombo(
                 settings.decrementTimerCombo
@@ -668,20 +689,24 @@ public final class AACViewModel: ObservableObject {
     public func createCard(title: String, imageData: Data?) -> AACard? {
         return try? dataManager.createCard(title: title, imageData: imageData)
     }
-    
+
     @discardableResult
     public func addCardFromKeyboard(text: String) -> Bool {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return false }
-        guard let card = createCard(title: trimmed, imageData: nil) else { return false }
-        
+        guard let card = createCard(title: trimmed, imageData: nil) else {
+            return false
+        }
+
         if let emptySlot = positions.first(where: { $0.card == nil }) {
             assignCardToPosition(card, position: emptySlot)
             return true
         }
-        
+
         do {
-            let newPosition = try dataManager.createGridPosition(index: positions.count)
+            let newPosition = try dataManager.createGridPosition(
+                index: positions.count
+            )
             assignCardToPosition(card, position: newPosition)
             return true
         } catch {
@@ -690,7 +715,7 @@ public final class AACViewModel: ObservableObject {
             return false
         }
     }
-    
+
     // MARK: - Combo Handling
 
     private func handleComboMatched(combo: ActionCombo, position: GridPosition)
@@ -746,6 +771,11 @@ public final class AACViewModel: ObservableObject {
                 }
             }
         }
+    }
+
+    private func performKeyboardAction() {
+        print("🎯 Keyboard action triggered")
+        onNavigateToKeyboard?()
     }
 
     private func handleComboMatched(combo: ActionCombo, slotIndex: Int) {
@@ -806,6 +836,11 @@ public final class AACViewModel: ObservableObject {
 
             return
         }
+        if slotIndex == -12 {
+            recordRecentCombo(combo)
+            performKeyboardAction()
+            return
+        }
 
         let index = currentPage * pageSize + slotIndex
         guard index >= 0, index < positions.count else {
@@ -848,9 +883,9 @@ public final class AACViewModel: ObservableObject {
 
     public func fetchAllUserGestures() -> [UserGesture] {
         let gestures = dataManager.fetchAllUserGestures()
-        print(gestures.count,"count")
+        print(gestures.count, "count")
         gestures.forEach { body in
-            print(body.gestureType,body.isEnabled,"body")
+            print(body.gestureType, body.isEnabled, "body")
         }
         return gestures
     }
@@ -1152,6 +1187,7 @@ public final class AACViewModel: ObservableObject {
                 gestureInputManager.setNavigationCombos(prev: nil, next: nil)
             }
             gestureInputManager.setSettingsCombo(settings.settingsCombo)
+            gestureInputManager.setKeyboardCombo(settings.keyboardCombo)
             // Set timing window from settings
             gestureInputManager.setTimingWindow(settings.timerSpeed)
             // Set timer combos (always available)
@@ -1200,6 +1236,7 @@ public final class AACViewModel: ObservableObject {
             // that might interfere with the database
             gestureInputManager.setNavigationCombos(prev: nil, next: nil)
             gestureInputManager.setSettingsCombo(settings.settingsCombo)
+            gestureInputManager.setKeyboardCombo(settings.keyboardCombo)
             // Set timing window from settings
             gestureInputManager.setTimingWindow(settings.timerSpeed)
             // Set timer combos (always available)
@@ -1248,10 +1285,17 @@ public final class AACViewModel: ObservableObject {
             )
             return
         }
-        
-        storeMenuCombo(combo, menuName: menuName, actionId: actionId, persist: true)
-        print("✅ Assigned combo \(combo.name) to \(menuName) menu action \(actionId)")
-        
+
+        storeMenuCombo(
+            combo,
+            menuName: menuName,
+            actionId: actionId,
+            persist: true
+        )
+        print(
+            "✅ Assigned combo \(combo.name) to \(menuName) menu action \(actionId)"
+        )
+
         if currentMenu == menu {
             reloadCombosForCurrentMenu()
         }
@@ -1262,19 +1306,20 @@ public final class AACViewModel: ObservableObject {
         guard let menuName = menuName(for: menu) else {
             return [:]
         }
-        
+
         return menuCombos[menuName] ?? [:]
     }
-    
+
     // MARK: - Menu Combo Persistence Helpers
-    
+
     private func restoreMenuCombosFromStorage() {
         let assignments = settings.allMenuComboAssignments()
         guard !assignments.isEmpty else { return }
-        
+
         for assignment in assignments {
-            guard let _ = tab(for: assignment.menuName),
-                  let combo = dataManager.fetchActionCombo(id: assignment.comboId) else {
+            guard tab(for: assignment.menuName) != nil,
+                let combo = dataManager.fetchActionCombo(id: assignment.comboId)
+            else {
                 continue
             }
             storeMenuCombo(
@@ -1285,7 +1330,7 @@ public final class AACViewModel: ObservableObject {
             )
         }
     }
-    
+
     private func storeMenuCombo(
         _ combo: ActionCombo,
         menuName: String,
@@ -1298,7 +1343,7 @@ public final class AACViewModel: ObservableObject {
         }
         mapping[combo] = actionId
         menuCombos[menuName] = mapping
-        
+
         if persist {
             settings.setMenuComboAssignment(
                 menuName: menuName,
@@ -1307,7 +1352,7 @@ public final class AACViewModel: ObservableObject {
             )
         }
     }
-    
+
     private func menuName(for menu: Tab) -> String? {
         switch menu {
         case .settings:
@@ -1318,7 +1363,7 @@ public final class AACViewModel: ObservableObject {
             return nil
         }
     }
-    
+
     private func tab(for menuName: String) -> Tab? {
         switch menuName {
         case "settings":
@@ -1347,6 +1392,7 @@ public final class AACViewModel: ObservableObject {
         let navNext = settings.navNextCombo
         let navPrev = settings.navPrevCombo
         let settingsCombo = settings.settingsCombo
+        let keyboardCombo = settings.keyboardCombo
         let editLayoutCombo = settings.editLayoutCombo
         let swapCombo = settings.swapCombo
         let deleteCombo = settings.deleteCombo
@@ -1359,20 +1405,55 @@ public final class AACViewModel: ObservableObject {
 
         // Filter out priority combos to avoid conflicts with InformationView
         let availableCombos = allCombos.filter { combo in
-            let isNavNext = navNext != nil && combo.firstGesture == navNext!.0 && combo.secondGesture == navNext!.1
-            let isNavPrev = navPrev != nil && combo.firstGesture == navPrev!.0 && combo.secondGesture == navPrev!.1
-            let isSettings = settingsCombo != nil && combo.firstGesture == settingsCombo!.0 && combo.secondGesture == settingsCombo!.1
-            let isEditLayout = editLayoutCombo != nil && combo.firstGesture == editLayoutCombo!.0 && combo.secondGesture == editLayoutCombo!.1
-            let isSwap = swapCombo != nil && combo.firstGesture == swapCombo!.0 && combo.secondGesture == swapCombo!.1
-            let isDelete = deleteCombo != nil && combo.firstGesture == deleteCombo!.0 && combo.secondGesture == deleteCombo!.1
-            let isChangeColor = changeColorCombo != nil && combo.firstGesture == changeColorCombo!.0 && combo.secondGesture == changeColorCombo!.1
-            let isDecrementTimer = decrementTimerCombo != nil && combo.firstGesture == decrementTimerCombo!.0 && combo.secondGesture == decrementTimerCombo!.1
-            let isIncrementTimer = incrementTimerCombo != nil && combo.firstGesture == incrementTimerCombo!.0 && combo.secondGesture == incrementTimerCombo!.1
-            let isFontSmall = fontSmallCombo != nil && combo.firstGesture == fontSmallCombo!.0 && combo.secondGesture == fontSmallCombo!.1
-            let isFontMedium = fontMediumCombo != nil && combo.firstGesture == fontMediumCombo!.0 && combo.secondGesture == fontMediumCombo!.1
-            let isFontBig = fontBigCombo != nil && combo.firstGesture == fontBigCombo!.0 && combo.secondGesture == fontBigCombo!.1
-            
-            return !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isChangeColor && !isDecrementTimer && !isIncrementTimer && !isFontSmall && !isFontMedium && !isFontBig
+            let isNavNext =
+                navNext != nil && combo.firstGesture == navNext!.0
+                && combo.secondGesture == navNext!.1
+            let isNavPrev =
+                navPrev != nil && combo.firstGesture == navPrev!.0
+                && combo.secondGesture == navPrev!.1
+            let isSettings =
+                settingsCombo != nil && combo.firstGesture == settingsCombo!.0
+                && combo.secondGesture == settingsCombo!.1
+            let isEditLayout =
+                editLayoutCombo != nil
+                && combo.firstGesture == editLayoutCombo!.0
+                && combo.secondGesture == editLayoutCombo!.1
+            let isSwap =
+                swapCombo != nil && combo.firstGesture == swapCombo!.0
+                && combo.secondGesture == swapCombo!.1
+            let isDelete =
+                deleteCombo != nil && combo.firstGesture == deleteCombo!.0
+                && combo.secondGesture == deleteCombo!.1
+            let isChangeColor =
+                changeColorCombo != nil
+                && combo.firstGesture == changeColorCombo!.0
+                && combo.secondGesture == changeColorCombo!.1
+            let isDecrementTimer =
+                decrementTimerCombo != nil
+                && combo.firstGesture == decrementTimerCombo!.0
+                && combo.secondGesture == decrementTimerCombo!.1
+            let isIncrementTimer =
+                incrementTimerCombo != nil
+                && combo.firstGesture == incrementTimerCombo!.0
+                && combo.secondGesture == incrementTimerCombo!.1
+            let isFontSmall =
+                fontSmallCombo != nil && combo.firstGesture == fontSmallCombo!.0
+                && combo.secondGesture == fontSmallCombo!.1
+            let isFontMedium =
+                fontMediumCombo != nil
+                && combo.firstGesture == fontMediumCombo!.0
+                && combo.secondGesture == fontMediumCombo!.1
+            let isFontBig =
+                fontBigCombo != nil && combo.firstGesture == fontBigCombo!.0
+                && combo.secondGesture == fontBigCombo!.1
+            let isKeyboard =
+                keyboardCombo != nil && combo.firstGesture == keyboardCombo!.0
+                && combo.secondGesture == keyboardCombo!.1
+
+            return !isNavNext && !isNavPrev && !isSettings && !isEditLayout
+                && !isSwap && !isDelete && !isChangeColor && !isDecrementTimer
+                && !isIncrementTimer && !isFontSmall && !isFontMedium
+                && !isFontBig && !isKeyboard
         }
 
         guard !availableCombos.isEmpty else {
@@ -1416,7 +1497,9 @@ public final class AACViewModel: ObservableObject {
             assignComboToMenu(combo, menu: .settings, actionId: 14)
         }
 
-        print("✅ Generated edit actions combos (excluded \(allCombos.count - availableCombos.count) priority combos)")
+        print(
+            "✅ Generated edit actions combos (excluded \(allCombos.count - availableCombos.count) priority combos)"
+        )
     }
 
     /// Regenerate combos after saving gesture changes
@@ -1462,7 +1545,8 @@ public final class AACViewModel: ObservableObject {
         let positionDescriptor = FetchDescriptor<GridPosition>(
             sortBy: [SortDescriptor(\.order)]
         )
-        let existingPositions = (try? modelContext.fetch(positionDescriptor)) ?? []
+        let existingPositions =
+            (try? modelContext.fetch(positionDescriptor)) ?? []
         let pageCount = max(
             1,
             Int(
@@ -1476,10 +1560,9 @@ public final class AACViewModel: ObservableObject {
         if existingPositions.count != newTotalPositions {
             try? dataManager.resizeGrid(newTotal: newTotalPositions)
         }
-        let currentPositions = (
-            (try? modelContext.fetch(positionDescriptor))
-                ?? []
-        )
+        let currentPositions =
+            ((try? modelContext.fetch(positionDescriptor))
+                ?? [])
 
         // Clear current grid combo references to avoid invalidated objects.
         if !currentPositions.isEmpty {
@@ -1493,7 +1576,8 @@ public final class AACViewModel: ObservableObject {
         menuCombos["settings"] = [:]
 
         // Delete existing combos
-        let existingCombos = (try? modelContext.fetch(FetchDescriptor<ActionCombo>())) ?? []
+        let existingCombos =
+            (try? modelContext.fetch(FetchDescriptor<ActionCombo>())) ?? []
         for combo in existingCombos { modelContext.delete(combo) }
         try? modelContext.save()
 
@@ -1504,7 +1588,9 @@ public final class AACViewModel: ObservableObject {
         var combos: [ActionCombo] = []
 
         // Prioritize navigation pairs
-        if supportedSelected.contains(.lookLeft) && supportedSelected.contains(.lookRight) {
+        if supportedSelected.contains(.lookLeft)
+            && supportedSelected.contains(.lookRight)
+        {
             combos.append(
                 ActionCombo(
                     name: makeName(.lookLeft, .lookRight),
@@ -1520,7 +1606,9 @@ public final class AACViewModel: ObservableObject {
                 )
             )
         }
-        if supportedSelected.contains(.lookUp) && supportedSelected.contains(.lookDown) {
+        if supportedSelected.contains(.lookUp)
+            && supportedSelected.contains(.lookDown)
+        {
             combos.append(
                 ActionCombo(
                     name: makeName(.lookUp, .lookDown),
@@ -1569,10 +1657,14 @@ public final class AACViewModel: ObservableObject {
         // Determine priority combos similar to onboarding flow.
         var navNext: (GestureType, GestureType)?
         var navPrev: (GestureType, GestureType)?
-        if supportedSelected.contains(.lookLeft) && supportedSelected.contains(.lookRight) {
+        if supportedSelected.contains(.lookLeft)
+            && supportedSelected.contains(.lookRight)
+        {
             navNext = (.lookLeft, .lookRight)
             navPrev = (.lookRight, .lookLeft)
-        } else if supportedSelected.contains(.lookUp) && supportedSelected.contains(.lookDown) {
+        } else if supportedSelected.contains(.lookUp)
+            && supportedSelected.contains(.lookDown)
+        {
             navNext = (.lookUp, .lookDown)
             navPrev = (.lookDown, .lookUp)
         }
@@ -1603,6 +1695,7 @@ public final class AACViewModel: ObservableObject {
         }
 
         settings.settingsCombo = nextPriorityCombo()
+        settings.keyboardCombo = nextPriorityCombo()
         settings.editLayoutCombo = nextPriorityCombo()
         settings.swapCombo = nextPriorityCombo()
         settings.deleteCombo = nextPriorityCombo()

@@ -209,13 +209,40 @@ public final class OnboardingViewModel {
         }
         settings.settingsCombo = settingsCombo
 
+        var keyboardCombo: (GestureType, GestureType)?
+        for combo in combos {
+            let isNavNext = navNext != nil && combo.firstGesture == navNext!.0 && combo.secondGesture == navNext!.1
+            let isNavPrev = navPrev != nil && combo.firstGesture == navPrev!.0 && combo.secondGesture == navPrev!.1
+            let isSettings = settingsCombo != nil && combo.firstGesture == settingsCombo!.0 && combo.secondGesture == settingsCombo!.1
+            if !isNavNext && !isNavPrev && !isSettings {
+                keyboardCombo = (combo.firstGesture, combo.secondGesture)
+                break
+            }
+        }
+        // Fallback: if no combo found, use first combo that's not nav or settings
+        if keyboardCombo == nil {
+            if let firstNonPriority = combos.first(where: { c in
+                let isNavNext = navNext != nil && c.firstGesture == navNext!.0 && c.secondGesture == navNext!.1
+                let isNavPrev = navPrev != nil && c.firstGesture == navPrev!.0 && c.secondGesture == navPrev!.1
+                let isSettings = settingsCombo != nil && c.firstGesture == settingsCombo!.0 && c.secondGesture == settingsCombo!.1
+                return !isNavNext && !isNavPrev && !isSettings
+            }) {
+                keyboardCombo = (firstNonPriority.firstGesture, firstNonPriority.secondGesture)
+            }
+        }
+        settings.keyboardCombo = keyboardCombo
+
+        print(keyboardCombo)
+   
+
         // Assign edit layout combo (priority 4) - use next available combo that's not nav or settings
         var editLayoutCombo: (GestureType, GestureType)?
         for combo in combos {
             let isNavNext = navNext != nil && combo.firstGesture == navNext!.0 && combo.secondGesture == navNext!.1
             let isNavPrev = navPrev != nil && combo.firstGesture == navPrev!.0 && combo.secondGesture == navPrev!.1
             let isSettings = settingsCombo != nil && combo.firstGesture == settingsCombo!.0 && combo.secondGesture == settingsCombo!.1
-            if !isNavNext && !isNavPrev && !isSettings {
+            let isKeyboard = keyboardCombo != nil && combo.firstGesture == keyboardCombo!.0 && combo.secondGesture == keyboardCombo!.1
+            if !isNavNext && !isNavPrev && !isSettings && !isKeyboard {
                 editLayoutCombo = (combo.firstGesture, combo.secondGesture)
                 break
             }
@@ -226,12 +253,14 @@ public final class OnboardingViewModel {
                 let isNavNext = navNext != nil && c.firstGesture == navNext!.0 && c.secondGesture == navNext!.1
                 let isNavPrev = navPrev != nil && c.firstGesture == navPrev!.0 && c.secondGesture == navPrev!.1
                 let isSettings = settingsCombo != nil && c.firstGesture == settingsCombo!.0 && c.secondGesture == settingsCombo!.1
-                return !isNavNext && !isNavPrev && !isSettings
+                let isKeyboard = keyboardCombo != nil && c.firstGesture == keyboardCombo!.0 && c.secondGesture == keyboardCombo!.1
+                return !isNavNext && !isNavPrev && !isSettings && !isKeyboard
             }) {
                 editLayoutCombo = (firstNonPriority.firstGesture, firstNonPriority.secondGesture)
             }
         }
         settings.editLayoutCombo = editLayoutCombo
+        print(editLayoutCombo,"HEHHEHE")
 
         // Assign swap combo (priority 5) - use next available combo that's not nav, settings, or edit layout
         var swapCombo: (GestureType, GestureType)?
@@ -296,7 +325,8 @@ public final class OnboardingViewModel {
             let isEditLayout = editLayoutCombo != nil && combo.firstGesture == editLayoutCombo!.0 && combo.secondGesture == editLayoutCombo!.1
             let isSwap = swapCombo != nil && combo.firstGesture == swapCombo!.0 && combo.secondGesture == swapCombo!.1
             let isDelete = deleteCombo != nil && combo.firstGesture == deleteCombo!.0 && combo.secondGesture == deleteCombo!.1
-            if !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete {
+            let isKeyboard = keyboardCombo != nil && combo.firstGesture == keyboardCombo!.0 && combo.secondGesture == keyboardCombo!.1
+            if !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isKeyboard {
                 decrementTimerCombo = (combo.firstGesture, combo.secondGesture)
                 break
             }
@@ -310,7 +340,8 @@ public final class OnboardingViewModel {
                 let isEditLayout = editLayoutCombo != nil && c.firstGesture == editLayoutCombo!.0 && c.secondGesture == editLayoutCombo!.1
                 let isSwap = swapCombo != nil && c.firstGesture == swapCombo!.0 && c.secondGesture == swapCombo!.1
                 let isDelete = deleteCombo != nil && c.firstGesture == deleteCombo!.0 && c.secondGesture == deleteCombo!.1
-                return !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete
+                let isKeyboard = keyboardCombo != nil && c.firstGesture == keyboardCombo!.0 && c.secondGesture == keyboardCombo!.1
+                return !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isKeyboard
             }) {
                 decrementTimerCombo = (firstNonPriority.firstGesture, firstNonPriority.secondGesture)
             }
@@ -327,7 +358,8 @@ public final class OnboardingViewModel {
             let isSwap = swapCombo != nil && combo.firstGesture == swapCombo!.0 && combo.secondGesture == swapCombo!.1
             let isDelete = deleteCombo != nil && combo.firstGesture == deleteCombo!.0 && combo.secondGesture == deleteCombo!.1
             let isDecrementTimer = decrementTimerCombo != nil && combo.firstGesture == decrementTimerCombo!.0 && combo.secondGesture == decrementTimerCombo!.1
-            if !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isDecrementTimer {
+            let isKeyboard = keyboardCombo != nil && combo.firstGesture == keyboardCombo!.0 && combo.secondGesture == keyboardCombo!.1
+            if !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isDecrementTimer && !isKeyboard {
                 incrementTimerCombo = (combo.firstGesture, combo.secondGesture)
                 break
             }
@@ -342,7 +374,8 @@ public final class OnboardingViewModel {
                 let isSwap = swapCombo != nil && c.firstGesture == swapCombo!.0 && c.secondGesture == swapCombo!.1
                 let isDelete = deleteCombo != nil && c.firstGesture == deleteCombo!.0 && c.secondGesture == deleteCombo!.1
                 let isDecrementTimer = decrementTimerCombo != nil && c.firstGesture == decrementTimerCombo!.0 && c.secondGesture == decrementTimerCombo!.1
-                return !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isDecrementTimer
+                let isKeyboard = keyboardCombo != nil && c.firstGesture == keyboardCombo!.0 && c.secondGesture == keyboardCombo!.1
+                return !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isDecrementTimer && !isKeyboard
             }) {
                 incrementTimerCombo = (firstNonPriority.firstGesture, firstNonPriority.secondGesture)
             }
@@ -360,7 +393,8 @@ public final class OnboardingViewModel {
             let isDelete = deleteCombo != nil && combo.firstGesture == deleteCombo!.0 && combo.secondGesture == deleteCombo!.1
             let isDecrementTimer = decrementTimerCombo != nil && combo.firstGesture == decrementTimerCombo!.0 && combo.secondGesture == decrementTimerCombo!.1
             let isIncrementTimer = incrementTimerCombo != nil && combo.firstGesture == incrementTimerCombo!.0 && combo.secondGesture == incrementTimerCombo!.1
-            if !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isDecrementTimer && !isIncrementTimer {
+            let isKeyboard = keyboardCombo != nil && combo.firstGesture == keyboardCombo!.0 && combo.secondGesture == keyboardCombo!.1
+            if !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isDecrementTimer && !isIncrementTimer && !isKeyboard {
                 fontSmallCombo = (combo.firstGesture, combo.secondGesture)
                 break
             }
@@ -376,12 +410,14 @@ public final class OnboardingViewModel {
                 let isDelete = deleteCombo != nil && c.firstGesture == deleteCombo!.0 && c.secondGesture == deleteCombo!.1
                 let isDecrementTimer = decrementTimerCombo != nil && c.firstGesture == decrementTimerCombo!.0 && c.secondGesture == decrementTimerCombo!.1
                 let isIncrementTimer = incrementTimerCombo != nil && c.firstGesture == incrementTimerCombo!.0 && c.secondGesture == incrementTimerCombo!.1
-                return !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isDecrementTimer && !isIncrementTimer
+                let isKeyboard = keyboardCombo != nil && c.firstGesture == keyboardCombo!.0 && c.secondGesture == keyboardCombo!.1
+                return !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isDecrementTimer && !isIncrementTimer && !isKeyboard
             }) {
                 fontSmallCombo = (firstNonPriority.firstGesture, firstNonPriority.secondGesture)
             }
         }
         settings.fontSmallCombo = fontSmallCombo
+        print(fontSmallCombo,"SMALLCOMBOSSS")
 
         // Assign font medium combo (priority 10) - use next available combo that's not nav, settings, edit layout, swap, delete, decrement timer, increment timer, font small
         var fontMediumCombo: (GestureType, GestureType)?
@@ -395,7 +431,8 @@ public final class OnboardingViewModel {
             let isDecrementTimer = decrementTimerCombo != nil && combo.firstGesture == decrementTimerCombo!.0 && combo.secondGesture == decrementTimerCombo!.1
             let isIncrementTimer = incrementTimerCombo != nil && combo.firstGesture == incrementTimerCombo!.0 && combo.secondGesture == incrementTimerCombo!.1
             let isFontSmall = fontSmallCombo != nil && combo.firstGesture == fontSmallCombo!.0 && combo.secondGesture == fontSmallCombo!.1
-            if !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isDecrementTimer && !isIncrementTimer && !isFontSmall {
+            let isKeyboard = keyboardCombo != nil && combo.firstGesture == keyboardCombo!.0 && combo.secondGesture == keyboardCombo!.1
+            if !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isDecrementTimer && !isIncrementTimer && !isFontSmall && !isKeyboard {
                 fontMediumCombo = (combo.firstGesture, combo.secondGesture)
                 break
             }
@@ -412,7 +449,8 @@ public final class OnboardingViewModel {
                 let isDecrementTimer = decrementTimerCombo != nil && c.firstGesture == decrementTimerCombo!.0 && c.secondGesture == decrementTimerCombo!.1
                 let isIncrementTimer = incrementTimerCombo != nil && c.firstGesture == incrementTimerCombo!.0 && c.secondGesture == incrementTimerCombo!.1
                 let isFontSmall = fontSmallCombo != nil && c.firstGesture == fontSmallCombo!.0 && c.secondGesture == fontSmallCombo!.1
-                return !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isDecrementTimer && !isIncrementTimer && !isFontSmall
+                let isKeyboard = keyboardCombo != nil && c.firstGesture == keyboardCombo!.0 && c.secondGesture == keyboardCombo!.1
+                return !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isDecrementTimer && !isIncrementTimer && !isFontSmall && !isKeyboard
             }) {
                 fontMediumCombo = (firstNonPriority.firstGesture, firstNonPriority.secondGesture)
             }
@@ -432,7 +470,8 @@ public final class OnboardingViewModel {
             let isIncrementTimer = incrementTimerCombo != nil && combo.firstGesture == incrementTimerCombo!.0 && combo.secondGesture == incrementTimerCombo!.1
             let isFontSmall = fontSmallCombo != nil && combo.firstGesture == fontSmallCombo!.0 && combo.secondGesture == fontSmallCombo!.1
             let isFontMedium = fontMediumCombo != nil && combo.firstGesture == fontMediumCombo!.0 && combo.secondGesture == fontMediumCombo!.1
-            if !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isDecrementTimer && !isIncrementTimer && !isFontSmall && !isFontMedium {
+            let isKeyboard = keyboardCombo != nil && combo.firstGesture == keyboardCombo!.0 && combo.secondGesture == keyboardCombo!.1
+            if !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isDecrementTimer && !isIncrementTimer && !isFontSmall && !isFontMedium && !isKeyboard {
                 fontBigCombo = (combo.firstGesture, combo.secondGesture)
                 break
             }
@@ -450,7 +489,8 @@ public final class OnboardingViewModel {
                 let isIncrementTimer = incrementTimerCombo != nil && c.firstGesture == incrementTimerCombo!.0 && c.secondGesture == incrementTimerCombo!.1
                 let isFontSmall = fontSmallCombo != nil && c.firstGesture == fontSmallCombo!.0 && c.secondGesture == fontSmallCombo!.1
                 let isFontMedium = fontMediumCombo != nil && c.firstGesture == fontMediumCombo!.0 && c.secondGesture == fontMediumCombo!.1
-                return !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isDecrementTimer && !isIncrementTimer && !isFontSmall && !isFontMedium
+                let isKeyboard = keyboardCombo != nil && c.firstGesture == keyboardCombo!.0 && c.secondGesture == keyboardCombo!.1
+                return !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isDecrementTimer && !isIncrementTimer && !isFontSmall && !isFontMedium && !isKeyboard
             }) {
                 fontBigCombo = (firstNonPriority.firstGesture, firstNonPriority.secondGesture)
             }
@@ -511,7 +551,8 @@ public final class OnboardingViewModel {
             let isFontMedium = fontMediumCombo != nil && combo.firstGesture == fontMediumCombo!.0 && combo.secondGesture == fontMediumCombo!.1
             let isFontBig = fontBigCombo != nil && combo.firstGesture == fontBigCombo!.0 && combo.secondGesture == fontBigCombo!.1
             let isChangeColor = changeColorCombo != nil && combo.firstGesture == changeColorCombo!.0 && combo.secondGesture == changeColorCombo!.1
-            return !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isDecrementTimer && !isIncrementTimer && !isFontSmall && !isFontMedium && !isFontBig && !isChangeColor
+            let isKeyboard = keyboardCombo != nil && combo.firstGesture == keyboardCombo!.0 && combo.secondGesture == keyboardCombo!.1
+            return !isNavNext && !isNavPrev && !isSettings && !isEditLayout && !isSwap && !isDelete && !isDecrementTimer && !isIncrementTimer && !isFontSmall && !isFontMedium && !isFontBig && !isChangeColor && !isKeyboard
         }
 
         for (index, position) in updatedPositions.enumerated() {

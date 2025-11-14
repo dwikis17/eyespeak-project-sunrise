@@ -40,6 +40,7 @@ public class UserSettings {
     @AppStorage("navNextCombo") private var navNextRaw: String?
     @AppStorage("navPrevCombo") private var navPrevRaw: String?
     @AppStorage("settingsCombo") private var settingsComboRaw: String?
+    @AppStorage("keyboardCombo") private var keyboardComboRaw: String?
     @AppStorage("editLayoutCombo") private var editLayoutComboRaw: String?
     @AppStorage("swapCombo") private var swapComboRaw: String?
     @AppStorage("changeColorCombo") private var changeColorComboRaw: String?
@@ -78,6 +79,10 @@ public class UserSettings {
     var settingsCombo: (GestureType, GestureType)? {
         get { decodePair(settingsComboRaw) }
         set { settingsComboRaw = encodePair(newValue) }
+    }
+    var keyboardCombo: (GestureType, GestureType)? {
+        get { decodePair(keyboardComboRaw) }
+        set { keyboardComboRaw = encodePair(newValue) }
     }
     var editLayoutCombo: (GestureType, GestureType)? {
         get { decodePair(editLayoutComboRaw) }
