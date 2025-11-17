@@ -35,8 +35,8 @@ struct GestureSelectionView: View {
     @State private var faceStatus = FaceStatus()
     @State private var isScanPaused: Bool = false
     @State private var speechSynth = AVSpeechSynthesizer()
-    @State private var playedBlinkStartCue = false
     @State private var trackingEnabled = false
+    @StateObject private var blinkHoldHandler = BlinkHoldProgressHandler()
 
     var body: some View {
         VStack(spacing: 16) {
@@ -63,14 +63,14 @@ struct GestureSelectionView: View {
         }
         .onAppear {
             initializeViewModel()
+            blinkHoldHandler.onCompleted = { handleBlinkHoldSelection() }
+            blinkHoldHandler.enable()
         }
         .overlay(
             Group {
                 if trackingEnabled {
                     AACFaceTrackingView(
-                        status: $faceStatus,
-                        onEyesClosed: { handleBlinkHoldSelection() },
-                        eyesClosedDuration: 2.0
+                        status: $faceStatus
                     )
                     .frame(width: 1, height: 1)
                     .allowsHitTesting(false)
@@ -84,7 +84,10 @@ struct GestureSelectionView: View {
                 trackingEnabled = true
             }
         }
-        .onDisappear { trackingEnabled = false }
+        .onDisappear {
+            trackingEnabled = false
+            blinkHoldHandler.disable()
+        }
     }
 
     @ViewBuilder
@@ -174,7 +177,8 @@ struct GestureSelectionView: View {
                         title: scanIndex == viewModel.userGestures.count
                             ? "Blink and hold to select Next to continue/save gestures"
                             : "Blink and hold to select",
-                        action: { toggleCurrentSelection(viewModel: viewModel) }
+                        action: { blinkHoldHandler.completeImmediately() },
+                        progress: blinkHoldHandler.progress
                     )
                         .frame(height: ctaButtonHeight)
                         .overlay(
@@ -195,23 +199,13 @@ struct GestureSelectionView: View {
             .frame(height: panelHeight)
             .onAppear { startScan(totalItems: viewModel.userGestures.count + 1) }
             .onDisappear { stopScan() }
-            .onChange(of: faceStatus.leftBlink) { newVal in
-                if newVal && !playedBlinkStartCue {
-                    AudioServicesPlaySystemSound(1057)
-                    playedBlinkStartCue = true
-                } else if !faceStatus.leftBlink && !faceStatus.rightBlink {
-                    playedBlinkStartCue = false
-                }
+            .onChange(of: faceStatus.leftBlink) { _ in
+                handleBlinkStateChange()
                 maybePauseScan()
                 maybeResumeScan()
             }
-            .onChange(of: faceStatus.rightBlink) { newVal in
-                if newVal && !playedBlinkStartCue {
-                    AudioServicesPlaySystemSound(1057)
-                    playedBlinkStartCue = true
-                } else if !faceStatus.leftBlink && !faceStatus.rightBlink {
-                    playedBlinkStartCue = false
-                }
+            .onChange(of: faceStatus.rightBlink) { _ in
+                handleBlinkStateChange()
                 maybePauseScan()
                 maybeResumeScan()
             }
@@ -312,6 +306,11 @@ struct GestureSelectionView: View {
             isScanPaused = true
             stopScan()
         }
+    }
+
+    private func handleBlinkStateChange() {
+        let eyesClosed = faceStatus.leftBlink && faceStatus.rightBlink
+        blinkHoldHandler.update(eyesClosed: eyesClosed)
     }
 
     private func speak(_ text: String) {

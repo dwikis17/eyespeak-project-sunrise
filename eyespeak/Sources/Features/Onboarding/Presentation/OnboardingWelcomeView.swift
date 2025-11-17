@@ -1,14 +1,13 @@
 import SwiftUI
 import ARKit
-import AudioToolbox
 
 struct OnboardingWelcomeView: View {
     var onContinue: () -> Void
     var totalSteps: Int = 3
     var currentStep: Int = 0
     @State private var faceStatus = FaceStatus()
-    @State private var playedBlinkStartCue = false
     @State private var trackingEnabled = true
+    @StateObject private var blinkHoldHandler = BlinkHoldProgressHandler()
     
     
     var body: some View {
@@ -36,12 +35,17 @@ struct OnboardingWelcomeView: View {
 
                             Spacer()
 
-                            BlinkHoldCTAView(title: "Blink and hold to continue", action: {
-                                // First cue: simulate blink start when button tapped
-                                trackingEnabled = false
-                                AudioServicesPlaySystemSound(1057)
-                                onContinue() // Second cue handled by parent during page change
-                            }, background: Color(.systemGray5), foreground: .black, cornerRadius: 20, height: 120, textSize: 22, iconSize: 24)
+                            BlinkHoldCTAView(
+                                title: "Blink and hold to continue",
+                                action: { blinkHoldHandler.completeImmediately() },
+                                progress: blinkHoldHandler.progress,
+                                background: Color(.systemGray5),
+                                foreground: .black,
+                                cornerRadius: 20,
+                                height: 120,
+                                textSize: 22,
+                                iconSize: 24
+                            )
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
 
@@ -62,13 +66,7 @@ struct OnboardingWelcomeView: View {
             Group {
                 if trackingEnabled {
                     AACFaceTrackingView(
-                        status: $faceStatus,
-                        onEyesClosed: {
-                            trackingEnabled = false
-                            AudioServicesPlaySystemSound(1057)
-                            onContinue()
-                        },
-                        eyesClosedDuration: 1.5
+                        status: $faceStatus
                     )
                     .frame(width: 1, height: 1)
                     .allowsHitTesting(false)
@@ -76,23 +74,28 @@ struct OnboardingWelcomeView: View {
                 }
             }
         )
-        .onDisappear { trackingEnabled = false }
-        .onChange(of: faceStatus.leftBlink) { newVal in
-            if newVal && !playedBlinkStartCue {
-                AudioServicesPlaySystemSound(1057)
-                playedBlinkStartCue = true
-            } else if !faceStatus.leftBlink && !faceStatus.rightBlink {
-                playedBlinkStartCue = false
-            }
+        .onAppear {
+            blinkHoldHandler.onCompleted = { handleBlinkHoldCompletion() }
+            blinkHoldHandler.enable()
         }
-        .onChange(of: faceStatus.rightBlink) { newVal in
-            if newVal && !playedBlinkStartCue {
-                AudioServicesPlaySystemSound(1057)
-                playedBlinkStartCue = true
-            } else if !faceStatus.leftBlink && !faceStatus.rightBlink {
-                playedBlinkStartCue = false
-            }
+        .onDisappear {
+            trackingEnabled = false
+            blinkHoldHandler.disable()
         }
+        .onChange(of: faceStatus.leftBlink) { _ in handleBlinkStateChange() }
+        .onChange(of: faceStatus.rightBlink) { _ in handleBlinkStateChange() }
+    }
+
+    private func handleBlinkStateChange() {
+        let eyesClosed = faceStatus.leftBlink && faceStatus.rightBlink
+        blinkHoldHandler.update(eyesClosed: eyesClosed)
+    }
+
+    private func handleBlinkHoldCompletion() {
+        guard trackingEnabled else { return }
+        trackingEnabled = false
+        blinkHoldHandler.disable()
+        onContinue()
     }
 }
 
