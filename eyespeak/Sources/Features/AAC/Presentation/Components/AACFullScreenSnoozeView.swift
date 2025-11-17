@@ -21,11 +21,8 @@ struct AACFullScreenSnoozeView: View {
     var body: some View {
         ZStack {
             // Blurred background that subtly reveals underlying content
-            Color.black.opacity(0.7)
+            Color.black.opacity(1)
                 .edgesIgnoringSafeArea(.all)
-                .background(
-                    BlurView(style: .systemUltraThinMaterialDark)
-                )
             
             VStack(spacing: 30) {
                 
