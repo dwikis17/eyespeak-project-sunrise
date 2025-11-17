@@ -95,23 +95,27 @@ struct AACFaceTrackingPanel: View {
                 .clipShape(RoundedRectangle(cornerRadius: 18))
             }
         }
-    
+
     }
 
     private var previewHeader: some View {
         HStack {
-            Label(
-                viewModel.faceStatus.isCalibrated
-                    ? "Calibrated" : "Not Calibrated",
-                systemImage: viewModel.faceStatus.isCalibrated
-                    ? "checkmark.seal.fill" : "exclamationmark.triangle"
-            )
-            .font(.caption)
-            .padding(.vertical, 6)
-            .padding(.horizontal, 10)
-            .background(.ultraThinMaterial)
-            .clipShape(Capsule())
-            
+            if viewModel.faceStatus.isCalibrated {
+                Circle()
+                    .foregroundColor(.green)
+                    .frame(width: 16, height: 16)
+            } else {
+                Label(
+                    "Not Calibrated",
+                    systemImage: "exclamationmark.triangle"
+                )
+                .font(.caption)
+                .padding(.vertical, 6)
+                .padding(.horizontal, 10)
+                .background(.ultraThinMaterial)
+                .clipShape(Capsule())
+            }
+
             Spacer()
         }
     }

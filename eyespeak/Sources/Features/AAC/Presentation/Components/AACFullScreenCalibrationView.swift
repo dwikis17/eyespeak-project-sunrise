@@ -181,6 +181,10 @@ struct AACFullScreenCalibrationView: View {
         case .center:
             status.neutralEyeYaw = status.eyeYawDegrees
             status.neutralEyePitch = status.eyePitchDegrees
+            status.neutralYaw = status.yawDegrees
+            status.neutralPitch = status.pitchDegrees
+            status.neutralLeftBlink = status.leftBlinkValue
+            status.neutralRightBlink = status.rightBlinkValue
         case .left:
             status.leftEyeYawEdge = status.eyeYawDegrees
         case .right:
