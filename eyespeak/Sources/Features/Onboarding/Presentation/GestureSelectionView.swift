@@ -37,6 +37,8 @@ struct GestureSelectionView: View {
     @State private var speechSynth = AVSpeechSynthesizer()
     @State private var trackingEnabled = false
     @StateObject private var blinkHoldHandler = BlinkHoldProgressHandler()
+    @State private var areEyesClosed = false
+    @State private var hasSeenEyesOpen = false
 
     var body: some View {
         VStack(spacing: 16) {
@@ -62,6 +64,7 @@ struct GestureSelectionView: View {
             Color.clear.frame(height: 40)
         }
         .onAppear {
+            hasSeenEyesOpen = false
             initializeViewModel()
             blinkHoldHandler.onCompleted = { handleBlinkHoldSelection() }
             blinkHoldHandler.enable()
@@ -295,6 +298,7 @@ struct GestureSelectionView: View {
         // Resume once both eyes are open
         if !faceStatus.leftBlink && !faceStatus.rightBlink && isScanPaused {
             isScanPaused = false
+            blinkHoldHandler.prepareForNextHold()
             let total = (viewModel?.userGestures.count ?? 0) + 1
             startScan(totalItems: total)
         }
@@ -310,6 +314,12 @@ struct GestureSelectionView: View {
 
     private func handleBlinkStateChange() {
         let eyesClosed = faceStatus.leftBlink && faceStatus.rightBlink
+        if !eyesClosed {
+            hasSeenEyesOpen = true
+        }
+        guard hasSeenEyesOpen else { return }
+        guard eyesClosed != areEyesClosed else { return }
+        areEyesClosed = eyesClosed
         blinkHoldHandler.update(eyesClosed: eyesClosed)
     }
 

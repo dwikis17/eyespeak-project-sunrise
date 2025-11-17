@@ -13,6 +13,9 @@ final class BlinkHoldProgressHandler: ObservableObject {
     private var hasCompletedCurrentHold = false
     private var isEnabled = true
     private let soundPlayer: HoldProgressSoundPlayer
+    private var didCompleteHold = false
+    private var releaseTimer: Timer?
+    private let releaseGraceDuration: TimeInterval = 0.15
 
     init(duration: CGFloat = 2.0) {
         holdDuration = duration
@@ -22,26 +25,42 @@ final class BlinkHoldProgressHandler: ObservableObject {
     func update(eyesClosed: Bool) {
         guard isEnabled else { return }
         if eyesClosed {
+            guard !didCompleteHold else { return }
+            cancelReleaseTimer()
             startHoldIfNeeded()
         } else {
-            resetHold()
+            guard !didCompleteHold else {
+                cancelReleaseTimer()
+                return
+            }
+            scheduleReleaseReset()
         }
     }
 
     func completeImmediately() {
-        guard isEnabled else { return }
+        guard isEnabled, !didCompleteHold else { return }
         progress = 1
         completeHold()
-        resetHold()
     }
 
     func disable() {
         isEnabled = false
-        resetHold()
+        resetHold(clearProgress: !didCompleteHold)
     }
 
     func enable() {
         isEnabled = true
+        prepareForNextHold()
+    }
+
+    func prepareForNextHold() {
+        stopTimer()
+        soundPlayer.stopProgressTone()
+        cancelReleaseTimer()
+        progress = 0
+        isHolding = false
+        hasCompletedCurrentHold = false
+        didCompleteHold = false
     }
 
     private func startHoldIfNeeded() {
@@ -69,21 +88,28 @@ final class BlinkHoldProgressHandler: ObservableObject {
     private func completeHold() {
         guard !hasCompletedCurrentHold else { return }
         hasCompletedCurrentHold = true
+        didCompleteHold = true
         stopTimer()
+        cancelReleaseTimer()
         soundPlayer.stopProgressTone()
         soundPlayer.playCompletionPop()
+        isHolding = false
         DispatchQueue.main.async { [weak self] in
             self?.onCompleted?()
         }
     }
 
-    private func resetHold() {
+    private func resetHold(clearProgress: Bool = true) {
         guard progress > 0 || isHolding else { return }
         stopTimer()
         soundPlayer.stopProgressTone()
-        progress = 0
+        cancelReleaseTimer()
+        if clearProgress {
+            progress = 0
+            hasCompletedCurrentHold = false
+            didCompleteHold = false
+        }
         isHolding = false
-        hasCompletedCurrentHold = false
     }
 
     private func stopTimer() {
@@ -91,8 +117,22 @@ final class BlinkHoldProgressHandler: ObservableObject {
         timer = nil
     }
 
+    private func cancelReleaseTimer() {
+        releaseTimer?.invalidate()
+        releaseTimer = nil
+    }
+
+    private func scheduleReleaseReset() {
+        cancelReleaseTimer()
+        guard progress > 0 || isHolding else { return }
+        releaseTimer = Timer.scheduledTimer(withTimeInterval: releaseGraceDuration, repeats: false) { [weak self] _ in
+            self?.resetHold(clearProgress: true)
+        }
+    }
+
     deinit {
         stopTimer()
         soundPlayer.stopProgressTone()
+        cancelReleaseTimer()
     }
 }

@@ -8,6 +8,8 @@ struct OnboardingWelcomeView: View {
     @State private var faceStatus = FaceStatus()
     @State private var trackingEnabled = true
     @StateObject private var blinkHoldHandler = BlinkHoldProgressHandler()
+    @State private var areEyesClosed = false
+    @State private var hasSeenEyesOpen = false
     
     
     var body: some View {
@@ -75,6 +77,7 @@ struct OnboardingWelcomeView: View {
             }
         )
         .onAppear {
+            hasSeenEyesOpen = false
             blinkHoldHandler.onCompleted = { handleBlinkHoldCompletion() }
             blinkHoldHandler.enable()
         }
@@ -88,6 +91,12 @@ struct OnboardingWelcomeView: View {
 
     private func handleBlinkStateChange() {
         let eyesClosed = faceStatus.leftBlink && faceStatus.rightBlink
+        if !eyesClosed {
+            hasSeenEyesOpen = true
+        }
+        guard hasSeenEyesOpen else { return }
+        guard eyesClosed != areEyesClosed else { return }
+        areEyesClosed = eyesClosed
         blinkHoldHandler.update(eyesClosed: eyesClosed)
     }
 

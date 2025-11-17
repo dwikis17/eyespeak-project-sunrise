@@ -8,6 +8,8 @@ struct OnboardingFirstTimeSetupView: View {
     @State private var faceStatus = FaceStatus()
     @State private var trackingEnabled = true
     @StateObject private var blinkHoldHandler = BlinkHoldProgressHandler()
+    @State private var areEyesClosed = false
+    @State private var hasSeenEyesOpen = false
 
     var body: some View {
         GeometryReader { geo in
@@ -81,6 +83,7 @@ struct OnboardingFirstTimeSetupView: View {
             }
         )
         .onAppear {
+            hasSeenEyesOpen = false
             blinkHoldHandler.onCompleted = { handleBlinkHoldCompletion() }
             blinkHoldHandler.enable()
         }
@@ -94,6 +97,12 @@ struct OnboardingFirstTimeSetupView: View {
 
     private func handleBlinkStateChange() {
         let eyesClosed = faceStatus.leftBlink && faceStatus.rightBlink
+        if !eyesClosed {
+            hasSeenEyesOpen = true
+        }
+        guard hasSeenEyesOpen else { return }
+        guard eyesClosed != areEyesClosed else { return }
+        areEyesClosed = eyesClosed
         blinkHoldHandler.update(eyesClosed: eyesClosed)
     }
 
