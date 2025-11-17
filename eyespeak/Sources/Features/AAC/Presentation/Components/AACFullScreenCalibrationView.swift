@@ -13,6 +13,7 @@ struct AACFullScreenCalibrationView: View {
     @Binding var isPresented: Bool
     var onHoldToSnooze: (() -> Void)? = nil
 
+    @StateObject private var holdSoundPlayer = HoldProgressSoundPlayer(duration: 2.0)
     @State private var step: CalibrationStep = .center
     @State private var instruction: String = "Let's set up your app"
     @State private var showInstruction: Bool = true
@@ -25,7 +26,7 @@ struct AACFullScreenCalibrationView: View {
 
     private let timer = Timer.publish(every: 0.01, on: .main, in: .common).autoconnect()
     private let holdTimer = Timer.publish(every: 0.01, on: .main, in: .common).autoconnect()
-    private let snoozeHoldDuration: CGFloat = 4.0
+    private let snoozeHoldDuration: CGFloat = 2.0
 
     enum CalibrationStep: CaseIterable {
         case center, left, right, up, down, offScreenLeft, offScreenRight, offScreenUp, offScreenDown
@@ -145,7 +146,7 @@ struct AACFullScreenCalibrationView: View {
             if eyesClosed {
                 if !isHolding {
                     isHolding = true
-                    playSound()
+                    holdSoundPlayer.startProgressTone()
                 }
                 if holdProgress < 1.0 {
                     holdProgress = min(
@@ -154,12 +155,15 @@ struct AACFullScreenCalibrationView: View {
                     )
                     if holdProgress >= 1.0 {
                         didTriggerSnooze = true
+                        holdSoundPlayer.stopProgressTone()
+                        holdSoundPlayer.playCompletionPop()
                         onHoldToSnooze?()
                     }
                 }
             } else {
                 if isHolding {
                     isHolding = false
+                    holdSoundPlayer.stopProgressTone()
                 }
                 holdProgress = 0
                 autoStartCalibrationIfPossible()
