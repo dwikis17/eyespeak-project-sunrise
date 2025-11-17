@@ -102,6 +102,15 @@ struct KeyboardUIView: View {
     @EnvironmentObject private var viewModel: AACViewModel
     @StateObject private var inputViewModel = KeyboardInputViewModel()
     @State private var assignedCombos: [KeyboardActionID: ActionCombo] = [:]
+    @AppStorage("fontScale") private var fontScaleRaw: String = "medium"
+    
+    private var scaleMultiplier: CGFloat {
+        FontScale(rawValue: fontScaleRaw)?.multiplier ?? FontScale.medium.multiplier
+    }
+    
+    private func scaled(_ value: CGFloat) -> CGFloat {
+        value * scaleMultiplier
+    }
     
     private let topRowLetters: [(String, KeyboardActionID)] = [
         ("q", .letterQ), ("w", .letterW), ("e", .letterE), ("r", .letterR), ("t", .letterT),
@@ -122,14 +131,14 @@ struct KeyboardUIView: View {
     private let predictionComboAction: KeyboardActionID = .acceptPrediction
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: scaled(10)) {
             addWordButton
             phraseSection
             keyboardSection
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.bottom, 50)
-        .padding(.trailing, 30)
+        .padding(.vertical, scaled(50))
+        .padding(.trailing, scaled(30))
         .task {
             ensureKeyboardCombos()
         }
@@ -142,7 +151,7 @@ struct KeyboardUIView: View {
     }
     
     private var addWordButton: some View {
-        HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .top, spacing: scaled(10)) {
             Spacer()
             Button {
                 handleAction(.addWord)
@@ -164,9 +173,9 @@ struct KeyboardUIView: View {
     }
     
     private var phraseSection: some View {
-        HStack(alignment: .center, spacing: 10) {
+        HStack(alignment: .center, spacing: scaled(10)) {
             HStack(alignment: .center) {
-                HStack(alignment: .center, spacing: 10) {
+                HStack(alignment: .center, spacing: scaled(10)) {
                     let headerText: Text = {
                         if inputViewModel.primaryHeaderText.isEmpty {
                             return Text("Type Something")
@@ -179,9 +188,9 @@ struct KeyboardUIView: View {
                         }
                     }()
                     headerText
-                        .font(Font.custom("Montserrat", size: 64))
+                        .font(Font.custom("Montserrat", size: scaled(64)))
                     
-                    VStack(alignment: .center, spacing: 10) {
+                    VStack(alignment: .center, spacing: scaled(10)) {
                         Button {
                             guard !inputViewModel.inlinePredictionText.isEmpty else { return }
                             handleAction(predictionComboAction)
@@ -201,22 +210,22 @@ struct KeyboardUIView: View {
                         .accessibilityLabel("Complete sentence")
                         .accessibilityHint("Applies the inline sentence prediction")
                     }
-                    .frame(width: 60, alignment: .center)
+                    .frame(width: scaled(60), alignment: .center)
                 }
     
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(.horizontal, 5)
+            .padding(.horizontal, scaled(5))
             .padding(.vertical, 0)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
-        .padding(.horizontal, 10)
+        .padding(.horizontal, scaled(10))
         .padding(.vertical, 0)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
     
     private var keyboardSection: some View {
-        VStack(alignment: .trailing, spacing: 7.6044) {
+        VStack(alignment: .trailing, spacing: scaled(7.6044)) {
             suggestionsRow
             topLetterRow
             middleLetterRow
@@ -227,7 +236,7 @@ struct KeyboardUIView: View {
     }
     
     private var suggestionsRow: some View {
-        HStack(alignment: .center, spacing: 6.84396) {
+        HStack(alignment: .center, spacing: scaled(6.84396)) {
             ForEach(Array(suggestionActions.enumerated()), id: \.element) { index, actionId in
                 if index < inputViewModel.suggestions.count {
                     let word = inputViewModel.suggestions[index]
@@ -249,13 +258,13 @@ struct KeyboardUIView: View {
                 }
             }
         }
-        .padding(.horizontal, 7.6044)
+        .padding(.horizontal, scaled(7.6044))
         .padding(.vertical, 0)
         .frame(maxWidth: .infinity, alignment: .trailing)
     }
     
     private var topLetterRow: some View {
-        HStack(alignment: .center, spacing: 6.84396) {
+        HStack(alignment: .center, spacing: scaled(6.84396)) {
             ForEach(topRowLetters, id: \.1) { descriptor in
                 letterButton(for: descriptor)
             }
@@ -275,13 +284,13 @@ struct KeyboardUIView: View {
             .buttonStyle(.plain)
             .accessibilityLabel("Delete character")
         }
-        .padding(.horizontal, 7.6044)
+        .padding(.horizontal, scaled(7.6044))
         .padding(.vertical, 0)
         .frame(maxWidth: .infinity, alignment: .trailing)
     }
     
     private var middleLetterRow: some View {
-        HStack(alignment: .center, spacing: 6.84396) {
+        HStack(alignment: .center, spacing: scaled(6.84396)) {
             ForEach(middleRowLetters, id: \.1) { descriptor in
                 letterButton(for: descriptor)
             }
@@ -301,13 +310,13 @@ struct KeyboardUIView: View {
             .buttonStyle(.plain)
             .accessibilityLabel("Speak phrase")
         }
-        .padding(.horizontal, 7.6044)
+        .padding(.horizontal, scaled(7.6044))
         .padding(.vertical, 0)
         .frame(maxWidth: .infinity, alignment: .topLeading)
     }
     
     private var bottomLetterRow: some View {
-        HStack(alignment: .center, spacing: 6.84396) {
+        HStack(alignment: .center, spacing: scaled(6.84396)) {
             Button {
                 handleAction(.shift)
             } label: {
@@ -327,13 +336,13 @@ struct KeyboardUIView: View {
                 letterButton(for: descriptor)
             }
         }
-        .padding(.horizontal, 7.6044)
+        .padding(.horizontal, scaled(7.6044))
         .padding(.vertical, 0)
         .frame(maxWidth: .infinity, alignment: .topLeading)
     }
     
     private var controlRow: some View {
-        HStack(alignment: .center, spacing: 6.84396) {
+        HStack(alignment: .center, spacing: scaled(6.84396)) {
             Button {
                 handleAction(.space)
             } label: {
@@ -364,7 +373,7 @@ struct KeyboardUIView: View {
             .buttonStyle(.plain)
             .accessibilityLabel("Clear message")
         }
-        .padding(.horizontal, 7.6044)
+        .padding(.horizontal, scaled(7.6044))
         .padding(.vertical, 0)
         .frame(maxWidth: .infinity, alignment: .topLeading)
     }

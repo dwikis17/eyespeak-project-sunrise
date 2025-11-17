@@ -103,7 +103,8 @@ struct AACFullScreenCalibrationView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color.black)
                 .cornerRadius(24)
-                .padding(20)
+                // Padding on the parent container to inset the calibration UI from screen edges
+                .padding(0)
                 .edgesIgnoringSafeArea(.all)
             } else {
                 // Show calibration UI
@@ -127,8 +128,10 @@ struct AACFullScreenCalibrationView: View {
                     let dotDirection = isOffScreenStep(step) ? arrowDirection(for: step) : nil
                     CalibrationDot(progress: timerProgress, direction: dotDirection)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: step.position)
-                        .padding(100)
+                        .padding(5)
+                        
                 }
+                .edgesIgnoringSafeArea(.all)
                 .onReceive(timer) { _ in
                     guard isCapturing else { return }
                     if timerProgress < 1.0 {
@@ -185,6 +188,10 @@ struct AACFullScreenCalibrationView: View {
         case .center:
             status.neutralEyeYaw = status.eyeYawDegrees
             status.neutralEyePitch = status.eyePitchDegrees
+            status.neutralYaw = status.yawDegrees
+            status.neutralPitch = status.pitchDegrees
+            status.neutralLeftBlink = status.leftBlinkValue
+            status.neutralRightBlink = status.rightBlinkValue
         case .left:
             status.leftEyeYawEdge = status.eyeYawDegrees
         case .right:

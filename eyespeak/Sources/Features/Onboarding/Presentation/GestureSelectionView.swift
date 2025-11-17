@@ -16,6 +16,7 @@ struct GestureSelectionView: View {
     @Environment(AppStateManager.self) private var appState
     @State private var viewModel: OnboardingViewModel?
     @State private var isInitialized = false
+    private let minRequiredSelections: Int = 7
     private let contentMaxWidth: CGFloat = 900
     // EQUAL COLUMNS - 50/50 split
     private let leftColumnRatio: CGFloat = 0.50
@@ -48,6 +49,28 @@ struct GestureSelectionView: View {
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.bottom, 12)
                 .zIndex(2)
+            // Instruction text under header - emphasized for visibility
+            HStack(spacing: 8) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundStyle(LinearGradient.redOrange)
+                    .font(.system(size: 16, weight: .semibold))
+                Text("choose minimal 7 type of gestures to continue")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.primary)
+            }
+            .padding(.vertical, 10)
+            .padding(.horizontal, 14)
+            .background(
+                RoundedRectangle(cornerRadius: 999, style: .continuous)
+                    .fill(Color(.systemBackground))
+                    .shadow(color: .black.opacity(0.06), radius: 4, x: 0, y: 2)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 999, style: .continuous)
+                    .stroke(LinearGradient.redOrange, lineWidth: 2)
+            )
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.bottom, 8)
                 
 
             if let viewModel = viewModel {
@@ -178,7 +201,9 @@ struct GestureSelectionView: View {
                     // Blink and hold CTA button
                     BlinkHoldCTAView(
                         title: scanIndex == viewModel.userGestures.count
-                            ? "Blink and hold to select Next to continue/save gestures"
+                            ? (viewModel.getSelectedGestureCount() >= minRequiredSelections
+                               ? "Blink and hold to select Next to continue/save gestures"
+                               : "Select at least 7 actions to continue")
                             : "Blink and hold to select",
                         action: { blinkHoldHandler.completeImmediately() },
                         progress: blinkHoldHandler.progress
@@ -186,7 +211,7 @@ struct GestureSelectionView: View {
                         .frame(height: ctaButtonHeight)
                         .overlay(
                             RoundedRectangle(cornerRadius: 20)
-                                .stroke(scanIndex == viewModel.userGestures.count ? Color.accentColor : .clear, lineWidth: 3)
+                                .stroke((scanIndex == viewModel.userGestures.count && viewModel.getSelectedGestureCount() >= minRequiredSelections) ? Color.accentColor : .clear, lineWidth: 3)
                         )
                 }
                 .padding(containerPadding)
@@ -229,11 +254,14 @@ struct GestureSelectionView: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
                             .stroke(LinearGradient.redOrange, lineWidth: 2)
-                            .opacity(scanIndex == viewModel.userGestures.count ? 1 : 0)
+                            .opacity((scanIndex == viewModel.userGestures.count && viewModel.getSelectedGestureCount() >= minRequiredSelections) ? 1 : 0)
                     )
             }
             .frame(maxWidth: contentMaxWidth)
+            .disabled(viewModel.getSelectedGestureCount() < minRequiredSelections)
+            .opacity(viewModel.getSelectedGestureCount() < minRequiredSelections ? 0.5 : 1)
             .padding(.top, 8)
+            .padding(.bottom, 24)
             
         }
     }
@@ -266,7 +294,12 @@ struct GestureSelectionView: View {
         if scanIndex < vm.userGestures.count {
             toggleCurrentSelection(viewModel: vm)
         } else {
-            performNext(viewModel: vm)
+            // Guard: require minimum selections before allowing Next via blink-hold
+            if vm.getSelectedGestureCount() >= minRequiredSelections {
+                performNext(viewModel: vm)
+            } else {
+                speak("Select at least 7 actions to continue")
+            }
         }
         // Pause scanning until eyes reopen
         isScanPaused = true
@@ -283,6 +316,11 @@ struct GestureSelectionView: View {
     }
 
     private func performNext(viewModel: OnboardingViewModel) {
+        // Guard: require minimum selections before proceeding
+        guard viewModel.getSelectedGestureCount() >= minRequiredSelections else {
+            speak("Select at least 7 actions to continue")
+            return
+        }
         Task {
             do {
                 try await viewModel.saveGestureSelection()

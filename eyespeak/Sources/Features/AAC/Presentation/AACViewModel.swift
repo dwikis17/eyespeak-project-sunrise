@@ -170,7 +170,11 @@ public final class AACViewModel: ObservableObject {
                         && combo.secondGesture == keyboardCombo.1
                 {
                     print("✨ Keyboard combo matched in \(menuName) menu")
-                    self.onNavigateToKeyboard?()
+                    if self.currentMenu == .keyboard {
+                        self.onNavigateToAAC?()
+                    } else {
+                        self.onNavigateToKeyboard?()
+                    }
                     print("HERE")
                     return
                 }
@@ -436,6 +440,12 @@ public final class AACViewModel: ObservableObject {
 
         lastDetectedGesture = gesture
 
+        // During snooze, only update lastDetectedGesture but don't pass to gestureInputManager
+        // The snooze view will handle gesture validation directly
+        if isSnoozed {
+            return
+        }
+
         gestureInputManager.registerGesture(gesture)
     }
 
@@ -459,14 +469,55 @@ public final class AACViewModel: ObservableObject {
     
     // MARK: - Snooze Methods
     
+    public func generateSnoozeUnlockActions() -> [GestureType] {
+        var enabledGestures = Array(enabledGestureTypes)
+        enabledGestures.removeAll { $0 == .blink }
+        
+        if enabledGestures.count >= 3 {
+            return Array(enabledGestures.shuffled().prefix(3))
+        }
+        
+        let legacy: [GestureType] = [.lookLeft, .lookUp, .lookRight]
+        var sequence: [GestureType] = []
+        
+        for gesture in legacy {
+            if enabledGestures.contains(gesture) {
+                sequence.append(gesture)
+            }
+            if sequence.count == 3 { break }
+        }
+        
+        if sequence.count < 3 {
+            for gesture in enabledGestures where !sequence.contains(gesture) {
+                sequence.append(gesture)
+                if sequence.count == 3 { break }
+            }
+        }
+        
+        var legacyIndex = 0
+        while sequence.count < 3, legacyIndex < legacy.count {
+            let legacyGesture = legacy[legacyIndex]
+            if !sequence.contains(legacyGesture) {
+                sequence.append(legacyGesture)
+            }
+            legacyIndex += 1
+        }
+        
+        return sequence
+    }
+    
     public func beginSnooze() {
         guard isGestureMode, !isSnoozed else { return }
         endCalibration()
+        // Reset gesture input manager to avoid stale state
+        gestureInputManager.reset()
         isSnoozed = true
     }
     
     public func endSnooze() {
         isSnoozed = false
+        // Reset gesture input manager when leaving snooze
+        gestureInputManager.reset()
     }
     
     public func toggleSnooze() {
@@ -893,7 +944,9 @@ public final class AACViewModel: ObservableObject {
     }
 
     public func fetchAllUserGestures() -> [UserGesture] {
-        let gestures = dataManager.fetchAllUserGestures()
+        let gestures = dataManager.fetchAllUserGestures().filter { gesture in
+            gesture.gestureType != .blink
+        }
         print(gestures.count, "count")
         gestures.forEach { body in
             print(body.gestureType, body.isEnabled, "body")

@@ -11,6 +11,8 @@ struct EditActionsView: View {
     @EnvironmentObject private var viewModel: AACViewModel
     @State private var localGestures: [UserGesture] = []
     @State private var refreshId = UUID()
+    private let minRequiredSelections: Int = 7
+    private var enabledCount: Int { localGestures.filter { $0.isEnabled }.count }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
@@ -18,12 +20,29 @@ struct EditActionsView: View {
             VStack(alignment: .leading, spacing: 15) {
                 Text("Available Actions")
                     .font(Typography.boldHeader)
-                Text("Select which movements you can do comfortably")
-                    .font(Typography.regularTitle)
-                    .foregroundStyle(Color.placeholder)
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(LinearGradient.redOrange)
+                        .font(.system(size: 16, weight: .semibold))
+                    Text("Select minimal 7 movements that you can do comfortably")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(.primary)
+                }
+                .padding(.vertical, 10)
+                .padding(.horizontal, 14)
+                .background(
+                    RoundedRectangle(cornerRadius: 999, style: .continuous)
+                        .fill(Color(.systemBackground))
+                        .shadow(color: .black.opacity(0.06), radius: 4, x: 0, y: 2)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 999, style: .continuous)
+                        .stroke(LinearGradient.redOrange, lineWidth: 2)
+                )
             }
             .padding()
-
+            
+            
             LazyVGrid(
                 columns: [
                     GridItem(.flexible(), spacing: 15),
@@ -107,6 +126,8 @@ struct EditActionsView: View {
                 saveChanges()
             }
             .frame(width: 200)
+            .disabled(enabledCount < minRequiredSelections)
+            .opacity(enabledCount < minRequiredSelections ? 0.5 : 1)
         }
         .padding(.horizontal)
     }
@@ -162,7 +183,10 @@ struct EditActionsView: View {
             if trigger.actionId == 13 {
                 cancelEdit()
             } else if trigger.actionId == 14 {
-                saveChanges()
+                // Only allow saving if minimum selections are met
+                if enabledCount >= minRequiredSelections {
+                    saveChanges()
+                }
             } else if trigger.actionId >= 1 && trigger.actionId <= 12 {
                 let index = trigger.actionId - 1
                 if index < localGestures.count {
@@ -181,6 +205,8 @@ struct EditActionsView: View {
     }
 
     private func saveChanges() {
+        // Guard: require minimum selections before proceeding
+        guard enabledCount >= minRequiredSelections else { return }
         // Save all gesture changes to SwiftData
         for gesture in localGestures {
             try? viewModel.dataManager.updateUserGesture(
