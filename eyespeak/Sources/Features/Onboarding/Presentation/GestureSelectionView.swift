@@ -36,8 +36,10 @@ struct GestureSelectionView: View {
     @State private var faceStatus = FaceStatus()
     @State private var isScanPaused: Bool = false
     @State private var speechSynth = AVSpeechSynthesizer()
-    @State private var playedBlinkStartCue = false
     @State private var trackingEnabled = false
+    @StateObject private var blinkHoldHandler = BlinkHoldProgressHandler()
+    @State private var areEyesClosed = false
+    @State private var hasSeenEyesOpen = false
 
     var body: some View {
         VStack(spacing: 16) {
@@ -85,15 +87,16 @@ struct GestureSelectionView: View {
             Color.clear.frame(height: 40)
         }
         .onAppear {
+            hasSeenEyesOpen = false
             initializeViewModel()
+            blinkHoldHandler.onCompleted = { handleBlinkHoldSelection() }
+            blinkHoldHandler.enable()
         }
         .overlay(
             Group {
                 if trackingEnabled {
                     AACFaceTrackingView(
-                        status: $faceStatus,
-                        onEyesClosed: { handleBlinkHoldSelection() },
-                        eyesClosedDuration: 2.0
+                        status: $faceStatus
                     )
                     .frame(width: 1, height: 1)
                     .allowsHitTesting(false)
@@ -107,7 +110,10 @@ struct GestureSelectionView: View {
                 trackingEnabled = true
             }
         }
-        .onDisappear { trackingEnabled = false }
+        .onDisappear {
+            trackingEnabled = false
+            blinkHoldHandler.disable()
+        }
     }
 
     @ViewBuilder
@@ -199,7 +205,8 @@ struct GestureSelectionView: View {
                                ? "Blink and hold to select Next to continue/save gestures"
                                : "Select at least 7 actions to continue")
                             : "Blink and hold to select",
-                        action: { toggleCurrentSelection(viewModel: viewModel) }
+                        action: { blinkHoldHandler.completeImmediately() },
+                        progress: blinkHoldHandler.progress
                     )
                         .frame(height: ctaButtonHeight)
                         .overlay(
@@ -220,23 +227,13 @@ struct GestureSelectionView: View {
             .frame(height: panelHeight)
             .onAppear { startScan(totalItems: viewModel.userGestures.count + 1) }
             .onDisappear { stopScan() }
-            .onChange(of: faceStatus.leftBlink) { newVal in
-                if newVal && !playedBlinkStartCue {
-                    AudioServicesPlaySystemSound(1057)
-                    playedBlinkStartCue = true
-                } else if !faceStatus.leftBlink && !faceStatus.rightBlink {
-                    playedBlinkStartCue = false
-                }
+            .onChange(of: faceStatus.leftBlink) { _ in
+                handleBlinkStateChange()
                 maybePauseScan()
                 maybeResumeScan()
             }
-            .onChange(of: faceStatus.rightBlink) { newVal in
-                if newVal && !playedBlinkStartCue {
-                    AudioServicesPlaySystemSound(1057)
-                    playedBlinkStartCue = true
-                } else if !faceStatus.leftBlink && !faceStatus.rightBlink {
-                    playedBlinkStartCue = false
-                }
+            .onChange(of: faceStatus.rightBlink) { _ in
+                handleBlinkStateChange()
                 maybePauseScan()
                 maybeResumeScan()
             }
@@ -339,6 +336,7 @@ struct GestureSelectionView: View {
         // Resume once both eyes are open
         if !faceStatus.leftBlink && !faceStatus.rightBlink && isScanPaused {
             isScanPaused = false
+            blinkHoldHandler.prepareForNextHold()
             let total = (viewModel?.userGestures.count ?? 0) + 1
             startScan(totalItems: total)
         }
@@ -350,6 +348,17 @@ struct GestureSelectionView: View {
             isScanPaused = true
             stopScan()
         }
+    }
+
+    private func handleBlinkStateChange() {
+        let eyesClosed = faceStatus.leftBlink && faceStatus.rightBlink
+        if !eyesClosed {
+            hasSeenEyesOpen = true
+        }
+        guard hasSeenEyesOpen else { return }
+        guard eyesClosed != areEyesClosed else { return }
+        areEyesClosed = eyesClosed
+        blinkHoldHandler.update(eyesClosed: eyesClosed)
     }
 
     private func speak(_ text: String) {

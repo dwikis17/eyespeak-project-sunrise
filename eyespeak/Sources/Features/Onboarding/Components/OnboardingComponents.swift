@@ -57,12 +57,15 @@ struct ProgressDotsView: View {
 struct BlinkHoldCTAView: View {
     var title: String = "Blink and hold to continue"
     var action: () -> Void
+    var progress: CGFloat? = nil
     var background: Color = Color(.systemGray5)
+    var progressColor: Color = .energeticOrange
     var foreground: Color = .black
-    var cornerRadius: CGFloat = 28
+    var cornerRadius: CGFloat = 15
     var height: CGFloat = 96
     var textSize: CGFloat = 18
     var iconSize: CGFloat = 20
+
     var body: some View {
         Button(action: action) {
             HStack(spacing: 10) {
@@ -73,14 +76,29 @@ struct BlinkHoldCTAView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .background(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(background)
-            )
             .foregroundColor(foreground)
+            .background(progressBackground)
+            .frame(maxWidth: .infinity)
             .frame(height: height)
         }
         .accessibilityHint("Simulate blink-and-hold during debugging")
+    }
+
+    private var progressBackground: some View {
+        GeometryReader { geometry in
+            let width = geometry.size.width
+            ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(background)
+                if let progress = progress {
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .fill(progressColor)
+                        .frame(width: width * max(0, min(1, progress)))
+                        .animation(.easeInOut(duration: 0.05), value: progress)
+                }
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
     }
 }
 

@@ -1,5 +1,4 @@
 import SwiftUI
-import AudioToolbox
 import ARKit
 
 struct OnboardingFirstTimeSetupView: View {
@@ -7,8 +6,10 @@ struct OnboardingFirstTimeSetupView: View {
     var totalSteps: Int
     var currentStep: Int
     @State private var faceStatus = FaceStatus()
-    @State private var playedBlinkStartCue = false
     @State private var trackingEnabled = true
+    @StateObject private var blinkHoldHandler = BlinkHoldProgressHandler()
+    @State private var areEyesClosed = false
+    @State private var hasSeenEyesOpen = false
 
     var body: some View {
         GeometryReader { geo in
@@ -39,11 +40,17 @@ struct OnboardingFirstTimeSetupView: View {
 
                             Spacer()
 
-                            BlinkHoldCTAView(title: "Blink and hold to continue", action: {
-                                trackingEnabled = false
-                                AudioServicesPlaySystemSound(1057)
-                                onContinue()
-                            }, background: Color(.systemGray5), foreground: .black, cornerRadius: 20, height: 120, textSize: 22, iconSize: 24)
+                            BlinkHoldCTAView(
+                                title: "Blink and hold to continue",
+                                action: { blinkHoldHandler.completeImmediately() },
+                                progress: blinkHoldHandler.progress,
+                                background: Color(.systemGray5),
+                                foreground: .black,
+                                cornerRadius: 20,
+                                height: 120,
+                                textSize: 22,
+                                iconSize: 24
+                            )
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                         .padding(.horizontal, 32)
@@ -67,13 +74,7 @@ struct OnboardingFirstTimeSetupView: View {
             Group {
                 if trackingEnabled {
                     AACFaceTrackingView(
-                        status: $faceStatus,
-                        onEyesClosed: {
-                            trackingEnabled = false
-                            AudioServicesPlaySystemSound(1057)
-                            onContinue()
-                        },
-                        eyesClosedDuration: 1.5
+                        status: $faceStatus
                     )
                     .frame(width: 1, height: 1)
                     .allowsHitTesting(false)
@@ -81,23 +82,35 @@ struct OnboardingFirstTimeSetupView: View {
                 }
             }
         )
-        .onDisappear { trackingEnabled = false }
-        .onChange(of: faceStatus.leftBlink) { newVal in
-            if newVal && !playedBlinkStartCue {
-                AudioServicesPlaySystemSound(1057)
-                playedBlinkStartCue = true
-            } else if !faceStatus.leftBlink && !faceStatus.rightBlink {
-                playedBlinkStartCue = false
-            }
+        .onAppear {
+            hasSeenEyesOpen = false
+            blinkHoldHandler.onCompleted = { handleBlinkHoldCompletion() }
+            blinkHoldHandler.enable()
         }
-        .onChange(of: faceStatus.rightBlink) { newVal in
-            if newVal && !playedBlinkStartCue {
-                AudioServicesPlaySystemSound(1057)
-                playedBlinkStartCue = true
-            } else if !faceStatus.leftBlink && !faceStatus.rightBlink {
-                playedBlinkStartCue = false
-            }
+        .onDisappear {
+            trackingEnabled = false
+            blinkHoldHandler.disable()
         }
+        .onChange(of: faceStatus.leftBlink) { _ in handleBlinkStateChange() }
+        .onChange(of: faceStatus.rightBlink) { _ in handleBlinkStateChange() }
+    }
+
+    private func handleBlinkStateChange() {
+        let eyesClosed = faceStatus.leftBlink && faceStatus.rightBlink
+        if !eyesClosed {
+            hasSeenEyesOpen = true
+        }
+        guard hasSeenEyesOpen else { return }
+        guard eyesClosed != areEyesClosed else { return }
+        areEyesClosed = eyesClosed
+        blinkHoldHandler.update(eyesClosed: eyesClosed)
+    }
+
+    private func handleBlinkHoldCompletion() {
+        guard trackingEnabled else { return }
+        trackingEnabled = false
+        blinkHoldHandler.disable()
+        onContinue()
     }
 }
 
