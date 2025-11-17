@@ -170,7 +170,11 @@ public final class AACViewModel: ObservableObject {
                         && combo.secondGesture == keyboardCombo.1
                 {
                     print("✨ Keyboard combo matched in \(menuName) menu")
-                    self.onNavigateToKeyboard?()
+                    if self.currentMenu == .keyboard {
+                        self.onNavigateToAAC?()
+                    } else {
+                        self.onNavigateToKeyboard?()
+                    }
                     print("HERE")
                     return
                 }

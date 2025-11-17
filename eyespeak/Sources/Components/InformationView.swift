@@ -61,77 +61,75 @@ struct InformationView: View {
 
     private var controlPanelSection: some View {
         LazyVGrid(columns: columns, spacing: 10) {
-            // Settings button with optional combo badge
-            if viewModel.currentMenu != .settings {
-                if let settingsCombo = viewModel.settings.settingsCombo {
-                    NavigationCard(
-                        title: "Settings",
-                        background: .mellowBlue,
-                        cornerRadius: 22,
-                        firstCombo: settingsCombo.0,
-                        secondCombo: settingsCombo.1
-                    ) {
-                        // action closure
-                        appState.currentTab = .settings
-                    }
-                } else {
-                    // no combo configured — keep same visual but without pill
-                    NavigationCard(
-                        title: "Settings",
-                        background: .mellowBlue,
-                        cornerRadius: 22,
-                        firstCombo: nil,
-                        secondCombo: nil
-                    ) {
-                        appState.currentTab = .settings
-                    }
-                }
-            } else {
-                if let settingsCombo = viewModel.settings.settingsCombo {
-                    NavigationCard(
-                        title: "AAC Board",
-                        background: .mellowBlue,
-                        cornerRadius: 22,
-                        firstCombo: settingsCombo.0,
-                        secondCombo: settingsCombo.1
-                    ) {
-                        // action closure
-                        appState.currentTab = .aac
-                    }
-                } else {
-                    // no combo configured — keep same visual but without pill
-                    NavigationCard(
-                        title: "AAC Board",
-                        background: .mellowBlue,
-                        cornerRadius: 22,
-                        firstCombo: nil,
-                        secondCombo: nil
-                    ) {
-                        appState.currentTab = .aac
-                    }
-                }
-            }
-
-            // Keyboard button (mirrors style, navigates to Keyboard tab)
-            if let keyboardCombo = viewModel.settings.keyboardCombo {
+            // Settings card - always visible, uses settingsCombo
+            if let settingsCombo = viewModel.settings.settingsCombo {
                 NavigationCard(
-                    title: "Keyboard",
+                    title: "Settings",
                     background: .mellowBlue,
                     cornerRadius: 22,
-                    firstCombo: keyboardCombo.0,
-                    secondCombo: keyboardCombo.1
+                    firstCombo: settingsCombo.0,
+                    secondCombo: settingsCombo.1
                 ) {
-                    appState.currentTab = .keyboard
+                    appState.currentTab = .settings
                 }
             } else {
                 NavigationCard(
-                    title: "Keyboard",
+                    title: "Settings",
                     background: .mellowBlue,
                     cornerRadius: 22,
                     firstCombo: nil,
                     secondCombo: nil
                 ) {
-                    appState.currentTab = .keyboard
+                    appState.currentTab = .settings
+                }
+            }
+            
+            // AAC Board/Keyboard card - toggles based on current tab, uses keyboardCombo
+            if viewModel.currentMenu == .keyboard {
+                // Show AAC Board when in keyboard tab
+                if let keyboardCombo = viewModel.settings.keyboardCombo {
+                    NavigationCard(
+                        title: "AAC Board",
+                        background: .mellowBlue,
+                        cornerRadius: 22,
+                        firstCombo: keyboardCombo.0,
+                        secondCombo: keyboardCombo.1
+                    ) {
+                        appState.currentTab = .aac
+                    }
+                } else {
+                    NavigationCard(
+                        title: "AAC Board",
+                        background: .mellowBlue,
+                        cornerRadius: 22,
+                        firstCombo: nil,
+                        secondCombo: nil
+                    ) {
+                        appState.currentTab = .aac
+                    }
+                }
+            } else {
+                // Show Keyboard when in AAC or settings tab
+                if let keyboardCombo = viewModel.settings.keyboardCombo {
+                    NavigationCard(
+                        title: "Keyboard",
+                        background: .mellowBlue,
+                        cornerRadius: 22,
+                        firstCombo: keyboardCombo.0,
+                        secondCombo: keyboardCombo.1
+                    ) {
+                        appState.currentTab = .keyboard
+                    }
+                } else {
+                    NavigationCard(
+                        title: "Keyboard",
+                        background: .mellowBlue,
+                        cornerRadius: 22,
+                        firstCombo: nil,
+                        secondCombo: nil
+                    ) {
+                        appState.currentTab = .keyboard
+                    }
                 }
             }
             // Calibrate card
