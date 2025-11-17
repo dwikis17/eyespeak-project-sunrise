@@ -140,7 +140,8 @@ struct InformationView: View {
                 background: .mellowBlue,
                 cornerRadius: 22,
                 firstCombo: nil,
-                secondCombo: nil
+                secondCombo: nil,
+                text: "Hold 2s"
             ) {
                 viewModel.toggleCalibration()
             }
@@ -151,7 +152,8 @@ struct InformationView: View {
                 background: .mellowBlue,
                 cornerRadius: 22,
                 firstCombo: nil,
-                secondCombo: nil
+                secondCombo: nil,
+                text: "Hold 4s"
             ) {
                 viewModel.toggleSnooze()
             }

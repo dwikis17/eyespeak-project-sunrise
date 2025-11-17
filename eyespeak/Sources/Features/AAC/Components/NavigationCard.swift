@@ -7,13 +7,16 @@ struct NavigationCard: View {
     var pillSize = CGSize(width: 38.431, height: 21.679)
     var isSelected: Bool = true
 
+
     // optional combo icons (use nil when not configured)
     var firstCombo: GestureType? = nil
     var secondCombo: GestureType? = nil
+    var text: String? = nil
     var height: CGFloat = 100.72
 
     // optional tap action
     var action: (() -> Void)? = nil
+
 
     @ViewBuilder
     private var contentBody: some View {
@@ -30,9 +33,21 @@ struct NavigationCard: View {
                             .stroke(background, lineWidth: 1)
                     )
             }
-
-            // Top-right pill with arrows (only if both icons provided)
-            if let first = firstCombo, let second = secondCombo {
+            
+            if let text = text {
+                ComboPill(
+                    firstGesture: .blink,
+                    secondGesture: .blink,
+                    foreground: background,
+                    background: .whiteWhite,
+                    size: CGSize(width: 45, height: 21.679),
+                    paddingValue: 4.927,
+                    iconSize: 8.825,
+                    spacing: 4.927,
+                    text: text
+                )
+                .padding(10)
+            } else if let first = firstCombo, let second = secondCombo {
                 if isSelected {
                     // Selected: white pill with blue icons
                     ComboPill(
@@ -61,6 +76,8 @@ struct NavigationCard: View {
                     .padding(10) // outer padding around capsule
                 }
             }
+
+            
 
             // Bottom-left title
             VStack {
@@ -93,5 +110,5 @@ struct NavigationCard: View {
 }
 
 #Preview {
-    NavigationCard(title: "Settings", background: .mellowBlue, cornerRadius: 28, firstCombo: .lookUp, secondCombo: .lookRight)
+    NavigationCard(title: "Settings", background: .mellowBlue, cornerRadius: 28, firstCombo: .lookUp, secondCombo: .lookRight, text: "Hold 4ss")
 }
