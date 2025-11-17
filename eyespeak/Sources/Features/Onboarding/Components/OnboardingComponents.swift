@@ -61,7 +61,7 @@ struct BlinkHoldCTAView: View {
     var background: Color = Color(.systemGray5)
     var progressColor: Color = .energeticOrange
     var foreground: Color = .black
-    var cornerRadius: CGFloat = 28
+    var cornerRadius: CGFloat = 15
     var height: CGFloat = 96
     var textSize: CGFloat = 18
     var iconSize: CGFloat = 20
