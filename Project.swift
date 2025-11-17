@@ -7,17 +7,24 @@ let project = Project(
             name: "eyespeak",
             destinations: .iOS,
             product: .app,
-            bundleId: "dev.tuist.eyespeak",
+            bundleId: "dev.tuist.eyespeakapp",
             infoPlist: .extendingDefault(
                 with: [
                     "UILaunchScreen": [
                         "UIColorName": "",
                         "UIImageName": "",
                     ],
+                    // iPhone orientations
+                    "UISupportedInterfaceOrientations": [
+                        "UIInterfaceOrientationLandscapeLeft",
+                        "UIInterfaceOrientationLandscapeRight",
+                    ],
                     "UISupportedInterfaceOrientations~ipad" : [
                         "UIInterfaceOrientationLandscapeLeft",
                         "UIInterfaceOrientationLandscapeRight",
                     ],
+                    // Require full screen to avoid iPad multitasking orientation requirements
+                    "UIRequiresFullScreen": true,
                     "NSCameraUsageDescription": "This app uses the camera for eye tracking and face detection to provide accessibility features for communication.",
                     "UIAppFonts": [
                         "Montserrat-Regular.ttf",

@@ -11,11 +11,9 @@ struct AACFullScreenSnoozeView: View {
     @Binding var isPresented: Bool
     @EnvironmentObject private var viewModel: AACViewModel
     
-    @State private var unlockProgress: [Bool] = [false, false, false]
+    @State private var unlockActions: [GestureType] = []
+    @State private var unlockProgress: [Bool] = []
     @State private var currentStep: Int = 0
-    @State private var currentUnlockIndex = 0
-    @State private var unlockCombo: [GestureType] = [.lookLeft, .lookUp, .lookRight]
-    @State private var unlockSequence: [GestureType] = []
     @State private var gestureCheckTimer: Timer?
     
     var body: some View {
@@ -46,26 +44,27 @@ struct AACFullScreenSnoozeView: View {
                         .font(Typography.regularTitle)
                         .foregroundStyle(Color.whiteWhite)
                     
-                    // Unlock combo display
+                    // Unlock action display
                     VStack(spacing: 12) {
-                        Text("Your unlock Combo")
+                        Text("Your unlock actions")
                             .font(Typography.boldTitle)
                             .foregroundStyle(Color.whiteWhite)
                         
-                        HStack(spacing: 16) {
-                            ForEach(0..<3, id: \.self) { index in
-                                let isActive = index < currentStep
+                        HStack(spacing: 12) {
+                            ForEach(Array(unlockActions.enumerated()), id: \.offset) { index, gesture in
+                                let isComplete = currentStep > index
+                                
                                 RoundedRectangle(cornerRadius: 12)
-                                    .fill(isActive ? Color.energeticOrange : Color.blueholder)
+                                    .fill(isComplete ? Color.energeticOrange : Color.blueholder)
                                     .overlay(
-                                        Image(systemName: unlockCombo[index].iconName)
-                                            .font(.system(size: 20, weight: .bold))
-                                            .foregroundStyle(isActive ? Color.whiteWhite : Color.placeholder)
+                                        Image(systemName: gesture.iconName)
+                                            .font(.system(size: 24, weight: .bold))
+                                            .foregroundStyle(isComplete ? Color.whiteWhite : Color.placeholder)
                                     )
-                                    .frame(width: 64, height: 56)
-                                    .scaleEffect(unlockProgress[index] ? 1.06 : 1.0)
-                                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: unlockProgress[index])
-                                    .shadow(color: isActive ? Color.energeticOrange.opacity(0.35) : .clear, radius: 12, x: 0, y: 6)
+                                    .frame(width: 60, height: 56)
+                                    .scaleEffect(unlockProgress.indices.contains(index) && unlockProgress[index] ? 1.08 : 1.0)
+                                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: unlockProgress.indices.contains(index) ? unlockProgress[index] : false)
+                                    .shadow(color: isComplete ? Color.energeticOrange.opacity(0.35) : .clear, radius: 12, x: 0, y: 6)
                             }
                         }
                         .padding(.horizontal, 24)
@@ -103,6 +102,8 @@ struct AACFullScreenSnoozeView: View {
             }
         }
         .onAppear {
+            // Load unlock actions from viewModel
+            loadUnlockActions()
             // Setup gesture handling for unlock
             setupGestureHandling()
         }
@@ -111,6 +112,12 @@ struct AACFullScreenSnoozeView: View {
             cleanupGestureHandling()
         }
 
+    }
+    
+    private func loadUnlockActions() {
+        unlockActions = viewModel.generateSnoozeUnlockActions()
+        unlockProgress = Array(repeating: false, count: unlockActions.count)
+        currentStep = 0
     }
     
     private func setupGestureHandling() {
@@ -131,18 +138,24 @@ struct AACFullScreenSnoozeView: View {
     }
     
     private func handleUnlockGesture(_ gesture: GestureType) {
-        // Check if this is the correct gesture in the sequence
-        if currentStep < unlockCombo.count && gesture == unlockCombo[currentStep] {
+        guard currentStep < unlockActions.count else {
+            resetUnlockSequence()
+            return
+        }
+        
+        if gesture == unlockActions[currentStep] {
             // Mark this step as completed
             withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                unlockProgress[currentStep] = true
+                if unlockProgress.indices.contains(currentStep) {
+                    unlockProgress[currentStep] = true
+                }
             }
             
             // Move to next step
             currentStep += 1
             
             // If all steps completed, unlock
-            if currentStep == unlockCombo.count {
+            if currentStep == unlockActions.count {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     withAnimation {
                         isPresented = false
@@ -157,7 +170,7 @@ struct AACFullScreenSnoozeView: View {
     
     private func resetUnlockSequence() {
         withAnimation {
-            unlockProgress = [false, false, false]
+            unlockProgress = Array(repeating: false, count: unlockActions.count)
             currentStep = 0
         }
     }

@@ -44,8 +44,10 @@ public final class OnboardingViewModel {
         errorMessage = nil
         do {
             // Fetch all user gestures (they should already be initialized by ModelContainer)
-            userGestures = dataManager.fetchAllUserGestures()
-            print("Loaded UserGestures:", userGestures.count)
+            userGestures = dataManager.fetchAllUserGestures().filter({ gesture in
+                gesture.gestureType != .blink
+            })
+         
             
             // Pre-select first 4 gestures as default
             let firstFour = Array(userGestures.prefix(4))
