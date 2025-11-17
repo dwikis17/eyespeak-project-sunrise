@@ -30,6 +30,7 @@ struct ComboPill: View {
     var paddingValue: CGFloat = 4.927
     var iconSize: CGFloat = 11.825
     var spacing: CGFloat = 4.927
+    var text: String? = nil
     var cornerRadius: CGFloat = 64.0517
     var isEnabled: Bool = true
     var ensureMinimumHitArea: Bool = false
@@ -44,9 +45,20 @@ struct ComboPill: View {
         foreground.opacity(isEnabled ? 1 : 0.4)
     }
 
+    private var resolvedText: String? {
+        guard let text,
+              !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return nil
+        }
+        return text.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     private var resolvedAccessibilityLabel: String {
         if let accessibilityLabel {
             return accessibilityLabel
+        }
+        if let resolvedText {
+            return resolvedText
         }
         let first = description(for: firstGesture)
         let second = description(for: secondGesture)
@@ -62,14 +74,25 @@ struct ComboPill: View {
             height: size.height * scaleMultiplier
         )
         let scaledCornerRadius = cornerRadius * scaleMultiplier
+        let pillAlignment: Alignment = resolvedText == nil ? .top : .center
 
-        let pill = HStack(alignment: .top, spacing: scaledSpacing) {
-            comboIcon(for: firstGesture, iconSize: scaledIconSize)
-            comboIcon(for: secondGesture, iconSize: scaledIconSize)
+        let pill = Group {
+            if let resolvedText {
+                Text(resolvedText)
+                    .font(.system(size: scaledIconSize, weight: .semibold, design: .rounded))
+                    .multilineTextAlignment(.center)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+            } else {
+                HStack(alignment: .top, spacing: scaledSpacing) {
+                    comboIcon(for: firstGesture, iconSize: scaledIconSize)
+                    comboIcon(for: secondGesture, iconSize: scaledIconSize)
+                }
+            }
         }
         .foregroundStyle(resolvedForeground)
         .padding(scaledPadding)
-        .frame(width: scaledSize.width, height: scaledSize.height, alignment: .top)
+        .frame(width: scaledSize.width, height: scaledSize.height, alignment: pillAlignment)
         .background(background)
         .cornerRadius(scaledCornerRadius, antialiased: true)
         .accessibilityElement(children: .ignore)
@@ -132,6 +155,7 @@ struct OutlineComboPill: View {
         let scaledCornerRadius = cornerRadius * scaleMultiplier
         let scaledInset = insetAmount * scaleMultiplier
         let scaledStrokeWidth = strokeWidth * scaleMultiplier
+        
 
         HStack(alignment: .center, spacing: scaledSpacing) {
             comboIcon(for: firstGesture, iconSize: scaledIconSize, alignment: .center)

@@ -128,7 +128,7 @@ struct KeyboardUIView: View {
             keyboardSection
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.bottom, 50)
+        .padding(.vertical, 50)
         .padding(.trailing, 30)
         .task {
             ensureKeyboardCombos()
