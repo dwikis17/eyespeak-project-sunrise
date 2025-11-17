@@ -893,7 +893,9 @@ public final class AACViewModel: ObservableObject {
     }
 
     public func fetchAllUserGestures() -> [UserGesture] {
-        let gestures = dataManager.fetchAllUserGestures()
+        let gestures = dataManager.fetchAllUserGestures().filter { gesture in
+            gesture.gestureType != .blink
+        }
         print(gestures.count, "count")
         gestures.forEach { body in
             print(body.gestureType, body.isEnabled, "body")
