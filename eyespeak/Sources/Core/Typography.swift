@@ -63,7 +63,6 @@ enum Typography {
     }
     
     // Card title font (scaled headline)
-    // Testing
     static var cardTitle: Font {
         AppFont.Montserrat.semibold(17 * scale(), relativeTo: .headline)
     }
