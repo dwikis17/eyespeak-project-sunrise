@@ -8,11 +8,19 @@ private let openAIRunArguments = Arguments.arguments(
     ]
 )
 
-private let openAISecretsSettings = Settings(
+private let openAISecretsSettings = Settings.settings(
     base: [:],
     configurations: [
-        .debug(name: "Debug", settings: [:], xcconfig: "Config/OpenAISecrets.xcconfig"),
-        .release(name: "Release", settings: [:], xcconfig: "Config/OpenAISecrets.xcconfig")
+        .debug(
+            name: .debug,
+            settings: [:],
+            xcconfig: .relativeToRoot("Config/OpenAISecrets.xcconfig")
+        ),
+        .release(
+            name: .release,
+            settings: [:],
+            xcconfig: .relativeToRoot("Config/OpenAISecrets.xcconfig")
+        )
     ],
     defaultSettings: .recommended
 )
