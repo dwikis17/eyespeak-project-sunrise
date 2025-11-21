@@ -71,3 +71,4 @@ Tuist/.build
 
 # Local secrets (create Config/OpenAISecrets.xcconfig from the sample and keep it out of git)
 Config/OpenAISecrets.xcconfig
+Config/OpenAISecrets.sample.xcconfig
