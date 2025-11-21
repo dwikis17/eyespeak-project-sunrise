@@ -176,6 +176,7 @@ final class KeyboardInputViewModel: ObservableObject {
             if self.predictionService.isModelAvailable {
                 await self.predictionService.generateSentencePredictions(for: workingText)
             } else {
+                print("⚠️ KeyboardInputViewModel: sentence predictions unavailable (\(self.predictionService.debugInfo))")
                 await MainActor.run {
                     self.inlinePredictionText = ""
                 }

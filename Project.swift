@@ -1,5 +1,13 @@
 import ProjectDescription
 
+// Scheme wiring so OPENAI_API_KEY survives `tuist generate`.
+// Replace the empty string with your key locally (or set it as a user override in Xcode).
+private let openAIRunArguments = Arguments.arguments(
+    environmentVariables: [
+        "OPENAI_API_KEY": EnvironmentVariable.environmentVariable(value: "", isEnabled: true)
+    ]
+)
+
 let project = Project(
     name: "eyespeak",
     targets: [
@@ -48,5 +56,17 @@ let project = Project(
             resources: [],
             dependencies: [.target(name: "eyespeak")]
         ),
+    ],
+    schemes: [
+        Scheme.scheme(
+            name: "eyespeak-OpenAI",
+            shared: true,
+            buildAction: .buildAction(targets: ["eyespeak"]),
+            testAction: .targets(["eyespeakTests"]),
+            runAction: .runAction(
+                configuration: .debug,
+                arguments: openAIRunArguments
+            )
+        )
     ]
 )
