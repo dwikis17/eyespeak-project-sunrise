@@ -8,6 +8,23 @@ private let openAIRunArguments = Arguments.arguments(
     ]
 )
 
+private let openAISecretsSettings = Settings.settings(
+    base: [:],
+    configurations: [
+        .debug(
+            name: .debug,
+            settings: [:],
+            xcconfig: .relativeToRoot("Config/OpenAISecrets.xcconfig")
+        ),
+        .release(
+            name: .release,
+            settings: [:],
+            xcconfig: .relativeToRoot("Config/OpenAISecrets.xcconfig")
+        )
+    ],
+    defaultSettings: .recommended
+)
+
 let project = Project(
     name: "eyespeak",
     targets: [
@@ -34,6 +51,7 @@ let project = Project(
                     // Require full screen to avoid iPad multitasking orientation requirements
                     "UIRequiresFullScreen": true,
                     "NSCameraUsageDescription": "This app uses the camera for eye tracking and face detection to provide accessibility features for communication.",
+                    "OPENAI_API_KEY": "$(OPENAI_API_KEY)",
                     "UIAppFonts": [
                         "Montserrat-Regular.ttf",
                         "Montserrat-Medium.ttf",
@@ -44,7 +62,8 @@ let project = Project(
             ),
             sources: ["eyespeak/Sources/**"],
             resources: ["eyespeak/Resources/**",],
-            dependencies: []
+            dependencies: [],
+            settings: openAISecretsSettings
         ),
         .target(
             name: "eyespeakTests",
