@@ -137,14 +137,19 @@ struct KeyboardUIView: View {
     
     var body: some View {
         GeometryReader { proxy in
-            let scale = scaleFactor(for: proxy.size)
+            let widthScale = min(proxy.size.width / Layout.designWidth, 1)
+            let heightScale = min(proxy.size.height / Layout.designHeight, 1)
             keyboardContent
                 .frame(
                     width: Layout.designWidth,
                     height: Layout.designHeight,
                     alignment: .bottomTrailing
                 )
-                .scaleEffect(scale, anchor: .bottomTrailing)
+                .scaleEffect(
+                    x: widthScale,
+                    y: heightScale,
+                    anchor: .bottomTrailing
+                )
                 .frame(
                     width: proxy.size.width,
                     height: proxy.size.height,
@@ -530,13 +535,6 @@ struct KeyboardUIView: View {
             return true
         }
         return false
-    }
-    
-    private func scaleFactor(for availableSize: CGSize) -> CGFloat {
-        guard availableSize.width > 0 && availableSize.height > 0 else { return 1 }
-        let widthScale = availableSize.width / Layout.designWidth
-        let heightScale = availableSize.height / Layout.designHeight
-        return min(widthScale, heightScale, 1)
     }
     
     private func loadAssignedCombos() -> [KeyboardActionID: ActionCombo] {
