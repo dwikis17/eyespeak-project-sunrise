@@ -47,6 +47,11 @@ public enum GestureType: String, Codable, CaseIterable, Hashable {
         case .lookDown: return "DownArrow"
         case .winkLeft: return "L"
         case .winkRight: return "R"
+        case .blink: return "B"
+        case .mouthOpen: return "M"
+        case .raiseEyebrows: return "raise_eyebrow"
+        case .lipPuckerLeft: return "LL"
+        case .lipPuckerRight: return "LR"
         default: return nil
         }
     }
