@@ -137,7 +137,7 @@ struct KeyboardUIView: View {
     
     var body: some View {
         GeometryReader { proxy in
-            let widthScale = min(proxy.size.width / Layout.designWidth, 1)
+            let widthScale = proxy.size.width / Layout.designWidth
             let heightScale = proxy.size.height / Layout.designHeight
             keyboardContent
                 .frame(
