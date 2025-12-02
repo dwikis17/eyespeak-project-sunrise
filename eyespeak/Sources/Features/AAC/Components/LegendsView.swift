@@ -108,6 +108,9 @@ private struct LegendRow: View {
             Text(item.title)
                 .font(Typography.boldBody)
                 .foregroundColor(Color(red: 0.67, green: 0.67, blue: 0.67))
+                .lineLimit(3)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
             Spacer()
             legendIcon
                 .frame(width: 19.2, height: 19.2)
@@ -120,13 +123,13 @@ private struct LegendRow: View {
             Image(systemName: item.imageName)
                 .resizable()
                 .scaledToFit()
-                .foregroundColor(Color(red: 0.67, green: 0.67, blue: 0.67))
+                .foregroundColor(Color(hex: "FE773C"))
         } else {
             Image(item.imageName)
                 .renderingMode(.template)
                 .resizable()
                 .scaledToFit()
-                .foregroundColor(Color(red: 0.67, green: 0.67, blue: 0.67))
+                .foregroundColor(Color(hex: "FE773C"))
                 
         }
     }
