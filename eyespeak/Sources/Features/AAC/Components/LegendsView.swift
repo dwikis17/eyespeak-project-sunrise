@@ -118,10 +118,16 @@ private struct LegendRow: View {
     private var legendIcon: some View {
         if item.usesSystemImage {
             Image(systemName: item.imageName)
+                .resizable()
+                .scaledToFit()
                 .foregroundColor(Color(red: 0.67, green: 0.67, blue: 0.67))
         } else {
             Image(item.imageName)
-            
+                .renderingMode(.template)
+                .resizable()
+                .scaledToFit()
+                .foregroundColor(Color(red: 0.67, green: 0.67, blue: 0.67))
+                
         }
     }
 }

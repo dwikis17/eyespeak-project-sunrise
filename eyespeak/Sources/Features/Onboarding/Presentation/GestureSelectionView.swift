@@ -22,12 +22,12 @@ struct GestureSelectionView: View {
     private let leftColumnRatio: CGFloat = 0.50
     // Show exactly 6 rows per view
     private let rowsVisible: Int = 6
-    private let rowHeight: CGFloat = 108
-    private let rowSpacing: CGFloat = 18
+    private let rowHeight: CGFloat = 75
+    private let rowSpacing: CGFloat = 10
     private let columnsExtraHeight: CGFloat = 40
     private var panelHeight: CGFloat {
         // Height for EXACTLY 6 rows - no more, no less
-        CGFloat(rowsVisible) * rowHeight + CGFloat(rowsVisible - 1) * rowSpacing + 24
+        CGFloat(rowsVisible) * rowHeight + CGFloat(rowsVisible - 1) * rowSpacing + 16
     }
 
     // Scanning + blink selection
@@ -42,24 +42,24 @@ struct GestureSelectionView: View {
     @State private var hasSeenEyesOpen = false
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 8) {
             // Top centered header to match screenshot
             Text("Choose Your Actions")
                 .font(Typography.boldHeaderLarge)
                 .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.bottom, 12)
+                .padding(.bottom, 6)
                 .zIndex(2)
             // Instruction text under header - emphasized for visibility
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundStyle(LinearGradient.redOrange)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: 14, weight: .semibold))
                 Text("choose minimal 7 type of gestures to continue")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.primary)
             }
-            .padding(.vertical, 10)
-            .padding(.horizontal, 14)
+            .padding(.vertical, 6)
+            .padding(.horizontal, 10)
             .background(
                 RoundedRectangle(cornerRadius: 999, style: .continuous)
                     .fill(Color(.systemBackground))
@@ -70,7 +70,7 @@ struct GestureSelectionView: View {
                     .stroke(LinearGradient.redOrange, lineWidth: 2)
             )
             .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.bottom, 8)
+            .padding(.bottom, 6)
                 
 
             if let viewModel = viewModel {
@@ -79,12 +79,13 @@ struct GestureSelectionView: View {
                 ProgressView("Loading gestures...")
             }
         }
-        .padding(24)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.systemGroupedBackground))
         // Ensure the top header never gets clipped by the device notch/status bar
         .safeAreaInset(edge: .top) {
-            Color.clear.frame(height: 40)
+            Color.clear.frame(height: 20)
         }
         .onAppear {
             hasSeenEyesOpen = false
@@ -133,7 +134,7 @@ struct GestureSelectionView: View {
             }
         } else {
             // Two-column layout with fixed height to prevent overlap
-            HStack(alignment: .top, spacing: 20) {
+            HStack(alignment: .top, spacing: 12) {
                 // Left column: gesture list with fixed height
                 ScrollViewReader { proxy in
                     ScrollView(.vertical, showsIndicators: true) {
@@ -147,11 +148,11 @@ struct GestureSelectionView: View {
                                     onTap: { viewModel.toggleGestureSelection(userGesture) }
                                 )
                                 .id(idx)
-                                .padding(.horizontal, 4)
+                                .padding(.horizontal, 2)
                             }
                         }
-                        .padding(.vertical, 12)
-                        .padding(.horizontal, 4)
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 2)
                     }
                     .clipShape(Rectangle())
                     .onChange(of: scanIndex) { newVal in
@@ -166,22 +167,22 @@ struct GestureSelectionView: View {
                 .frame(maxWidth: .infinity)
 
                 // Right column: tutorial preview + detail + CTA inside white box
-                let ctaButtonHeight: CGFloat = 70
-                let containerPadding: CGFloat = 16
-                let totalSpacing: CGFloat = 32  // 2 gaps of 16pt each
+                let ctaButtonHeight: CGFloat = 55
+                let containerPadding: CGFloat = 12
+                let totalSpacing: CGFloat = 20  // 2 gaps of 10pt each
                 let availableHeight = panelHeight - totalSpacing - ctaButtonHeight - (containerPadding * 2)
                 let boxHeight = availableHeight / 2  // Split remaining space equally between two boxes
                 
-                VStack(spacing: 16) {
+                VStack(spacing: 10) {
                     // Video tutorial box
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .fill(Color(.systemBackground))
                         .overlay(
                             VideoTutorialPreview(
                                 gesture: currentHighlightedGesture(viewModel: viewModel),
                                 highlightIndex: scanIndex
                             )
-                            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                         )
                         .frame(maxWidth: .infinity)
                         .frame(height: boxHeight)
@@ -192,7 +193,7 @@ struct GestureSelectionView: View {
                             .frame(maxWidth: .infinity)
                             .frame(height: boxHeight)
                     } else {
-                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
                             .fill(Color(.systemBackground))
                             .frame(maxWidth: .infinity)
                             .frame(height: boxHeight)
@@ -210,7 +211,7 @@ struct GestureSelectionView: View {
                     )
                         .frame(height: ctaButtonHeight)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 20)
+                            RoundedRectangle(cornerRadius: 16)
                                 .stroke((scanIndex == viewModel.userGestures.count && viewModel.getSelectedGestureCount() >= minRequiredSelections) ? Color.accentColor : .clear, lineWidth: 3)
                         )
                 }
@@ -218,7 +219,7 @@ struct GestureSelectionView: View {
                 .frame(height: panelHeight)
                 .frame(maxWidth: .infinity)
                 .background(
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .fill(Color(.systemBackground))
                         .shadow(color: .black.opacity(0.06), radius: 4, x: 0, y: 2)
                 )
@@ -244,7 +245,7 @@ struct GestureSelectionView: View {
                     .font(.headline)
                     .foregroundColor(.black)
                     .frame(maxWidth: .infinity)
-                    .padding()
+                    .padding(.vertical, 12)
                     .background(Color.white)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .overlay(
@@ -260,8 +261,8 @@ struct GestureSelectionView: View {
             .frame(maxWidth: contentMaxWidth)
             .disabled(viewModel.getSelectedGestureCount() < minRequiredSelections)
             .opacity(viewModel.getSelectedGestureCount() < minRequiredSelections ? 0.5 : 1)
-            .padding(.top, 8)
-            .padding(.bottom, 24)
+            .padding(.top, 6)
+            .padding(.bottom, 12)
             
         }
     }
@@ -395,43 +396,46 @@ private struct SelectableGestureRow: View {
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: 16) {
+            HStack(spacing: 10) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
                         .fill(LinearGradient.redOrange)
-                        .frame(width: 90, height: 90)
+                        .frame(width: 60, height: 60)
                     Image(systemName: userGesture.iconName)
                         .foregroundColor(.white)
-                        .font(.system(size: 38, weight: .bold))
+                        .font(.system(size: 28, weight: .bold))
                 }
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(userGesture.displayName)
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.primary)
+                        .lineLimit(1)
                     Text(subtitle(for: userGesture))
-                        .font(.system(size: 14))
+                        .font(.system(size: 12))
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
                         .lineLimit(2)
+                        .minimumScaleFactor(0.85)
                 }
                 Spacer()
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .foregroundColor(isSelected ? .green : .gray.opacity(0.5))
-                    .font(.system(size: 28))
+                    .font(.system(size: 22))
             }
-            .padding(16)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
             .background(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(Color(.systemBackground))
                     .shadow(color: .black.opacity(0.06), radius: 4, x: 0, y: 2)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .stroke(Color.black.opacity(0.08), lineWidth: 1)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .stroke(LinearGradient.redOrange, lineWidth: 3)
                     .opacity(isHighlighted ? 1 : 0)
             )
@@ -465,39 +469,42 @@ private struct GestureDetailCard: View {
     let isSelected: Bool
 
     var body: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 10) {
             ZStack {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(LinearGradient.redOrange)
-                    .frame(width: 84, height: 84)
+                    .frame(width: 55, height: 55)
                 Image(systemName: userGesture.iconName)
                     .foregroundColor(.white)
-                    .font(.system(size: 32, weight: .bold))
+                    .font(.system(size: 26, weight: .bold))
             }
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
                     Text(userGesture.displayName)
-                        .font(.system(size: 20, weight: .semibold))
+                        .font(.system(size: 16, weight: .semibold))
+                        .lineLimit(1)
                     Text(isSelected ? "Selected" : "Unselected")
-                        .font(.caption)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
+                        .font(.caption2)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
                         .background((isSelected ? Color.green : Color.red).opacity(0.2))
                         .foregroundColor(isSelected ? .green : .red)
                         .clipShape(Capsule())
                 }
                 Text(detailText(for: userGesture))
-                    .font(.system(size: 14))
+                    .font(.system(size: 12))
                     .foregroundColor(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-                    .lineLimit(nil)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.85)
             }
             Spacer()
         }
-        .padding(16)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
         .frame(maxHeight: .infinity)
         .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(Color.white)
         )
     }

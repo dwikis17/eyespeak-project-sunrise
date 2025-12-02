@@ -15,21 +15,21 @@ struct EditActionsView: View {
     private var enabledCount: Int { localGestures.filter { $0.isEnabled }.count }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 15) {
+        VStack(alignment: .leading, spacing: 8) {
             headerView
-            VStack(alignment: .leading, spacing: 15) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text("Available Actions")
                     .font(Typography.boldHeader)
-                HStack(spacing: 8) {
+                HStack(spacing: 6) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundStyle(LinearGradient.redOrange)
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.system(size: 14, weight: .semibold))
                     Text("Select minimal 7 movements that you can do comfortably")
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.primary)
                 }
-                .padding(.vertical, 10)
-                .padding(.horizontal, 14)
+                .padding(.vertical, 6)
+                .padding(.horizontal, 10)
                 .background(
                     RoundedRectangle(cornerRadius: 999, style: .continuous)
                         .fill(Color(.systemBackground))
@@ -40,15 +40,16 @@ struct EditActionsView: View {
                         .stroke(LinearGradient.redOrange, lineWidth: 2)
                 )
             }
-            .padding()
+            .padding(.horizontal)
+            .padding(.top, 8)
             
             
             LazyVGrid(
                 columns: [
-                    GridItem(.flexible(), spacing: 15),
-                    GridItem(.flexible(), spacing: 15),
+                    GridItem(.flexible(), spacing: 6),
+                    GridItem(.flexible(), spacing: 6),
                 ],
-                spacing: 10
+                spacing: 6
             ) {
                 ForEach(Array(localGestures.enumerated()), id: \.element.id) {
                     index,
@@ -69,7 +70,8 @@ struct EditActionsView: View {
 
             footerView
         }
-        .padding(.vertical, 20)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .onAppear {
             loadGestures()
             // Generate combos if not already generated
@@ -91,7 +93,8 @@ struct EditActionsView: View {
             }
             Spacer()
         }
-        .padding()
+        .padding(.vertical, 12)
+        .padding(.horizontal)
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color.white)
@@ -130,6 +133,7 @@ struct EditActionsView: View {
             .opacity(enabledCount < minRequiredSelections ? 0.5 : 1)
         }
         .padding(.horizontal)
+        .padding(.top, 8)
     }
 
     private func loadGestures() {
