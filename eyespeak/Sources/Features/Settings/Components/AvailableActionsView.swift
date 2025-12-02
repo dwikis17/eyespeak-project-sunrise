@@ -12,7 +12,7 @@ struct AvailableActionsView: View {
     
     var body: some View {
         HStack {
-            VStack(alignment:.leading, spacing: 15) {
+            VStack(alignment:.leading, spacing: 8) {
                 Text("Available Actions")
                     .font(Typography.boldHeader)
                 Text("Select which movements you can do comfortably")

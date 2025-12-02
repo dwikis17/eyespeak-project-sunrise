@@ -21,20 +21,28 @@ struct SettingsView: View {
                     .environmentObject(viewModel)
                     .id(fontScaleRaw)
             } else {
-                VStack(spacing: 15) {
+                VStack(spacing: 0) {
                     headerView
                         .id("\(fontScaleRaw)-header")
-                    ResetTimerView()
-                        .id("\(fontScaleRaw)-reset")
-                    TextSizeSettingView()
-                        .id("\(fontScaleRaw)-textsize")
-                    AvailableActionsView()
-                        .id("\(fontScaleRaw)-available")
-                    EditLayoutview()
-                        .id("\(fontScaleRaw)-editlayout")
-                    Spacer()
+                        .padding(.horizontal)
+                        .padding(.top, 10)
+                    
+                    VStack(spacing: 8) {
+                        ResetTimerView()
+                            .id("\(fontScaleRaw)-reset")
+                        TextSizeSettingView()
+                            .id("\(fontScaleRaw)-textsize")
+//                        AvailableActionsView()
+//                            .id("\(fontScaleRaw)-available")
+                        EditLayoutview()
+                            .id("\(fontScaleRaw)-editlayout")
+                    }
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+                    
+                    Spacer(minLength: 0)
                 }
-                .padding(.vertical, 20)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .environmentObject(viewModel)
             }
         }
@@ -68,7 +76,8 @@ struct SettingsView: View {
                 .foregroundStyle(Color.mellowBlue)
             Spacer()
         }
-        .padding()
+        .padding(.vertical, 12)
+        .padding(.horizontal)
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color.white)

@@ -18,14 +18,14 @@ struct TextSizeSettingView: View {
     
     var body: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 15) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text("Text Size")
                     .font(Typography.boldHeader)
                 Text("Size of the text")
                     .font(Typography.regularTitle)
                     .foregroundStyle(Color.placeholder)
                 
-                HStack(spacing: 20) {
+                HStack(spacing: 12) {
                     // SMALL card
                     NavigationCard(
                         title: "SMALL",
@@ -63,7 +63,7 @@ struct TextSizeSettingView: View {
                     }
                 }
             }
-            .frame(maxWidth: 650)
+            .frame(maxWidth: 500)
             
             Spacer()
         }
