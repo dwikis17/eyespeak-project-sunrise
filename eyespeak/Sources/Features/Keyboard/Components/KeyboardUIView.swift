@@ -104,6 +104,11 @@ struct KeyboardUIView: View {
     @State private var assignedCombos: [KeyboardActionID: ActionCombo] = [:]
     @AppStorage("fontScale") private var fontScaleRaw: String = "medium"
     
+    private enum Layout {
+        static let designWidth: CGFloat = 1200
+        static let designHeight: CGFloat = 900
+    }
+    
     private var scaleMultiplier: CGFloat {
         FontScale(rawValue: fontScaleRaw)?.multiplier ?? FontScale.medium.multiplier
     }
@@ -131,12 +136,29 @@ struct KeyboardUIView: View {
     private let predictionComboAction: KeyboardActionID = .acceptPrediction
     
     var body: some View {
+        GeometryReader { proxy in
+            let scale = scaleFactor(for: proxy.size)
+            keyboardContent
+                .frame(
+                    width: Layout.designWidth,
+                    height: Layout.designHeight,
+                    alignment: .bottomTrailing
+                )
+                .scaleEffect(scale, anchor: .bottomTrailing)
+                .frame(
+                    width: proxy.size.width,
+                    height: proxy.size.height,
+                    alignment: .bottomTrailing
+                )
+        }
+    }
+    
+    private var keyboardContent: some View {
         VStack(alignment: .leading, spacing: scaled(10)) {
             addWordButton
             phraseSection
             keyboardSection
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.vertical, scaled(50))
         .padding(.trailing, scaled(30))
         .task {
@@ -508,6 +530,13 @@ struct KeyboardUIView: View {
             return true
         }
         return false
+    }
+    
+    private func scaleFactor(for availableSize: CGSize) -> CGFloat {
+        guard availableSize.width > 0 && availableSize.height > 0 else { return 1 }
+        let widthScale = availableSize.width / Layout.designWidth
+        let heightScale = availableSize.height / Layout.designHeight
+        return min(widthScale, heightScale, 1)
     }
     
     private func loadAssignedCombos() -> [KeyboardActionID: ActionCombo] {
