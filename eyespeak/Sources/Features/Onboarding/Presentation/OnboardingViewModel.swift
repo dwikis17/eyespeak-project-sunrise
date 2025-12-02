@@ -237,8 +237,7 @@ public final class OnboardingViewModel {
         }
         settings.keyboardCombo = keyboardCombo
 
-        print(keyboardCombo)
-   
+    
 
         // Assign edit layout combo (priority 4) - use next available combo that's not nav or settings
         var editLayoutCombo: (GestureType, GestureType)?
@@ -265,7 +264,6 @@ public final class OnboardingViewModel {
             }
         }
         settings.editLayoutCombo = editLayoutCombo
-        print(editLayoutCombo,"HEHHEHE")
 
         // Assign swap combo (priority 5) - use next available combo that's not nav, settings, or edit layout
         var swapCombo: (GestureType, GestureType)?

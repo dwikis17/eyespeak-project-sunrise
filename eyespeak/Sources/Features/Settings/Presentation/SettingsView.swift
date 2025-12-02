@@ -16,7 +16,7 @@ struct SettingsView: View {
 
     var body: some View {
         Group {
-            if viewModel.isEditActionsMode {
+            if false {
                 EditActionsView()
                     .environmentObject(viewModel)
                     .id(fontScaleRaw)
