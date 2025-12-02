@@ -11,8 +11,8 @@ struct ActionCard: View {
     let userGesture: UserGesture
 
     var background: Color = .whiteWhite
-    var cornerRadius: CGFloat = 20
-    var height: CGFloat = 100.72
+    var cornerRadius: CGFloat = 14
+    var height: CGFloat = 70
 
     // Optional description text (defaults to gesture display name if not provided)
     var description: String? = nil
@@ -77,49 +77,51 @@ struct ActionCard: View {
                 .fill(background)
                 .frame(height: height)
             
-            HStack(spacing: 10) {
+            HStack(spacing: 6) {
                 // Left section: Gradient background with large icon
                 ZStack {
                     LinearGradient.orangeGradient
 
-                    gestureIcon(for: userGesture.gestureType, iconSize: 40)
+                    gestureIcon(for: userGesture.gestureType, iconSize: 28)
                         .foregroundStyle(.white)
                 }
-                .aspectRatio(1, contentMode: .fit)
+                .frame(width: 50, height: 50)
                 .clipShape(
                     RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                 )
                 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 2) {
                     if let first = firstComboGesture, let second = secondComboGesture {
                         OutlineComboPill(firstGesture: first, secondGesture: second)
                     }
     
                     Text(userGesture.displayName)
                         .font(Typography.boldHeader)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
                     Text(resolvedDescription)
                         .lineLimit(2)
                         .font(Typography.regularTitle)
+                        .minimumScaleFactor(0.75)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-                .frame(minHeight: 90)
-
-            
                 Spacer()
 
                 if resolvedIsCompleted {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(Color.oldHulkGreen)
-                        .font(.system(size: 30))
-                        .frame(width: 30, height: 30)
+                        .font(.system(size: 20))
+                        .frame(width: 20, height: 20)
                 } else {
                 Circle()
                     .stroke(Color.placeholder, lineWidth: 1)
-                    .frame(width: 30, height: 30)
+                    .frame(width: 20, height: 20)
                 }
                 
             }
-            .padding(8)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 5)
             .frame(height: height)
           
         }
@@ -127,7 +129,7 @@ struct ActionCard: View {
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
         )
         .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 4)
-        .frame(width:462)
+        .frame(maxWidth: .infinity)
     }
 
     var body: some View {

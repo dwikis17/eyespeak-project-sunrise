@@ -12,7 +12,7 @@ struct EditLayoutview: View {
     
     var body: some View {
         HStack {
-            VStack(alignment:.leading, spacing: 15) {
+            VStack(alignment:.leading, spacing: 8) {
                 Text("Edit Layout")
                     .font(Typography.boldHeader)
                 Text("Customize your own AAC Board Layout")

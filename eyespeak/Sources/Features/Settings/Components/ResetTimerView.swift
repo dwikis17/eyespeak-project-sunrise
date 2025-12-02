@@ -14,14 +14,14 @@ struct ResetTimerView: View {
     
     var body: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 15) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text("Reset Time")
                     .font(Typography.boldHeader)
                 Text("Time between action before resetting")
                     .font(Typography.regularTitle)
                     .foregroundStyle(Color.placeholder)
                 
-                HStack(spacing: 20) {
+                HStack(spacing: 12) {
                     // Decrement button (-)
                     IncrementButtonView(
                         title: "-",
@@ -71,7 +71,7 @@ struct ResetTimerView: View {
 
                 
             }
-            .frame(maxWidth: 650)
+            .frame(maxWidth: 500)
             
             Spacer()
         }
