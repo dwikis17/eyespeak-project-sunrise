@@ -104,6 +104,11 @@ struct KeyboardUIView: View {
     @State private var assignedCombos: [KeyboardActionID: ActionCombo] = [:]
     @AppStorage("fontScale") private var fontScaleRaw: String = "medium"
     
+    private enum Layout {
+        static let designWidth: CGFloat = 1200
+        static let designHeight: CGFloat = 900
+    }
+    
     private var scaleMultiplier: CGFloat {
         FontScale(rawValue: fontScaleRaw)?.multiplier ?? FontScale.medium.multiplier
     }
@@ -131,12 +136,34 @@ struct KeyboardUIView: View {
     private let predictionComboAction: KeyboardActionID = .acceptPrediction
     
     var body: some View {
+        GeometryReader { proxy in
+            let widthScale = proxy.size.width / Layout.designWidth
+            let heightScale = proxy.size.height / Layout.designHeight
+            keyboardContent
+                .frame(
+                    width: Layout.designWidth,
+                    height: Layout.designHeight,
+                    alignment: .bottomTrailing
+                )
+                .scaleEffect(
+                    x: widthScale,
+                    y: heightScale,
+                    anchor: .bottomTrailing
+                )
+                .frame(
+                    width: proxy.size.width,
+                    height: proxy.size.height,
+                    alignment: .bottomTrailing
+                )
+        }
+    }
+    
+    private var keyboardContent: some View {
         VStack(alignment: .leading, spacing: scaled(10)) {
             addWordButton
             phraseSection
             keyboardSection
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.vertical, scaled(50))
         .padding(.trailing, scaled(30))
         .task {
