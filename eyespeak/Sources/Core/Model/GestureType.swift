@@ -27,14 +27,14 @@ public enum GestureType: String, Codable, CaseIterable, Hashable {
         case .lookRight: return "arrow.right"
         case .lookUp: return "arrow.up"
         case .lookDown: return "arrow.down"
-        case .winkLeft: return "eye.square"         // Unique for left wink
-        case .winkRight: return "eye.square.fill"   // Unique for right wink
-        case .blink: return "eye.fill"              // Distinguish from open eye
-        case .mouthOpen: return "mouth"             // Unique for open mouth
-        case .raiseEyebrows: return "eyebrow"       // Use a custom or symbolic icon if available
-        case .lipPuckerLeft: return "person.circle"    // Suggesting a left mouth pucker (custom, fallback to "mouth" if nonexistent)
-        case .lipPuckerRight: return "person.circle.fill"  // Suggesting a right mouth pucker (custom, fallback to "mouth" if nonexistent)
-        case .smile: return "face.smiling"          // Standard smile
+        case .winkLeft: return "L"
+        case .winkRight: return "R"
+        case .blink: return "B"
+        case .mouthOpen: return "M"
+        case .raiseEyebrows: return "raise_eyebrow"
+        case .lipPuckerLeft: return "LL"
+        case .lipPuckerRight: return "LR"
+        case .smile: return "face.smiling"
         }
     }
 

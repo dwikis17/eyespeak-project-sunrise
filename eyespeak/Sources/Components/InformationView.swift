@@ -83,7 +83,7 @@ struct InformationView: View {
                     appState.currentTab = .settings
                 }
             }
-            
+
             // AAC Board/Keyboard card - toggles based on current tab, uses keyboardCombo
             if viewModel.currentMenu == .keyboard {
                 // Show AAC Board when in keyboard tab
@@ -143,7 +143,7 @@ struct InformationView: View {
             ) {
                 viewModel.toggleCalibration()
             }
-            
+
             // Snooze card
             NavigationCard(
                 title: "Snooze",
@@ -187,19 +187,30 @@ struct InformationView: View {
                             ),
                             id: \.offset
                         ) { _, gesture in
-                            Image(systemName: gesture.iconName)
-                                .font(.system(size: 44, weight: .semibold))
-                                .foregroundColor(.white)
-                                .shadow(
-                                    color: .black.opacity(0.12),
-                                    radius: 4,
-                                    x: 0,
-                                    y: 2
-                                )
+                            Group {
+                                if gesture.iconName == "face.smiling"
+                                    || gesture.iconName == "arrow.up"
+                                    || gesture.iconName == "arrow.down"
+                                    || gesture.iconName == "arrow.left"
+                                    || gesture.iconName == "arrow.right"
+                                {
+                                    Image(systemName: gesture.iconName)
+                                } else {
+                                    Image(gesture.iconName)
+                                }
+                            }
+                            .font(.system(size: 44, weight: .semibold))
+                            .foregroundColor(.white)
+                            .shadow(
+                                color: .black.opacity(0.12),
+                                radius: 4,
+                                x: 0,
+                                y: 2
+                            )
                         }
                     }
                 }
-                .frame(height:.infinity)
+                .frame(height: .infinity)
 
                 // Live countdown bar linked to gesture timing window
                 GeometryReader { geo in
@@ -243,13 +254,41 @@ struct InformationView: View {
                         id: \.offset
                     ) { _, pair in
                         HStack(spacing: 12) {
-                            Image(systemName: pair.0.iconName)
-                            Image(systemName: pair.1.iconName)
+                            if pair.0.iconName == "face.smiling"
+                                || pair.0.iconName == "arrow.up"
+                                || pair.0.iconName == "arrow.down"
+                                || pair.0.iconName == "arrow.left"
+                                || pair.0.iconName == "arrow.right"
+                            {
+                                Image(systemName: pair.0.iconName)
+                                    .font(.system(size: 12, weight: .semibold))
+
+                            } else {
+                                Image(pair.0.iconName)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 12, height: 12)
+
+                            }
+                            if pair.1.iconName == "face.smiling"
+                                || pair.1.iconName == "arrow.up"
+                                || pair.1.iconName == "arrow.down"
+                                || pair.1.iconName == "arrow.left"
+                                || pair.1.iconName == "arrow.right"
+                            {
+                                Image(systemName: pair.1.iconName)
+                                    .font(.system(size: 12, weight: .semibold))
+
+                            } else {
+                                Image(pair.1.iconName)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 12, height: 12)
+                            }
                         }
-                        .font(.system(size: 12, weight: .semibold))
                         .padding(.vertical, 10)
                         .frame(maxWidth: .infinity)
-                        .background(Color(.systemGray6))
+                        .background(Color(.gray))
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                     }
                 }

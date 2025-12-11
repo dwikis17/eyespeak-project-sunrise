@@ -57,9 +57,24 @@ struct AACFullScreenSnoozeView: View {
                                 RoundedRectangle(cornerRadius: 12)
                                     .fill(isComplete ? Color.energeticOrange : Color.blueholder)
                                     .overlay(
-                                        Image(systemName: gesture.iconName)
-                                            .font(.system(size: 24, weight: .bold))
-                                            .foregroundStyle(isComplete ? Color.whiteWhite : Color.placeholder)
+                                        Group {
+                                            if gesture.iconName == "face.smiling"
+                                                || gesture.iconName == "arrow.up"
+                                                || gesture.iconName == "arrow.down"
+                                                || gesture.iconName == "arrow.left"
+                                                || gesture.iconName == "arrow.right"
+                                            {
+                                                Image(systemName: gesture.iconName)
+                                                    .font(.system(size: 24, weight: .bold))
+                                            } else {
+                                                Image(gesture.iconName)
+                                                    .resizable()
+                                                    .scaledToFit()
+                                                    .frame(width: 12, height: 12)
+                                            }
+                                        }
+                                    
+                                        .foregroundStyle(isComplete ? Color.whiteWhite : Color.placeholder)
                                     )
                                     .frame(width: 60, height: 56)
                                     .scaleEffect(unlockProgress.indices.contains(index) && unlockProgress[index] ? 1.08 : 1.0)
